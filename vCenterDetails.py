@@ -79,13 +79,11 @@ def ParseServiceInstance(ServiceInstance):
    """
 
    content = ServiceInstance.RetrieveContent()
-   objView = content.viewManager.CreateContainerView(content.rootFolder,[vim.Folder],True)
-   cntView = content.viewManager.CreateInventoryView()
-   vmList = objView.view
-   print objView.view
-   print cntView.view
+   objView = content.viewManager.CreateContainerView(content.rootFolder,[],True)
+   for obj in objView.view:
+      print obj
+
    objView.Destroy()
-   cntView.Destroy()
    # for vm in vmList:
    #    if (vm.name in vmnames) and (vm.runtime.powerState == "poweredOn"):
    #        vmObj = vm
