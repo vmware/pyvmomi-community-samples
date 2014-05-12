@@ -15,17 +15,15 @@
 # limitations under the License.
 
 """
-Python program for listing the vms on an ESX / vCenter host
+Python program to authenticate and print
+a friendly encouragement to joining the community!
 """
 
-from optparse import OptionParser, make_option
 from pyVim.connect import SmartConnect, Disconnect
 from pyVmomi import vmodl
-
 import argparse
 import atexit
 import getpass
-import sys
 
 
 def GetArgs():
@@ -69,8 +67,8 @@ def main():
         except IOError, e:
             pass
         if not ServiceInstance:
-            print "Could not connect to specified host" +
-            "using specified username & password"
+            print "Could not connect to specified host using specified "
+            + "username & password"
             return -1
 
         atexit.register(Disconnect, ServiceInstance)
