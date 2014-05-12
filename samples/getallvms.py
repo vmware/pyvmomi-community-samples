@@ -40,6 +40,38 @@ def GetArgs():
    args = parser.parse_args()
    return args
 
+
+def PrintVmInfo(vm, depth=1):
+   """
+   Print information for a particular virtual machine or recurse into a folder with depth protection
+   """
+   maxdepth = 10
+
+   # if this is a group it will have children. if it does, recurse into them and then return
+   if hasattr(vm, 'childEntity'):
+      if depth > maxdepth:
+         return
+      vmList = vm.childEntity
+      for c in vmList:
+         PrintVmInfo(c, depth+1)
+      return
+
+   summary = vm.summary
+   print "Name       : ", summary.config.name
+   print "Path       : ", summary.config.vmPathName
+   print "Guest      : ", summary.config.guestFullName
+   annotation = summary.config.annotation
+   if annotation != None and annotation != "":
+      print "Annotation : ", annotation
+   print "State      : ", summary.runtime.powerState
+   if summary.guest != None:
+      ip = summary.guest.ipAddress
+      if ip != None and ip != "":
+         print "IP         : ", ip
+   if summary.runtime.question != None:
+      print "Question  : ", summary.runtime.question.text
+   print ""
+
 def main():
    """
    Simple command-line program for listing the virtual machines on a system.
@@ -52,29 +84,29 @@ def main():
       password = getpass.getpass(prompt='Enter password for host %s and user %s: ' % (args.host,args.user))
 
    try:
-      ServiceInstance = None
+      si = None
       try:
-         ServiceInstance = SmartConnect(host=args.host,
+         si = SmartConnect(host=args.host,
                 user=args.user,
                 pwd=password,
                 port=int(args.port))
       except IOError, e:
         pass
-      if not ServiceInstance:
+      if not si:
          print "Could not connect to the specified host using specified username and password"
          return -1
 
-      atexit.register(Disconnect, ServiceInstance)
+      atexit.register(Disconnect, si)
 
-      print "\nHello World!\n"
-      print "If you got here, you authenticted into vCenter."
-      print "The server is " + args.host + "!"
-      print "Well done!"
-      print "\n"
-      print "Download, learn and contribute back:"
-      print "https://github.com/vmware/pyvmomi-community-samples"
-      print "\n\n"
+      content = si.RetrieveContent()
+      datacenter = content.rootFolder.childEntity[0]
+      print dir(datacenter)
+      # folder1 = content.rootFolder.childEntity[0]
 
+      # vmFolder = datacenter.vmFolder
+      # vmList = vmFolder.childEntity
+      # for vm in vmList:
+      #    PrintVmInfo(vm)
    except vmodl.MethodFault, e:
       print "Caught vmodl fault : " + e.msg
       return -1
