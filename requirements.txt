@@ -1,0 +1,3 @@
+pyvmomi
+suds>=0.4,<0.7
+argparse
