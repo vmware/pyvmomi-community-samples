@@ -35,7 +35,7 @@ parser.add_argument('-o', '--port',
 
 args = parser.parse_args()
 if args.password:
-      password = args.password
+    password = args.password
 else:
     password = getpass.getpass(
         prompt='Enter password for host %s and user %s: ' %
