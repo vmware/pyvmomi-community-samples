@@ -21,27 +21,10 @@ a friendly encouragement to joining the community!
 
 from pyVim.connect import SmartConnect, Disconnect
 from pyVmomi import vmodl
-import argparse
+
+import pyvmomi_addons.cli as cli
+
 import atexit
-import getpass
-
-
-def GetArgs():
-    """
-    Supports the command-line arguments listed below.
-    """
-    parser = argparse.ArgumentParser(description='Process args for retrieving'
-                                     ' all the Virtual Machines')
-    parser.add_argument('-s', '--host', required=True, action='store',
-                        help='Remote host to connect to')
-    parser.add_argument('-o', '--port', type=int, default=443, action='store',
-                        help='Port to connect on')
-    parser.add_argument('-u', '--user', required=True, action='store',
-                        help='User name to use when connecting to host')
-    parser.add_argument('-p', '--password', required=False, action='store',
-                        help='Password to use when connecting to host')
-    args = parser.parse_args()
-    return args
 
 
 def main():
@@ -49,20 +32,14 @@ def main():
     Simple command-line program for listing the virtual machines on a system.
     """
 
-    args = GetArgs()
-    if args.password:
-        password = args.password
-    else:
-        password = getpass.getpass(prompt=
-                                   'Enter password for host %s and user %s: '
-                                   % (args.host, args.user))
+    args = cli.get_args()
 
     try:
         ServiceInstance = None
         try:
             ServiceInstance = SmartConnect(host=args.host,
                                            user=args.user,
-                                           pwd=password,
+                                           pwd=args.password,
                                            port=int(args.port))
         except IOError, e:
             pass
