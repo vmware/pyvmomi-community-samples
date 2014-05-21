@@ -15,27 +15,27 @@
 from setuptools import setup
 import os
 
+
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
-setup(
-   name='pyvmomi-community-samples',
-   version='5.5.0',
-   description='VMware vSphere Python SDK Community Samples',
-   author='VMware, Inc.',
-   author_email='hartsocks@vmware.com',
-   url='https://github.com/vmware/pyvmomi',
-   packages=['samples', 'pyvmomi-addons'],
-   license='Apache',
-   long_description=read('README.md'),
-   classifiers=[
-      "License :: OSI Approved :: Apache Software License",
-      "Development Status :: 4 - Beta",
-      "Environment :: No Input/Output (Daemon)",
-      "Intended Audience :: Information Technology",
-      "Intended Audience :: System Administrators",
-      "Topic :: Software Development :: Libraries :: Python Modules",
-      "Topic :: System :: Distributed Computing"
-   ],
-   zip_safe=True
-)
+
+setup(name='pyvmomi-community-samples',
+      version='5.5.0',
+      description='VMware vSphere Python SDK Community Samples',
+      author='VMware, Inc.',
+      author_email='hartsocks@vmware.com',
+      url='https://github.com/vmware/pyvmomi',
+      packages=['samples', 'pyvmomi-addons'],
+      license='Apache',
+      long_description=read('README.md'),
+      classifiers=[
+          "License :: OSI Approved :: Apache Software License",
+          "Development Status :: 4 - Beta",
+          "Environment :: No Input/Output (Daemon)",
+          "Intended Audience :: Information Technology",
+          "Intended Audience :: System Administrators",
+          "Topic :: Software Development :: Libraries :: Python Modules",
+          "Topic :: System :: Distributed Computing"
+      ],
+      zip_safe=True)
