@@ -1,6 +1,5 @@
-#!/usr/bin/env python
-# VMware vSphere Python SDK
-# Copyright (c) 2008-2013 VMware, Inc. All Rights Reserved.
+# VMware vSphere Python SDK Community Samples Addons
+# Copyright (c) 2014 VMware, Inc. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,20 +14,24 @@
 # limitations under the License.
 
 """
-Python program to authenticate and print
-a friendly encouragement to joining the community!
+This module implements simple helper functions for python samples
 """
+__author__ = "VMware, Inc."
 
-import atexit
 import argparse
 import getpass
-import traceback
-
-from pyVim import connect
-from pyVmomi import vmodl
 
 
-def get_args():
+def build_arg_parser():
+    """
+    Builds a standard argument parser with arguments for talking to vCenter
+
+    -s service_host_name_or_ip
+    -o optional_port_number
+    -u required_user
+    -p optional_password
+
+    """
     parser = argparse.ArgumentParser(
         description='Standard Arguments for talking to vCenter')
 
@@ -54,9 +57,13 @@ def get_args():
                         required=False,
                         action='store',
                         help='Password to use when connecting to host')
+    return parser
 
-    args = parser.parse_args()
 
+def prompt_for_password(args):
+    """
+    if no password is specified on the command line, prompt for it
+    """
     if not args.password:
         args.password = getpass.getpass(
             prompt='Enter password for host %s and user %s: ' %
@@ -64,40 +71,12 @@ def get_args():
     return args
 
 
-def main():
+def get_args():
     """
-    Simple command-line program for listing the virtual machines on a system.
+    Supports the command-line arguments needed to form a connection to vSphere.
     """
+    parser = build_arg_parser()
 
-    args = get_args()
+    args = parser.parse_args()
 
-    try:
-        service_instance = connect.SmartConnect(host=args.host,
-                                                user=args.user,
-                                                pwd=args.password,
-                                                port=int(args.port))
-
-        atexit.register(connect.Disconnect, service_instance)
-
-        print "\nHello World!\n"
-        print "If you got here, you authenticted into vCenter."
-        print "The server is %s!" % args.host
-        # NOTE (hartsock): only a successfully authenticated session has a
-        # session key aka session id.
-        session_id = service_instance.content.sessionManager.currentSession.key
-        print "current session id: %s" % session_id
-        print "Well done!"
-        print "\n"
-        print "Download, learn and contribute back:"
-        print "https://github.com/vmware/pyvmomi-community-samples"
-        print "\n\n"
-
-    except vmodl.MethodFault, e:
-        print "Caught vmodl fault : " + e.msg
-        return -1
-
-    return 0
-
-# Start program
-if __name__ == "__main__":
-    main()
+    return prompt_for_password(args)
