@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # William Lam
 # www.virtuallyghetto.com
 
@@ -7,21 +7,21 @@ vSphere Python SDK program for demonstrating vSphere perfManager API based on
 Rbvmomi sample https://gist.github.com/toobulkeh/6124975
 """
 
-import pyVim.connect as connect
-
-from pyVmomi import vmodl
-from pyVmomi import vim
-
 import argparse
 import atexit
 import getpass
 import datetime
 
+from pyVim import connect
+from pyVmomi import vmodl
+from pyVmomi import vim
+
 
 def GetArgs():
     """
-   Supports the command-line arguments listed below.
-   """
+    This sample uses different arguments than the standard sample. We also
+    need the vihost to work with.
+    """
     parser = argparse.ArgumentParser(
         description='Process args for retrieving all the Virtual Machines')
 

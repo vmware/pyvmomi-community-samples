@@ -1,6 +1,5 @@
-#!/usr/bin/env python
-# VMware vSphere Python SDK
-# Copyright (c) 2008-2013 VMware, Inc. All Rights Reserved.
+# VMware vSphere Python SDK Community Samples Addons
+# Copyright (c) 2014 VMware, Inc. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,32 +14,26 @@
 # limitations under the License.
 
 """
-Python program for listing the vms on an ESX / vCenter host
+This module implements simple helper functions for python samples working with
+virtual machine objects
 """
-
-import atexit
-
-from pyVim import connect
-from pyVmomi import vmodl
-
-import tools.cli as cli
+__author__ = "VMware, Inc."
 
 
-def print_vm_info(vm, depth=1):
+def print_vm_info(vm, depth=1, max_depth=10):
     """
     Print information for a particular virtual machine or recurse into a
     folder with depth protection
     """
-    maxdepth = 10
 
     # if this is a group it will have children. if it does, recurse into them
     # and then return
     if hasattr(vm, 'childEntity'):
-        if depth > maxdepth:
+        if depth > max_depth:
             return
         vmList = vm.childEntity
         for c in vmList:
-            print_vm_info(c, depth+1)
+            print_vm_info(c, depth + 1)
         return
 
     summary = vm.summary
@@ -58,43 +51,3 @@ def print_vm_info(vm, depth=1):
     if summary.runtime.question is not None:
         print "Question  : ", summary.runtime.question.text
     print ""
-
-
-def main():
-    """
-    Simple command-line program for listing the virtual machines on a system.
-    """
-
-    args = cli.get_args()
-
-    try:
-        si = connect.SmartConnect(host=args.host,
-                                  user=args.user,
-                                  pwd=args.password,
-                                  port=int(args.port))
-
-        atexit.register(connect.Disconnect, si)
-
-        content = si.RetrieveContent()
-        children = content.rootFolder.childEntity
-        for child in children:
-            if hasattr(child, 'vmFolder'):
-                datacenter = child
-            else:
-                # some other non-datacenter type object
-                continue
-
-            vm_folder = datacenter.vmFolder
-            vm_list = vm_folder.childEntity
-            for vm in vm_list:
-                print_vm_info(vm, 10)
-
-    except vmodl.MethodFault, e:
-        print "Caught vmodl fault : " + e.msg
-        return -1
-
-    return 0
-
-# Start program
-if __name__ == "__main__":
-    main()
