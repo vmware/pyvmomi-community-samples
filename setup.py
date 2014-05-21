@@ -25,7 +25,7 @@ setup(
    author='VMware, Inc.',
    author_email='hartsocks@vmware.com',
    url='https://github.com/vmware/pyvmomi',
-   packages=['samples', 'pyvmomi-addons'],
+   packages=['samples', 'pyvmomi_addons'],
    license='Apache',
    long_description=read('README.md'),
    classifiers=[
