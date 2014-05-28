@@ -1,24 +1,25 @@
-# Written by Michael Rice
-# Github: https://github.com/michaelrice
-# Website: https://michaelrice.github.io/
-# Blog: http://www.errr-online.com/
-# This code has been released under the terms of the MIT licenses
-# http://opensource.org/licenses/MIT 
+"""Written by Michael Rice
+
+Github: https://github.com/michaelrice
+Website: https://michaelrice.github.io/
+Blog: http://www.errr-online.com/
+This code has been released under the terms of the MIT licenses
+http://opensource.org/licenses/MIT
+
+Helper module for task operations.
+"""
 __author__ = 'errr'
 
-from pyVmomi import vim, vmodl
+from pyVmomi import vim
+from pyVmomi import vmodl
 
 
-def wait_for_tasks(tasks, si):
-    """
-   Given the service instance si and tasks, it returns after all the
+def wait_for_tasks(service_instance, tasks):
+    """Given the service instance si and tasks, it returns after all the
    tasks are complete
    """
-
-    property_collector = si.content.propertyCollector
-
+    property_collector = service_instance.content.propertyCollector
     task_list = [str(task) for task in tasks]
-
     # Create filter
     obj_specs = [vmodl.query.PropertyCollector.ObjectSpec(obj=task)
                  for task in tasks]
@@ -29,17 +30,15 @@ def wait_for_tasks(tasks, si):
     filter_spec.objectSet = obj_specs
     filter_spec.propSet = [property_spec]
     pcfilter = property_collector.CreateFilter(filter_spec, True)
-
     try:
         version, state = None, None
-
         # Loop looking for updates till the state moves to a completed state.
         while len(task_list):
             update = property_collector.WaitForUpdates(version)
-            for filterSet in update.filterSet:
-                for objSet in filterSet.objectSet:
-                    task = objSet.obj
-                    for change in objSet.changeSet:
+            for filter_set in update.filterSet:
+                for obj_set in filter_set.objectSet:
+                    task = obj_set.obj
+                    for change in obj_set.changeSet:
                         if change.name == 'info':
                             state = change.val.state
                         elif change.name == 'info.state':
