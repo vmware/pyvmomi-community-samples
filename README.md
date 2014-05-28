@@ -6,6 +6,9 @@ pyvmomi-community-samples
 The pyVmomi library itself is hosted here:
     https://github.com/vmware/pyvmomi/
 
+The community samples website is here:
+    http://vmware.github.io/pyvmomi-community-samples/
+
 The samples contained here in are provided as-is from contributors around the
 pyVmomi community. They are intended as learning tools and may vary in quality.
 Any developer may contribute, enhance, or alter the samples. Ownership of any
@@ -26,8 +29,9 @@ submitted sample reverts to the project itself
 Please conform to pep8 standards. Check your code by running the pep8 tool.
     https://pypi.python.org/pypi/pep8
 
-# Contribution Process
+# Contribution Proces
 
 * Follow the [GitHub process](https://help.github.com/articles/fork-a-repo)
   * please use one branch per sample or change-set
   * please use one commit and pull request per sample
+
