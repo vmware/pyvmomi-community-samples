@@ -29,7 +29,7 @@ submitted sample reverts to the project itself
 Please conform to pep8 standards. Check your code by running the pep8 tool.
     https://pypi.python.org/pypi/pep8
 
-# Contribution Proces
+# Contribution Process
 
 * Follow the [GitHub process](https://help.github.com/articles/fork-a-repo)
   * please use one branch per sample or change-set
