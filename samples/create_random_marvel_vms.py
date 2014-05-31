@@ -143,7 +143,7 @@ def WaitForTasks(tasks, si):
 
         # Loop looking for updates till the state moves to a completed state.
         while len(taskList):
-            update = pc.WaitForUpdates(version)
+            update = pc.WaitForUpdatesEx(version)
             for filterSet in update.filterSet:
                 for objSet in filterSet.objectSet:
                     task = objSet.obj
