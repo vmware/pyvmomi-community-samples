@@ -89,9 +89,16 @@
 <h3>
 <a name="synchronizing-your-fork-with-the-main-project" class="anchor" href="#synchronizing-your-fork-with-the-main-project"><span class="octicon octicon-link"></span></a>Synchronizing your fork with the main project</h3>
 
-<p>Replace the words 'your_user_name' below with your own user name and you should end up with the ability to issue yourself a pull request containing the current state of the main project's code!</p>
+<p>See <a href="http://robots.thoughtbot.com/keeping-a-github-fork-updated">this guide</a> for the best practice on how to do this.</p>
 
-<p><a href="https://github.com/your_user_name/pyvmomi-community-samples/compare/your_user_name:master...vmware:master">https://github.com/your_user_name/pyvmomi-community-samples/compare/your_user_name:master...vmware:master</a></p>
+<p><pre>
+  $ git checkout master
+  $ git remote add vmware git@github.com:vmware/pyvmomi-community-samples.git
+  $ git fetch vmware master
+  $ git rebase vmware/master
+  $ git push origin master
+</pre></p>
+
       </section>
     </div>
 
