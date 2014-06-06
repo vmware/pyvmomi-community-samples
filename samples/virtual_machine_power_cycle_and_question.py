@@ -142,9 +142,8 @@ if not isinstance(vm, vim.VirtualMachine):
 print "Found VirtualMachine: %s Name: %s" % (vm, vm.name)
 
 if vm.runtime.powerState == vim.VirtualMachinePowerState.poweredOn:
-    # using a dynamic class extension for power_off
-    # this is a blocking method call and the script will pause
-    # while the machine powers off.
+    # using time.sleep we just wait until the power off action
+    # is complete. Nothing fancy here.
     print "powering off..."
     task = vm.PowerOff()
     while task.info.state not in [vim.TaskInfo.State.success,
