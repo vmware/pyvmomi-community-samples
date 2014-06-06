@@ -142,9 +142,6 @@ def main():
     except vmodl.MethodFault, e:
         print "Caught vmodl fault : " + e.msg
         return -1
-    except Exception, e:
-        print "Caught exception : " + str(e)
-        return -1
 
     return 0
 
