@@ -90,7 +90,7 @@ def main():
 
         perfManager = content.perfManager
         metricId = vim.PerformanceManager.MetricId(counterId=6, instance="*")
-        startTime = datetime.datetime.now()-datetime.timedelta(hours=1)
+        startTime = datetime.datetime.now() - datetime.timedelta(hours=1)
         endTime = datetime.datetime.now()
 
         query = vim.PerformanceManager.QuerySpec(maxSample=1,

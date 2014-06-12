@@ -3,7 +3,7 @@
 # Website: https://michaelrice.github.io/
 # Blog: http://www.errr-online.com/
 # This code has been released under the terms of the MIT licenses
-# http://opensource.org/licenses/MIT 
+# http://opensource.org/licenses/MIT
 __author__ = 'errr'
 
 import atexit

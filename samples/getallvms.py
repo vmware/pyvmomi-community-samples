@@ -40,7 +40,7 @@ def print_vm_info(vm, depth=1):
             return
         vmList = vm.childEntity
         for c in vmList:
-            print_vm_info(c, depth+1)
+            print_vm_info(c, depth + 1)
         return
 
     summary = vm.summary
