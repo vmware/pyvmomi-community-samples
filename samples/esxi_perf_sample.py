@@ -84,10 +84,10 @@ def main():
         # quick/dirty way to find an ESXi host
         host = search_index.FindByDnsName(dnsName=args.vihost, vmSearch=False)
 
-        perfmanager = content.perfManager
-        metricid = vim.PerformanceManager.MetricId(counterId=6, instance="*")
-        starttime = datetime.datetime.now()-datetime.timedelta(hours=1)
-        endtime = datetime.datetime.now()
+        perfManager = content.perfManager
+        metricId = vim.PerformanceManager.MetricId(counterId=6, instance="*")
+        startTime = datetime.datetime.now() - datetime.timedelta(hours=1)
+        endTime = datetime.datetime.now()
 
         query = vim.PerformanceManager.QuerySpec(maxSample=1,
                                                  entity=host,
