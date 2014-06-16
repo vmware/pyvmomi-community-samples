@@ -4,23 +4,22 @@
 
 """
 vSphere SDK for Python program for creating tiny VMs (1vCPU/128MB) with random
-names using the Marvel Commics API
+names using the Marvel Comics API
 """
 
-import argparse
 import atexit
-import getpass
 import hashlib
 import json
+
 import random
-import requests
 import time
 
+import requests
 from pyVim import connect
 from pyVmomi import vim
-from pyVmomi import vmodl
 
 from tools import cli
+from tools import tasks
 
 
 def get_args():
@@ -66,9 +65,16 @@ def get_args():
     return cli.prompt_for_password(args)
 
 
-def get_marvel_characters(number_of_characters,
-                          marvel_public_key,
+def get_marvel_characters(number_of_characters, marvel_public_key,
                           marvel_private_key):
+    """Makes an API call to the Marvel Comics developer API
+        to get a list of character names.
+
+    :param number_of_characters: int Number of characters to fetch.
+    :param marvel_public_key: String Public API key from Marvel
+    :param marvel_private_key: String Private API key from Marvel
+    :rtype list: Containing names of characters
+    """
     timestamp = str(int(time.time()))
     # hash is required as part of request which is
     # md5(timestamp + private + public key)
@@ -76,9 +82,9 @@ def get_marvel_characters(number_of_characters,
                              marvel_public_key).hexdigest()
 
     characters = []
-    for x in xrange(number_of_characters):
-        # randomly select one of the 1402 Marvel character
-        offset = random.randrange(1, 1402)
+    for _num in xrange(number_of_characters):
+        # randomly select one of the 1478 Marvel characters
+        offset = random.randrange(1, 1478)
         limit = '1'
 
         # GET /v1/public/characters
@@ -93,81 +99,39 @@ def get_marvel_characters(number_of_characters,
             raise RuntimeError('Your Marvel API keys do not work!')
 
         # retrieve character name & replace spaces with underscore so we don't
-        # have stupid spaces in our VM names
+        # have spaces in our VM names
         character = data['data']['results'][0]['name'].strip().replace(' ',
                                                                        '_')
         characters.append(character)
     return characters
 
 
-def CreateDummyVM(name, si, vmFolder, rp, datastore):
-    vmName = 'MARVEL-' + name
-    datastorePath = '[' + datastore + '] ' + vmName
+def create_dummy_vm(name, service_instance, vm_folder, resource_pool,
+                    datastore):
+    """Creates a dummy VirtualMachine with 1 vCpu, 128MB of RAM.
+
+    :param name: String Name for the VirtualMachine
+    :param service_instance: ServiceInstance connection
+    :param vm_folder: Folder to place the VirtualMachine in
+    :param resource_pool: ResourcePool to place the VirtualMachine in
+    :param datastore: DataStrore to place the VirtualMachine on
+    """
+    vm_name = 'MARVEL-' + name
+    datastore_path = '[' + datastore + '] ' + vm_name
 
     # bare minimum VM shell, no disks. Feel free to edit
-    file = vim.vm.FileInfo(logDirectory=None, snapshotDirectory=None,
-                           suspendDirectory=None, vmPathName=datastorePath)
+    vmx_file = vim.vm.FileInfo(logDirectory=None,
+                               snapshotDirectory=None,
+                               suspendDirectory=None,
+                               vmPathName=datastore_path)
 
-    config = vim.vm.ConfigSpec(name=vmName, memoryMB=128, numCPUs=1,
-                               files=file, guestId='dosGuest',
+    config = vim.vm.ConfigSpec(name=vm_name, memoryMB=128, numCPUs=1,
+                               files=vmx_file, guestId='dosGuest',
                                version='vmx-07')
 
-    print "Creating VM " + vmName + " ..."
-    task = vmFolder.CreateVM_Task(config=config, pool=rp)
-    WaitForTasks([task], si)
-
-
-# borrowed from poweronvm.py sample
-def WaitForTasks(tasks, si):
-    """
-    Given the service instance si and tasks, it returns after all the
-    tasks are complete
-    """
-
-    pc = si.content.propertyCollector
-
-    taskList = [str(task) for task in tasks]
-
-    # Create filter
-    objSpecs = [vmodl.query.PropertyCollector.ObjectSpec(obj=task)
-                for task in tasks]
-    propSpec = vmodl.query.PropertyCollector.PropertySpec(type=vim.Task,
-                                                          pathSet=[], all=True)
-    filterSpec = vmodl.query.PropertyCollector.FilterSpec()
-    filterSpec.objectSet = objSpecs
-    filterSpec.propSet = [propSpec]
-    filter = pc.CreateFilter(filterSpec, True)
-
-    try:
-        version, state = None, None
-
-        # Loop looking for updates till the state moves to a completed state.
-        while len(taskList):
-            update = pc.WaitForUpdatesEx(version)
-            for filterSet in update.filterSet:
-                for objSet in filterSet.objectSet:
-                    task = objSet.obj
-                    for change in objSet.changeSet:
-                        if change.name == 'info':
-                            state = change.val.state
-                        elif change.name == 'info.state':
-                            state = change.val
-                        else:
-                            continue
-
-                        if not str(task) in taskList:
-                            continue
-
-                        if state == vim.TaskInfo.State.success:
-                            # Remove task from taskList
-                            taskList.remove(str(task))
-                        elif state == vim.TaskInfo.State.error:
-                            raise task.info.error
-            # Move to next version
-            version = update.version
-    finally:
-        if filter:
-            filter.Destroy()
+    print "Creating VM {}...".format(vm_name)
+    task = vm_folder.CreateVM_Task(config=config, pool=resource_pool)
+    tasks.wait_for_tasks(service_instance, [task])
 
 
 def main():
@@ -190,22 +154,22 @@ def main():
     else:
         marvel_private_key = raw_input('Marvel private key: ').strip()
 
-    si = connect.SmartConnect(host=args.host,
-                              user=args.user,
-                              pwd=args.password,
-                              port=int(args.port))
-    if not si:
+    service_instance = connect.SmartConnect(host=args.host,
+                                            user=args.user,
+                                            pwd=args.password,
+                                            port=int(args.port))
+    if not service_instance:
         print("Could not connect to the specified host using specified "
               "username and password")
         return -1
 
-    atexit.register(connect.Disconnect, si)
+    atexit.register(connect.Disconnect, service_instance)
 
-    content = si.RetrieveContent()
+    content = service_instance.RetrieveContent()
     datacenter = content.rootFolder.childEntity[0]
-    vmFolder = datacenter.vmFolder
+    vmfolder = datacenter.vmFolder
     hosts = datacenter.hostFolder.childEntity
-    rp = hosts[0].resourcePool
+    resource_pool = hosts[0].resourcePool
 
     print("Connecting to Marvel API and retrieving " + str(args.count) +
           " random character(s) ...")
@@ -215,7 +179,8 @@ def main():
                                        marvel_private_key)
 
     for name in characters:
-        CreateDummyVM(name, si, vmFolder, rp, args.datastore)
+        create_dummy_vm(name, service_instance, vmfolder, resource_pool,
+                        args.datastore)
 
     return 0
 
