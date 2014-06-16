@@ -17,7 +17,7 @@ from pyVmomi import vim
 from tools import cli
 
 
-def GetArgs():
+def get_args():
     """
    Supports the command-line arguments listed below.
    """
@@ -39,20 +39,33 @@ def GetArgs():
 
 # http://stackoverflow.com/questions/1094841/
 def sizeof_fmt(num):
-    for x in ['bytes', 'KB', 'MB', 'GB']:
+    """
+    Returns the human readable version of a file size
+
+    :param num:
+    :return:
+    """
+    for item in ['bytes', 'KB', 'MB', 'GB']:
         if num < 1024.0:
-            return "%3.1f%s" % (num, x)
+            return "%3.1f%s" % (num, item)
         num /= 1024.0
     return "%3.1f%s" % (num, 'TB')
 
 
-def print_fs(fs):
-    print "{}\t{}\t".format("Datastore:     ", fs.volume.name)
-    print "{}\t{}\t".format("UUID:          ", fs.volume.uuid)
-    print "{}\t{}\t".format("Capacity:      ", sizeof_fmt(fs.volume.capacity))
-    print "{}\t{}\t".format("VMFS Version:  ", fs.volume.version)
-    print "{}\t{}\t".format("Is Local VMFS: ", fs.volume.local)
-    print "{}\t{}\t".format("SSD:           ", fs.volume.ssd)
+def print_fs(host_fs):
+    """
+    Prints the host file system volume info
+
+    :param host_fs:
+    :return:
+    """
+    print "{}\t{}\t".format("Datastore:     ", host_fs.volume.name)
+    print "{}\t{}\t".format("UUID:          ", host_fs.volume.uuid)
+    print "{}\t{}\t".format("Capacity:      ", sizeof_fmt(
+        host_fs.volume.capacity))
+    print "{}\t{}\t".format("VMFS Version:  ", host_fs.volume.version)
+    print "{}\t{}\t".format("Is Local VMFS: ", host_fs.volume.local)
+    print "{}\t{}\t".format("SSD:           ", host_fs.volume.ssd)
 
 
 def main():
@@ -61,33 +74,29 @@ def main():
    associated devices
    """
 
-    args = GetArgs()
+    args = get_args()
 
     cli.prompt_for_password(args)
 
     try:
-        si = None
-        try:
-            si = connect.SmartConnect(host=args.host,
-                                      user=args.user,
-                                      pwd=args.password,
-                                      port=int(args.port))
-        except IOError, e:
-            pass
-        if not si:
+        service_instance = connect.SmartConnect(host=args.host,
+                                                user=args.user,
+                                                pwd=args.password,
+                                                port=int(args.port))
+        if not service_instance:
             print("Could not connect to the specified host using specified "
                   "username and password")
             return -1
 
-        atexit.register(connect.Disconnect, si)
+        atexit.register(connect.Disconnect, service_instance)
 
-        content = si.RetrieveContent()
+        content = service_instance.RetrieveContent()
         # Search for all ESXi hosts
-        objView = content.viewManager.CreateContainerView(content.rootFolder,
+        objview = content.viewManager.CreateContainerView(content.rootFolder,
                                                           [vim.HostSystem],
                                                           True)
-        esxi_hosts = objView.view
-        objView.Destroy()
+        esxi_hosts = objview.view
+        objview.Destroy()
 
         datastores = {}
         for esxi_host in esxi_hosts:
@@ -96,23 +105,26 @@ def main():
 
             # All Filesystems on ESXi host
             storage_system = esxi_host.configManager.storageSystem
-            fss = storage_system.fileSystemVolumeInfo.mountInfo
+            host_file_sys_vol_mount_info = \
+                storage_system.fileSystemVolumeInfo.mountInfo
 
             datastore_dict = {}
             # Map all filesystems
-            for fs in fss:
+            for host_mount_info in host_file_sys_vol_mount_info:
                 # Extract only VMFS volumes
-                if fs.volume.type == "VMFS":
+                if host_mount_info.volume.type == "VMFS":
 
-                    extents = fs.volume.extent
+                    extents = host_mount_info.volume.extent
                     if not args.json:
-                        print_fs(fs)
+                        print_fs(host_mount_info)
                     else:
-                        datastore_details = {'uuid': fs.volume.uuid,
-                                             'capacity': fs.volume.capacity,
-                                             'vmfs_version': fs.volume.version,
-                                             'local': fs.volume.local,
-                                             'ssd': fs.volume.ssd}
+                        datastore_details = {
+                            'uuid': host_mount_info.volume.uuid,
+                            'capacity': host_mount_info.volume.capacity,
+                            'vmfs_version': host_mount_info.volume.version,
+                            'local': host_mount_info.volume.local,
+                            'ssd': host_mount_info.volume.ssd
+                        }
 
                     extent_arr = []
                     extent_count = 0
@@ -129,7 +141,8 @@ def main():
                             # add the extent array to the datastore info
                             datastore_details['extents'] = extent_arr
                             # associate datastore details with datastore name
-                            datastore_dict[fs.volume.name] = datastore_details
+                            datastore_dict[host_mount_info.volume.name] = \
+                                datastore_details
                     if not args.json:
                         print
 
@@ -139,8 +152,8 @@ def main():
         if args.json:
             print json.dumps(datastores)
 
-    except vmodl.MethodFault, e:
-        print "Caught vmodl fault : " + e.msg
+    except vmodl.MethodFault as error:
+        print "Caught vmodl fault : " + error.msg
         return -1
 
     return 0
