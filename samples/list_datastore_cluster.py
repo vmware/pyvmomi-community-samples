@@ -13,7 +13,7 @@ from pyVmomi import vmodl
 from pyVim import connect
 
 
-def GetArgs():
+def get_args():
     """
    Supports the command-line arguments listed below.
    """
@@ -48,41 +48,37 @@ def main():
    Simple command-line program for listing Datastores in Datastore Cluster
    """
 
-    args = GetArgs()
+    args = get_args()
 
     try:
-        si = None
-        try:
-            si = connect.SmartConnect(host=args.host,
-                                      user=args.user,
-                                      pwd=args.password,
-                                      port=int(args.port))
-        except IOError, e:
-            pass
-        if not si:
+        service_instance = connect.SmartConnect(host=args.host,
+                                                user=args.user,
+                                                pwd=args.password,
+                                                port=int(args.port))
+        if not service_instance:
             print("Could not connect to the specified host using "
                   "specified username and password")
             return -1
 
-        atexit.register(connect.Disconnect, si)
+        atexit.register(connect.Disconnect, service_instance)
 
-        content = si.RetrieveContent()
+        content = service_instance.RetrieveContent()
         # Search for all Datastore Clusters aka StoragePod
         obj_view = content.viewManager.CreateContainerView(content.rootFolder,
                                                            [vim.StoragePod],
                                                            True)
-        datastoreClusters = obj_view.view
+        ds_cluster_list = obj_view.view
         obj_view.Destroy()
 
-        for datastoreCluster in datastoreClusters:
-            if datastoreCluster.name == args.dscluster:
-                datastores = datastoreCluster.childEntity
+        for ds_cluster in ds_cluster_list:
+            if ds_cluster.name == args.dscluster:
+                datastores = ds_cluster.childEntity
                 print "Datastores: "
                 for datastore in datastores:
                     print datastore.name
 
-    except vmodl.MethodFault, e:
-        print "Caught vmodl fault : " + e.msg
+    except vmodl.MethodFault as error:
+        print "Caught vmodl fault : " + error.msg
         return -1
 
     return 0
