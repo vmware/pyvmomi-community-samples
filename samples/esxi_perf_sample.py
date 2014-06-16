@@ -17,7 +17,7 @@ from pyVmomi import vmodl
 from pyVmomi import vim
 
 
-def GetArgs():
+def get_args():
     """
     This sample uses different arguments than the standard sample. We also
     need the vihost to work with.
@@ -65,42 +65,37 @@ def main():
    Simple command-line program demonstrating vSphere perfManager API
    """
 
-    args = GetArgs()
+    args = get_args()
     try:
-        si = None
-        try:
-            si = connect.SmartConnect(host=args.host,
-                                      user=args.user,
-                                      pwd=args.password,
-                                      port=int(args.port))
-        except IOError, e:
-            pass
-        if not si:
+        service_instance = connect.SmartConnect(host=args.host,
+                                                user=args.user,
+                                                pwd=args.password,
+                                                port=int(args.port))
+        if not service_instance:
             print("Could not connect to the specified host using specified "
                   "username and password")
             return -1
 
-        atexit.register(connect.Disconnect, si)
+        atexit.register(connect.Disconnect, service_instance)
 
-        content = si.RetrieveContent()
+        content = service_instance.RetrieveContent()
 
-        searchIndex = content.searchIndex
+        search_index = content.searchIndex
         # quick/dirty way to find an ESXi host
-        host = searchIndex.FindByDnsName(dnsName=args.vihost, vmSearch=False)
+        host = search_index.FindByDnsName(dnsName=args.vihost, vmSearch=False)
 
-        perfManager = content.perfManager
-        metricId = vim.PerformanceManager.MetricId(counterId=6, instance="*")
-        startTime = datetime.datetime.now()-datetime.timedelta(hours=1)
-        endTime = datetime.datetime.now()
+        perfmanager = content.perfManager
+        metricid = vim.PerformanceManager.MetricId(counterId=6, instance="*")
+        starttime = datetime.datetime.now()-datetime.timedelta(hours=1)
+        endtime = datetime.datetime.now()
 
         query = vim.PerformanceManager.QuerySpec(maxSample=1,
                                                  entity=host,
-                                                 metricId=[metricId],
-                                                 startTime=startTime,
-                                                 endTime=endTime)
+                                                 metricId=[metricid],
+                                                 startTime=starttime,
+                                                 endTime=endtime)
 
-        perfResults = perfManager.QueryPerf(querySpec=[query])
-        print perfResults
+        print perfmanager.QueryPerf(querySpec=[query])
 
     except vmodl.MethodFault, e:
         print "Caught vmodl fault : " + e.msg
