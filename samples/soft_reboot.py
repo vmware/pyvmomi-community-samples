@@ -44,7 +44,7 @@ if not vm:
 
 print "Found: {0}".format(vm.name)
 print "The current powerState is: {0}".format(vm.runtime.powerState)
-# This does not grantee a reboot.
+# This does not guarantee a reboot.
 # It issues a command to the guest
 # operating system asking it to perform a reboot.
 # Returns immediately and does not wait for the guest
