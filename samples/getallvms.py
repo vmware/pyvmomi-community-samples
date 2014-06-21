@@ -45,6 +45,7 @@ def print_vm_info(vm, depth=1):
 
     summary = vm.summary
     print "Name       : ", summary.config.name
+    print "UUID       : ", summary.config.instanceUuid
     print "Path       : ", summary.config.vmPathName
     print "Guest      : ", summary.config.guestFullName
     annotation = summary.config.annotation
