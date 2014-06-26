@@ -2,8 +2,9 @@
 Github: https://github.com/michaelrice
 Website: https://michaelrice.github.io/
 Blog: http://www.errr-online.com/
-This code has been released under the terms of the MIT licenses
-http://opensource.org/licenses/MIT
+
+This code is released under the terms of the Apache 2
+http://www.apache.org/licenses/LICENSE-2.0.html
 
 Example script to reboot a VirtualMachine
 
