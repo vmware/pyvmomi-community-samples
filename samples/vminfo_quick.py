@@ -3,8 +3,8 @@
  Github: https://github.com/michaelrice
  Website: https://michaelrice.github.io/
  Blog: http://www.errr-online.com/
- This code has been released under the terms of the MIT licenses
- http://opensource.org/licenses/MIT
+ This code has been released under the terms of the Apache 2 licenses
+ http://www.apache.org/licenses/LICENSE-2.0.html
 
  Script to quickly get all the VMs with a set of common properties.
 
