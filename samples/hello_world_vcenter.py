@@ -22,13 +22,14 @@ a friendly encouragement to joining the community!
 import atexit
 import argparse
 import getpass
-import traceback
 
 from pyVim import connect
 from pyVmomi import vmodl
 
 
 def get_args():
+    """Get command line args from the user.
+    """
     parser = argparse.ArgumentParser(
         description='Standard Arguments for talking to vCenter')
 
@@ -81,19 +82,19 @@ def main():
 
         print "\nHello World!\n"
         print "If you got here, you authenticted into vCenter."
-        print "The server is %s!" % args.host
+        print "The server is {}!".format(args.host)
         # NOTE (hartsock): only a successfully authenticated session has a
         # session key aka session id.
         session_id = service_instance.content.sessionManager.currentSession.key
-        print "current session id: %s" % session_id
+        print "current session id: {}".format(session_id)
         print "Well done!"
         print "\n"
         print "Download, learn and contribute back:"
         print "https://github.com/vmware/pyvmomi-community-samples"
         print "\n\n"
 
-    except vmodl.MethodFault, e:
-        print "Caught vmodl fault : " + e.msg
+    except vmodl.MethodFault as error:
+        print "Caught vmodl fault : " + error.msg
         return -1
 
     return 0

@@ -26,7 +26,7 @@ from pyVmomi import vmodl
 import tools.cli as cli
 
 
-def print_vm_info(vm, depth=1):
+def print_vm_info(virtual_machine, depth=1):
     """
     Print information for a particular virtual machine or recurse into a
     folder with depth protection
@@ -35,15 +35,15 @@ def print_vm_info(vm, depth=1):
 
     # if this is a group it will have children. if it does, recurse into them
     # and then return
-    if hasattr(vm, 'childEntity'):
+    if hasattr(virtual_machine, 'childEntity'):
         if depth > maxdepth:
             return
-        vmList = vm.childEntity
-        for c in vmList:
-            print_vm_info(c, depth+1)
+        vmlist = virtual_machine.childEntity
+        for item in vmlist:
+            print_vm_info(item, depth+1)
         return
 
-    summary = vm.summary
+    summary = virtual_machine.summary
     print "Name       : ", summary.config.name
     print "Path       : ", summary.config.vmPathName
     print "Guest      : ", summary.config.guestFullName
@@ -52,9 +52,9 @@ def print_vm_info(vm, depth=1):
         print "Annotation : ", annotation
     print "State      : ", summary.runtime.powerState
     if summary.guest is not None:
-        ip = summary.guest.ipAddress
-        if ip:
-            print "IP         : ", ip
+        ip_address = summary.guest.ipAddress
+        if ip_address:
+            print "IP         : ", ip_address
     if summary.runtime.question is not None:
         print "Question  : ", summary.runtime.question.text
     print ""
@@ -68,14 +68,14 @@ def main():
     args = cli.get_args()
 
     try:
-        si = connect.SmartConnect(host=args.host,
-                                  user=args.user,
-                                  pwd=args.password,
-                                  port=int(args.port))
+        service_instance = connect.SmartConnect(host=args.host,
+                                                user=args.user,
+                                                pwd=args.password,
+                                                port=int(args.port))
 
-        atexit.register(connect.Disconnect, si)
+        atexit.register(connect.Disconnect, service_instance)
 
-        content = si.RetrieveContent()
+        content = service_instance.RetrieveContent()
         children = content.rootFolder.childEntity
         for child in children:
             if hasattr(child, 'vmFolder'):
@@ -86,11 +86,11 @@ def main():
 
             vm_folder = datacenter.vmFolder
             vm_list = vm_folder.childEntity
-            for vm in vm_list:
-                print_vm_info(vm, 10)
+            for virtual_machine in vm_list:
+                print_vm_info(virtual_machine, 10)
 
-    except vmodl.MethodFault, e:
-        print "Caught vmodl fault : " + e.msg
+    except vmodl.MethodFault as error:
+        print "Caught vmodl fault : " + error.msg
         return -1
 
     return 0
