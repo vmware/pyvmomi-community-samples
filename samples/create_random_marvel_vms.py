@@ -190,41 +190,32 @@ def main():
     else:
         marvel_private_key = raw_input('Marvel private key: ').strip()
 
-    try:
-        si = None
-        try:
-            si = connect.SmartConnect(host=args.host,
-                                      user=args.user,
-                                      pwd=args.password,
-                                      port=int(args.port))
-        except IOError, e:
-            pass
-        if not si:
-            print("Could not connect to the specified host using specified "
-                  "username and password")
-            return -1
-
-        atexit.register(connect.Disconnect, si)
-
-        content = si.RetrieveContent()
-        datacenter = content.rootFolder.childEntity[0]
-        vmFolder = datacenter.vmFolder
-        hosts = datacenter.hostFolder.childEntity
-        rp = hosts[0].resourcePool
-
-        print("Connecting to Marvel API and retrieving " + str(args.count) +
-              " random character(s) ...")
-
-        characters = get_marvel_characters(args.count,
-                                           marvel_public_key,
-                                           marvel_private_key)
-
-        for name in characters:
-            CreateDummyVM(name, si, vmFolder, rp, args.datastore)
-
-    except vmodl.MethodFault, e:
-        print "Caught vmodl fault : " + e.msg
+    si = connect.SmartConnect(host=args.host,
+                              user=args.user,
+                              pwd=args.password,
+                              port=int(args.port))
+    if not si:
+        print("Could not connect to the specified host using specified "
+              "username and password")
         return -1
+
+    atexit.register(connect.Disconnect, si)
+
+    content = si.RetrieveContent()
+    datacenter = content.rootFolder.childEntity[0]
+    vmFolder = datacenter.vmFolder
+    hosts = datacenter.hostFolder.childEntity
+    rp = hosts[0].resourcePool
+
+    print("Connecting to Marvel API and retrieving " + str(args.count) +
+          " random character(s) ...")
+
+    characters = get_marvel_characters(args.count,
+                                       marvel_public_key,
+                                       marvel_private_key)
+
+    for name in characters:
+        CreateDummyVM(name, si, vmFolder, rp, args.datastore)
 
     return 0
 
