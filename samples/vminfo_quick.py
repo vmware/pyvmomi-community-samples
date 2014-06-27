@@ -11,13 +11,14 @@
 """
 __author__ = 'errr'
 
+from __future__ import print_function
+import atexit
 from time import clock
-from tools import cli
-from tools import pchelper
+
 from pyVim import connect
 from pyVmomi import vim
-
-import atexit
+from tools import cli
+from tools import pchelper
 
 START = clock()
 
@@ -30,10 +31,10 @@ def endit():
     """
     end = clock()
     total = end - START
-    print "Completion time: {} seconds.".format(total)
+    print("Completion time: {0} seconds.".format(total))
 
 # List of properties.
-# See: http://vijava.sourceforge.net/vSphereAPIDoc/ver5/ReferenceGuide/vim.VirtualMachine.html
+# See: http://goo.gl/fjTEpW
 # for all properties.
 vm_properties = ["name", "config.uuid", "config.hardware.numCPU",
                  "config.hardware.memoryMB", "guest.guestState",
@@ -49,7 +50,7 @@ try:
                                             port=int(args.port))
     atexit.register(connect.Disconnect, service_instance)
     atexit.register(endit)
-except IOError, e:
+except IOError as e:
     pass
 
 if not service_instance:
@@ -63,17 +64,17 @@ vm_data = pchelper.collect_properties(service_instance, view_ref=view,
                                       path_set=vm_properties,
                                       include_mors=True)
 for vm in vm_data:
-    print "-" * 70
-    print "Name:                    {}".format(vm["name"])
-    print "BIOS UUID:               {}".format(vm["config.uuid"])
-    print "CPUs:                    {}".format(vm["config.hardware.numCPU"])
-    print "MemoryMB:                {}".format(vm["config.hardware.memoryMB"])
-    print "Guest PowerState:        {}".format(vm["guest.guestState"])
-    print "Guest Full Name:         {}".format(vm["config.guestFullName"])
-    print "Guest Container Type:    {}".format(vm["config.guestId"])
-    print "Container Version:       {}".format(vm["config.version"])
+    print("-" * 70)
+    print("Name:                    {0}".format(vm["name"]))
+    print("BIOS UUID:               {0}".format(vm["config.uuid"]))
+    print("CPUs:                    {0}".format(vm["config.hardware.numCPU"]))
+    print("MemoryMB:                {0}".format(
+        vm["config.hardware.memoryMB"]))
+    print("Guest PowerState:        {0}".format(vm["guest.guestState"]))
+    print("Guest Full Name:         {0}".format(vm["config.guestFullName"]))
+    print("Guest Container Type:    {0}".format(vm["config.guestId"]))
+    print("Container Version:       {0}".format(vm["config.version"]))
 
 
-print ""
-print "Found {} VirtualMachines.".format(len(vm_data))
-
+print("")
+print("Found {0} VirtualMachines.".format(len(vm_data)))
