@@ -28,28 +28,29 @@ import time
 from pyVim import connect
 from pyVmomi import vim
 
+
 def get_args():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('-s', '--host',
-                    required=True,
-                    action='store',
-                    help='Remote host to connect to')
+                        required=True,
+                        action='store',
+                        help='Remote host to connect to')
 
     parser.add_argument('-u', '--user',
-                    required=True,
-                    action='store',
-                    help='User name to use when connecting to host')
+                        required=True,
+                        action='store',
+                        help='User name to use when connecting to host')
 
     parser.add_argument('-p', '--password',
-                    required=False,
-                    action='store',
-                    help='Password to use when connecting to host')
+                        required=False,
+                        action='store',
+                        help='Password to use when connecting to host')
 
     parser.add_argument('-o', '--port',
-                    required=False,
-                    action='store',
-                    help="port to use, default 443", default=443)
+                        required=False,
+                        action='store',
+                        help="port to use, default 443", default=443)
 
     parser.add_argument('-n', '--name',
                         required=True,
@@ -65,7 +66,7 @@ def get_args():
     if args.password is None:
         args.password = getpass.getpass(
             prompt='Enter password for host %s and user %s: ' %
-               (args.host, args.user))
+                   (args.host, args.user))
 
     args = parser.parse_args()
 
@@ -84,11 +85,11 @@ atexit.register(connect.Disconnect, si)
 root_folder = si.content.rootFolder
 entity_stack = root_folder.childEntity
 name = args.name
-object = None
+obj = None
 while entity_stack:
     entity = entity_stack.pop()
     if entity.name == name:
-        object = entity
+        obj = entity
         break
     elif isinstance(entity, vim.Datacenter):
         # add this vim.DataCenter's folders to our search
@@ -102,7 +103,7 @@ while entity_stack:
         # add all child entities from this folder to our search
         entity_stack.extend(entity.childEntity)
 
-if object is None:
+if obj is None:
     print "A object named %s could not be found" % args.name
     exit()
 
@@ -113,13 +114,13 @@ else:
     new_name = args.name + "0"
 
 print
-print "name        : %s" % object.name
+print "name        : %s" % obj.name
 print
 print "    renaming from %s to %s" % (args.name, new_name)
 print
 
 # rename creates a task...
-task = object.Rename(new_name)
+task = obj.Rename(new_name)
 
 # Did you know that task objects in pyVmomi get updates automatically?
 # Check this out... it's not super efficient but here's how you could

@@ -38,9 +38,9 @@ def print_vm_info(virtual_machine, depth=1):
     if hasattr(virtual_machine, 'childEntity'):
         if depth > maxdepth:
             return
-        vmlist = virtual_machine.childEntity
-        for item in vmlist:
-            print_vm_info(item, depth+1)
+        vmList = vm.childEntity
+        for c in vmList:
+            print_vm_info(c, depth + 1)
         return
 
     summary = virtual_machine.summary
