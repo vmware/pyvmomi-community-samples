@@ -15,7 +15,7 @@ def collect_properties(service_instance, view_ref, obj_type, path_set=None,
     Check the vSphere API documentation for example on retrieving
     object properties:
 
-        - http://pubs.vmware.com/vsphere-50/index.jsp#com.vmware.wssdk.pg.doc_50/PG_Ch5_PropertyCollector.7.2.html
+        - http://goo.gl/erbFDz
 
     Args:
         si          (ServiceInstance): ServiceInstance connection
@@ -80,7 +80,8 @@ def get_container_view(service_instance, obj_type, container=None):
     """
     Get a vSphere Container View reference to all objects of type 'obj_type'
 
-    It is up to the caller to take care of destroying the View when no longer needed.
+    It is up to the caller to take care of destroying the View when no longer
+    needed.
 
     Args:
         obj_type (list): A list of managed object types
@@ -98,4 +99,3 @@ def get_container_view(service_instance, obj_type, container=None):
         recursive=True
     )
     return view_ref
-
