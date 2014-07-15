@@ -27,6 +27,7 @@ setup(name='pyvmomi-community-samples',
       author_email='hartsocks@vmware.com',
       url='https://github.com/vmware/pyvmomi',
       packages=['samples'],
+      test_suite='samples.tests',
       license='Apache',
       long_description=read('README.md'),
       classifiers=[
