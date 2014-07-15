@@ -133,7 +133,7 @@ if __name__ == "__main__":
 
 
 # This may or may not be useful to the person who writes the download example
-#def download(remote_file_path, local_file_path):
+# def download(remote_file_path, local_file_path):
 #    resource = "/folder/%s" % remote_file_path.lstrip("/")
 #    url = self._get_url(resource)
 #
@@ -153,7 +153,7 @@ if __name__ == "__main__":
 # This may or may not be useful to the person who tries to use a service
 # request in the future
 
-        # Get the service request set up
+# Get the service request set up
 #        service_request_spec = vim.SessionManager.HttpServiceRequestSpec(
 #            method='httpPut', url=http_url)
 #        ticket = session_manager.AcquireGenericServiceTicket(
