@@ -91,11 +91,11 @@ def main():
 
         query = vim.PerformanceManager.QuerySpec(maxSample=1,
                                                  entity=host,
-                                                 metricId=[metricid],
-                                                 startTime=starttime,
-                                                 endTime=endtime)
+                                                 metricId=[metricId],
+                                                 startTime=startTime,
+                                                 endTime=endTime)
 
-        print perfmanager.QueryPerf(querySpec=[query])
+        print perfManager.QueryPerf(querySpec=[query])
 
     except vmodl.MethodFault, e:
         print "Caught vmodl fault : " + e.msg
