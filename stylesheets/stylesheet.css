@@ -268,6 +268,79 @@ Full-Width Styles
   padding: 20px 10px;
   margin: 0 auto;
 }
+.clearfix:after {
+  content: "\00A0";
+  display: block;
+  clear: both;
+  visibility: hidden;
+  line-height: 0;
+  height: 0;
+}
+
+.dropdown {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  border-top: 4px solid;
+  border-right: 4px solid transparent;
+  border-left: 4px solid transparent;
+  vertical-align: middle;
+}
+
+#nav {
+  display: block;
+  width: 100%;
+  background: #000;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+#nav li {
+  float: left;
+  position: relative;
+}
+
+#nav a {
+  display: block;
+  padding-top: 4px;
+  padding-right: 8px;
+  padding-bottom: 4px;
+  padding-left: 8px;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+#nav ul {
+  display: none;
+  position: absolute;
+  background: #000;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+#nav ul li {
+  float: none;
+}
+
+#nav ul a {
+  padding-top: 4px;
+  padding-right: 16px;
+  padding-bottom: 4px;
+  padding-left: 16px;
+  white-space: nowrap;
+  font-weight: 300;
+}
+
+#nav li:hover {
+  background: #09f;
+}
+
+#nav li:hover ul {
+  display: block;
+}
 
 #forkme_banner {
   display: block;
