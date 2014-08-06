@@ -136,7 +136,7 @@ strong {
 img {
   position: relative;
   margin: 0 auto;
-  max-width: 739px;
+  max-width: 100%;
   padding: 5px;
   margin: 10px 0 10px 0;
   border: 1px solid #ebebeb;
@@ -275,6 +275,11 @@ Full-Width Styles
   visibility: hidden;
   line-height: 0;
   height: 0;
+}
+
+.caption {
+  text-align: center;
+  font-weight: 700;
 }
 
 .dropdown {
