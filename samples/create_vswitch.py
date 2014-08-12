@@ -10,23 +10,22 @@ Example script to create a Vsphere Standard Switch
 """
 
 import atexit
-import argparse
 import getpass
 
 from tools import cli
-from tools import tasks
 from pyVim import connect
 from pyVmomi import vim, vmodl
+
 
 def get_args():
     """Get command line args from the user.
     """
     parser = cli.build_arg_parser()
-    
+
     parser.add_argument('-e', '--esx_host',
                         required=True,
-                        help='Name/IP of the Physical Host you want to add the '
-                             'vSwitch.')
+                        help='Name/IP of the Physical Host on which '
+                             'you want to add the vSwitch')
 
     parser.add_argument('-t', '--vswitch_name',
                         required=False,
@@ -53,14 +52,18 @@ def get_args():
 
 
 def create_vswitch(host_network_system, vss_name, num_ports, nic_name):
+    """
+    Creates a Vsphere Standard Switch on the specified host
+    """
     vss_spec = vim.host.VirtualSwitch.Specification()
     vss_spec.numPorts = num_ports
-    #vss_spec.bridge = vim.host.VirtualSwitch.SimpleBridge(nicDevice='pnic_key')
+
     vss_spec.bridge = vim.host.VirtualSwitch.BondBridge(nicDevice=[nic_name])
 
     host_network_system.AddVirtualSwitch(vswitchName=vss_name, spec=vss_spec)
 
     print "Successfully created vSwitch ",  vss_name
+
 
 def main():
     """
@@ -76,19 +79,21 @@ def main():
                                                 port=int(args.port))
 
         atexit.register(connect.Disconnect, service_instance)
-        content = service_instance.RetrieveContent()
+        #content = service_instance.RetrieveContent()
 
         if not service_instance:
             raise SystemExit("Unable to connect to host with supplied info.")
 
-        host = service_instance.content.searchIndex.FindByIp(None, args.esx_host, False)
+        host = service_instance.content.searchIndex. \
+        FindByIp(None, args.esx_host, False)
 
         if not host:
             raise SystemExit("Unable to locate Physical Host.")
 
         host_network_system = host.configManager.networkSystem
 
-        create_vswitch(host_network_system, args.vswitch_name, int(args.num_port), args.pnic_name)
+        create_vswitch(host_network_system, args.vswitch_name, \
+        int(args.num_port), args.pnic_name)
 
     except vmodl.MethodFault as error:
         print "Caught vmodl fault : " + error.msg
