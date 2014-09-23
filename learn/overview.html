@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta charset='utf-8' />
+<meta http-equiv="X-UA-Compatible" content="chrome=1" />
+<meta name="description" content="pyvmomi-community-samples : Overview" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="stylesheet" type="text/css" media="screen"
+	href="/pyvmomi-community-samples/stylesheets/stylesheet.css">
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script src="/pyvmomi-community-samples/javascripts/main.js"></script>
+
+<title>pyvmomi-community-samples : Overview</title>
+</head>
+
+<body>
+	<!-- PAGE -->
+	<div id="page_wrap">
+		<!-- MAIN CONTENT -->
+		<div id="main_content_wrap" class="outer">
+			<section id="main_content" class="inner">
+				<h3>Understanding the vCenter hierarchy</h3>
+				<div>
+					<img src="/pyvmomi-community-samples/images/vchierarchy.png"
+						alt="vCenter Hierarchy" title="vCenter Hierarchy">
+					<div class="caption">
+						vCenter Hierarchy (<a
+							href="/pyvmomi-community-samples/assets/vchierarchy.pdf">pdf</a>)
+					</div>
+				</div>
+				<p>VMware vCenter allows you to manage physical and virtual
+					infrastructure in a datacenter. The pyvmomi SDK provides Python bindings
+					that allow you to programmatically manage the inventory of that same
+					infrastructure.</p>
+				<p>The inventory is managed as a collection of virtual datacenters. Each
+					datacenter contains compute, data storage, and networking resources.
+					Virtual machines and virtual applications can be created in these
+					datacenters that consume these resources. Folders can be used to
+					hierarchically group objects of the same type. The nested structure allows
+					you to organize the objects in the datacenter into an easily manageable
+					structure. Possible reasons include aligning with various functions and/or
+					organizational structure.</p>
+				<p>The image above shows the hierarchy of objects in the vCenter
+					inventory.</p>
+				<p>For many pyvmomi applications, the flow of applications is similar:
+					connect to a vCenter server, get a service instance, and starting with the
+					root folder, navigate the hierarchy. You can then perform various
+					operations on these managed objects.</p>
+
+			</section>
+		</div>
+	</div>
+</body>
+</html>
