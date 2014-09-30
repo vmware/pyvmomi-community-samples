@@ -74,22 +74,22 @@ def add_dv_port_groups(si, pg_name, dv_switch, vlan_id):
     dv_pg_spec = vim.dvs.DistributedVirtualPortgroup.ConfigSpec()
     dv_pg_spec.name = pg_name
     dv_pg_spec.type = vim.dvs.DistributedVirtualPortgroup. \
-    PortgroupType.earlyBinding
+        PortgroupType.earlyBinding
     dv_pg_spec.autoExpand = True
     dv_pg_spec.defaultPortConfig = vim.dvs. \
-    VmwareDistributedVirtualSwitch.VmwarePortConfigPolicy()
+        VmwareDistributedVirtualSwitch.VmwarePortConfigPolicy()
     dv_pg_spec.defaultPortConfig.securityPolicy = \
-    vim.dvs.VmwareDistributedVirtualSwitch.SecurityPolicy()
+        vim.dvs.VmwareDistributedVirtualSwitch.SecurityPolicy()
 
     dv_pg_spec.defaultPortConfig.vlan = \
-    vim.dvs.VmwareDistributedVirtualSwitch.VlanIdSpec()
+        vim.dvs.VmwareDistributedVirtualSwitch.VlanIdSpec()
     dv_pg_spec.defaultPortConfig.vlan.vlanId = int(vlan_id)
     dv_pg_spec.defaultPortConfig.securityPolicy. \
-    allowPromiscuous = vim.BoolPolicy(value=True)
+        allowPromiscuous = vim.BoolPolicy(value=True)
     dv_pg_spec.defaultPortConfig.securityPolicy. \
-    forgedTransmits = vim.BoolPolicy(value=True)
+        forgedTransmits = vim.BoolPolicy(value=True)
     dv_pg_spec.defaultPortConfig.securityPolicy.macChanges = \
-    vim.BoolPolicy(value=False)
+        vim.BoolPolicy(value=False)
     dv_pg_spec.defaultPortConfig.vlan.inherited = False
 
     dv_pg_spec.defaultPortConfig.securityPolicy.inherited = False
@@ -105,10 +105,10 @@ def create_dvSwitch(si, content, network_folder, hosts, dvs_name):
     dvs_create_spec = vim.DistributedVirtualSwitch.CreateSpec()
     dvs_config_spec = vim.DistributedVirtualSwitch.ConfigSpec()
     dvs_config_spec.name = dvs_name
-    #Max DV Ports per Vcenter
+    # Max DV Ports per Vcenter
     dvs_config_spec.maxPorts = 30000
     dvs_config_spec.uplinkPortPolicy = \
-    vim.DistributedVirtualSwitch.NameArrayUplinkPortPolicy()
+        vim.DistributedVirtualSwitch.NameArrayUplinkPortPolicy()
     dvs_config_spec.uplinkPortPolicy.uplinkPortName = ['dvUplink']
     for host in hosts:
         dvs_host_config = vim.dvs.HostMember.ConfigSpec()
@@ -125,14 +125,14 @@ def create_dvSwitch(si, content, network_folder, hosts, dvs_name):
         api_versions.append(host.config.product.apiVersion)
     dvs_create_spec.configSpec = dvs_config_spec
     dvs_create_spec.productInfo = vim.dvs. \
-    ProductSpec(version=min(api_versions) + '.0')
+        ProductSpec(version=min(api_versions) + '.0')
     print "Creating DVS ...", dvs_name
     task = network_folder.CreateDVS_Task(dvs_create_spec)
     tasks.wait_for_tasks(si, [task])
-    #NOTE: This is not required if wait_for_tasks returns
-    #task.info.result
+    # NOTE: This is not required if wait_for_tasks returns
+    # task.info.result
     container = content.viewManager.CreateContainerView(
-    content.rootFolder, [vim.DistributedVirtualSwitch], True)
+        content.rootFolder, [vim.DistributedVirtualSwitch], True)
     for view in container.view:
         if view.name == dvs_name:
             return view
@@ -163,8 +163,8 @@ def main():
                 break
         network_folder = datacenter.networkFolder
         obj_view = content.viewManager.CreateContainerView(content.rootFolder,
-                                                        [vim.HostSystem],
-                                                        True)
+                                                           [vim.HostSystem],
+                                                           True)
         hosts = obj_view.view
 
         dv_switch = create_dvSwitch(service_instance, content, network_folder,
