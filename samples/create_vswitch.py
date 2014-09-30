@@ -85,15 +85,15 @@ def main():
             raise SystemExit("Unable to connect to host with supplied info.")
 
         host = service_instance.content.searchIndex. \
-        FindByIp(None, args.esx_host, False)
+            FindByIp(None, args.esx_host, False)
 
         if not host:
             raise SystemExit("Unable to locate Physical Host.")
 
         host_network_system = host.configManager.networkSystem
 
-        create_vswitch(host_network_system, args.vswitch_name, \
-        int(args.num_port), args.pnic_name)
+        create_vswitch(host_network_system, args.vswitch_name,
+                       int(args.num_port), args.pnic_name)
 
     except vmodl.MethodFault as error:
         print "Caught vmodl fault : " + error.msg
