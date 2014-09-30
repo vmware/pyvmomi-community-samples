@@ -95,11 +95,11 @@ def add_dv_port_groups(si, pg_name, dv_switch, vlan_id):
     dv_pg_spec.defaultPortConfig.securityPolicy.inherited = False
 
     task = dv_switch.AddDVPortgroup_Task([dv_pg_spec])
-    tasks.wait_for_tasks(si, task)
+    tasks.wait_for_tasks(si, [task])
     print "Successfully added port group"
 
 
-def create_dvSwitch(si, network_folder, hosts, dvs_name):
+def create_dvSwitch(si, content, network_folder, hosts, dvs_name):
     dvs_host_configs = []
     api_versions = []
     dvs_create_spec = vim.DistributedVirtualSwitch.CreateSpec()
@@ -126,11 +126,16 @@ def create_dvSwitch(si, network_folder, hosts, dvs_name):
     dvs_create_spec.configSpec = dvs_config_spec
     dvs_create_spec.productInfo = vim.dvs. \
     ProductSpec(version=min(api_versions) + '.0')
-    print "Creating DVS %s ...", dvs_name
+    print "Creating DVS ...", dvs_name
     task = network_folder.CreateDVS_Task(dvs_create_spec)
-#     dv_switch = tasks.wait_for_tasks(si, task)
-#     if dv_switch:
-#         print "Successfully created DVS %s", dvs_name
+    tasks.wait_for_tasks(si, [task])
+    #NOTE: This is not required if wait_for_tasks returns
+    #task.info.result
+    container = content.viewManager.CreateContainerView(
+    content.rootFolder, [vim.DistributedVirtualSwitch], True)
+    for view in container.view:
+        if view.name == dvs_name:
+            return view
 
 
 def main():
@@ -162,8 +167,8 @@ def main():
                                                         True)
         hosts = obj_view.view
 
-        dv_switch = create_dvSwitch(service_instance, network_folder, hosts,
-                                    args.dvs_name)
+        dv_switch = create_dvSwitch(service_instance, content, network_folder,
+                                    hosts, args.dvs_name)
 
         add_dv_port_groups(service_instance, args.pg_name, dv_switch,
                            args.vlan_id)
