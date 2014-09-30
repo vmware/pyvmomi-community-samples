@@ -58,3 +58,6 @@ docs/_build/
 # OS X
 .DS_Store
 *.orig
+
+# ignore flight recorder YAML file
+*/hello_world_vcenter.yaml
