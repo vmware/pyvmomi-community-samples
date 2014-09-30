@@ -67,7 +67,7 @@ def create_vswitch(host_network_system, vss_name, num_ports, nic_name):
 
 def main():
     """
-    Simple command-line program for changing network virtual machines NIC.
+    Simple command-line program for creating VirtualStandardSwitch
     """
 
     args = get_args()
