@@ -32,7 +32,7 @@ import getpass
 import sys
 
 
-def GetArgs():
+def get_args():
     """
     Supports the command-line arguments listed below.
     """
@@ -82,7 +82,7 @@ or more if specified.
     return args
 
 
-def ParsePropspec(propspec):
+def parse_propspec(propspec):
     """
     Parses property specifications.  Returns sequence of 2-tuples, each
     containing a managed object type and a list of properties applicable
@@ -116,19 +116,19 @@ def ParsePropspec(propspec):
     return props
 
 
-def MakeWaitOptions(maxWaitSeconds=None, maxObjectUpdates=None):
+def make_wait_options(max_wait_seconds=None, max_object_updates=None):
     waitopts = vmodl.query.PropertyCollector.WaitOptions()
 
-    if maxObjectUpdates is not None:
-        waitopts.maxObjectUpdates = maxObjectUpdates
+    if max_object_updates is not None:
+        waitopts.maxObjectUpdates = max_object_updates
 
-    if maxWaitSeconds is not None:
-        waitopts.maxWaitSeconds = maxWaitSeconds
+    if max_wait_seconds is not None:
+        waitopts.maxWaitSeconds = max_wait_seconds
 
     return waitopts
 
 
-def MakePropertyCollector(pc, from_node, props):
+def make_property_collector(pc, from_node, props):
     """
     :type pc: pyVmomi.VmomiSupport.vmodl.query.PropertyCollector
     :type from_node: pyVmomi.VmomiSupport.ManagedObject
@@ -140,7 +140,7 @@ def MakePropertyCollector(pc, from_node, props):
     filterSpec = vmodl.query.PropertyCollector.FilterSpec()
 
     # Make the object spec
-    traversal = serviceutil.buildFullTraversal()
+    traversal = serviceutil.build_full_traversal()
 
     objSpec = vmodl.query.PropertyCollector.ObjectSpec(obj=from_node,
                                                        selectSet=traversal)
@@ -172,7 +172,7 @@ def MakePropertyCollector(pc, from_node, props):
         raise
 
 
-def MonitorPropertyChanges(si, propspec, iterations=None):
+def monitor_property_changes(si, propspec, iterations=None):
     """
     :type si: pyVmomi.VmomiSupport.vim.ServiceInstance
     :type propspec: collections.Sequence
@@ -180,8 +180,8 @@ def MonitorPropertyChanges(si, propspec, iterations=None):
     """
 
     pc = si.content.propertyCollector
-    MakePropertyCollector(pc, si.content.rootFolder, propspec)
-    waitopts = MakeWaitOptions(30)
+    make_property_collector(pc, si.content.rootFolder, propspec)
+    waitopts = make_wait_options(30)
 
     version = ''
 
@@ -246,7 +246,7 @@ def main():
     one or more types to stdout
     """
 
-    args = GetArgs()
+    args = get_args()
 
     if args.password:
         password = args.password
@@ -269,10 +269,10 @@ def main():
 
         atexit.register(Disconnect, si)
 
-        propspec = ParsePropspec(args.propspec)
+        propspec = parse_propspec(args.propspec)
 
         print "Monitoring property changes.  Press ^C to exit"
-        MonitorPropertyChanges(si, propspec, args.iterations)
+        monitor_property_changes(si, propspec, args.iterations)
 
     except vmodl.MethodFault, e:
         print >>sys.stderr, "Caught vmodl fault :\n%s" % str(e)
