@@ -129,10 +129,10 @@ def main():
 
     # connect this thing
     si = SmartConnect(
-            host=args.host, 
-            user=args.user, 
-            pwd=args.password, 
-            port=args.port)
+        host=args.host, 
+        user=args.user, 
+        pwd=args.password, 
+        port=args.port)
     # disconnect this thing
     atexit.register(Disconnect, si)
 
