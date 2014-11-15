@@ -55,7 +55,6 @@ This is for demonstration purposes only.
 I did not do a whole lot of sanity checking, etc.
 >>>>>>> 28bc0f9... pep8 fixes
 
-
 Known issues:
 This will not add more than 15 disks to a VM
 To do that the VM needs an additional scsi controller
@@ -194,6 +193,7 @@ def get_obj(content, vimtype, name):
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
                 content.rootFolder, vimtype, True)
 >>>>>>> 28bc0f9... pep8 fixes
 =======
@@ -209,6 +209,9 @@ def get_obj(content, vimtype, name):
 =======
             content.rootFolder, vimtype, True)
 >>>>>>> c63f665... travis
+=======
+        content.rootFolder, vimtype, True)
+>>>>>>> 519ac6c... fix over indent
     for c in container.view:
         if c.name == name:
             obj = c
