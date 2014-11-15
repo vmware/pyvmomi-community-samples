@@ -230,6 +230,7 @@ def main():
 =======
 =======
     si = SmartConnect(
+<<<<<<< HEAD
 >>>>>>> 28bc0f9... pep8 fixes
             host=args.host, 
             user=args.user, 
@@ -253,6 +254,12 @@ def main():
 >>>>>>> 4011aaf... add disk to vm example
 =======
 >>>>>>> 28bc0f9... pep8 fixes
+=======
+        host=args.host, 
+        user=args.user, 
+        pwd=args.password, 
+        port=args.port)
+>>>>>>> 6f1e1ce... more travis
     # disconnect this thing
     atexit.register(Disconnect, si)
 
