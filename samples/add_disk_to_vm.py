@@ -1,21 +1,19 @@
+#!/usr/bin/python
 """
 Written by Dann Bohn
 Github: https://github.com/whereismyjetpack
 Email: dannbohn@gmail.com
 
 Script to add a Hard disk to an existing VM
-This is for demonstration purposes only. I did not do a whole lot of sanity checking, etc.
+This is for demonstration purposes only. 
+I did not do a whole lot of sanity checking, etc.
 
-Example:
-Add Hard disk 2 to an existing VM with a hard drive size of 20GB:
-./add_disk_to_vm.py -s 'vcenter.server' -u 'administrator' --vm-name testing --disk 2 --disk-size 20
 
 Known issues:
-This will not add more than 15 disks to a VM, To do that the VM needs an additional scsi controller, and I have not yet worked through that
-This will not expand a but can easily be added. Let me know if you want a sample for that, too
+This will not add more than 15 disks to a VM 
+To do that the VM needs an additional scsi controller
+and I have not yet worked through that
 """
-
-#!/usr/bin/python
 from pyVmomi import vim
 from pyVmomi import vmodl
 from pyVim.connect import SmartConnect, Disconnect
@@ -80,7 +78,8 @@ def get_args():
 
 def get_obj(content, vimtype, name):
     obj = None
-    container = content.viewManager.CreateContainerView(content.rootFolder, vimtype, True)
+    container = content.viewManager.CreateContainerView(
+                content.rootFolder, vimtype, True)
     for c in container.view:
         if c.name == name:
             obj = c
@@ -110,7 +109,8 @@ def add_disk(vm, si, disk_num, disk_size):
         disk_spec.fileOperation = "create"
         disk_spec.operation = vim.vm.device.VirtualDeviceSpec.Operation.add
         disk_spec.device = vim.vm.device.VirtualDisk()
-        disk_spec.device.backing = vim.vm.device.VirtualDisk.FlatVer2BackingInfo()
+        disk_spec.device.backing = \
+            vim.vm.device.VirtualDisk.FlatVer2BackingInfo()
         # comment thinProvisioned out for 'thick'
         disk_spec.device.backing.thinProvisioned = True
         disk_spec.device.backing.diskMode = 'persistent'
@@ -128,7 +128,11 @@ def main():
     args = get_args()
 
     # connect this thing
-    si = SmartConnect(host=args.host, user=args.user, pwd=args.password, port=args.port)
+    si = SmartConnect(
+            host=args.host, 
+            user=args.user, 
+            pwd=args.password, 
+            port=args.port)
     # disconnect this thing
     atexit.register(Disconnect, si)
 
