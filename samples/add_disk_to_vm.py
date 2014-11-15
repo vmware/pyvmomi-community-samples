@@ -223,6 +223,7 @@ def main():
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
         host=args.host,
         user=args.user,
         pwd=args.password,
@@ -258,6 +259,11 @@ def main():
         host=args.host, 
         user=args.user, 
         pwd=args.password, 
+=======
+        host=args.host,
+        user=args.user,
+        pwd=args.password,
+>>>>>>> 9c64665... travis
         port=args.port)
 >>>>>>> 6f1e1ce... more travis
     # disconnect this thing
