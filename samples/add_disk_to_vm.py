@@ -1,21 +1,34 @@
+#!/usr/bin/env python
 """
 Written by Dann Bohn
 Github: https://github.com/whereismyjetpack
 Email: dannbohn@gmail.com
 
 Script to add a Hard disk to an existing VM
-This is for demonstration purposes only. I did not do a whole lot of sanity checking, etc.
-
-Example:
-Add Hard disk 2 to an existing VM with a hard drive size of 20GB:
-./add_disk_to_vm.py -s 'vcenter.server' -u 'administrator' --vm-name testing --disk 2 --disk-size 20
+<<<<<<< HEAD
+<<<<<<< HEAD
+This is for demonstration purposes only.
+=======
+This is for demonstration purposes only. 
+>>>>>>> 5811a25... pep8 fixes
+=======
+This is for demonstration purposes only.
+>>>>>>> c63f665... travis
+I did not do a whole lot of sanity checking, etc.
 
 Known issues:
-This will not add more than 15 disks to a VM, To do that the VM needs an additional scsi controller, and I have not yet worked through that
-This will not expand a but can easily be added. Let me know if you want a sample for that, too
+<<<<<<< HEAD
+<<<<<<< HEAD
+This will not add more than 15 disks to a VM
+=======
+This will not add more than 15 disks to a VM 
+>>>>>>> 5811a25... pep8 fixes
+=======
+This will not add more than 15 disks to a VM
+>>>>>>> c63f665... travis
+To do that the VM needs an additional scsi controller
+and I have not yet worked through that
 """
-
-#!/usr/bin/python
 from pyVmomi import vim
 from pyVmomi import vmodl
 from pyVim.connect import SmartConnect, Disconnect
@@ -60,12 +73,12 @@ def get_args():
                         help='vmuuid of vm')
 
     parser.add_argument('--disk',
-                        required=False,
+                        required=True,
                         action='store',
                         help='disk number (if adding a disk)')
 
     parser.add_argument('--disk-size',
-                        required=False,
+                        required=True,
                         action='store',
                         help='disk size, in GB, to add to the VM')
 
@@ -80,7 +93,20 @@ def get_args():
 
 def get_obj(content, vimtype, name):
     obj = None
-    container = content.viewManager.CreateContainerView(content.rootFolder, vimtype, True)
+    container = content.viewManager.CreateContainerView(
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+        content.rootFolder, vimtype, True)
+=======
+                content.rootFolder, vimtype, True)
+>>>>>>> 5811a25... pep8 fixes
+=======
+            content.rootFolder, vimtype, True)
+>>>>>>> c63f665... travis
+=======
+        content.rootFolder, vimtype, True)
+>>>>>>> 519ac6c... fix over indent
     for c in container.view:
         if c.name == name:
             obj = c
@@ -110,7 +136,8 @@ def add_disk(vm, si, disk_num, disk_size):
         disk_spec.fileOperation = "create"
         disk_spec.operation = vim.vm.device.VirtualDeviceSpec.Operation.add
         disk_spec.device = vim.vm.device.VirtualDisk()
-        disk_spec.device.backing = vim.vm.device.VirtualDisk.FlatVer2BackingInfo()
+        disk_spec.device.backing = \
+            vim.vm.device.VirtualDisk.FlatVer2BackingInfo()
         # comment thinProvisioned out for 'thick'
         disk_spec.device.backing.thinProvisioned = True
         disk_spec.device.backing.diskMode = 'persistent'
@@ -128,7 +155,31 @@ def main():
     args = get_args()
 
     # connect this thing
-    si = SmartConnect(host=args.host, user=args.user, pwd=args.password, port=args.port)
+    si = SmartConnect(
+<<<<<<< HEAD
+<<<<<<< HEAD
+<<<<<<< HEAD
+        host=args.host,
+        user=args.user,
+        pwd=args.password,
+        port=args.port)
+=======
+            host=args.host, 
+            user=args.user, 
+            pwd=args.password, 
+            port=args.port)
+>>>>>>> 5811a25... pep8 fixes
+=======
+        host=args.host, 
+        user=args.user, 
+        pwd=args.password, 
+=======
+        host=args.host,
+        user=args.user,
+        pwd=args.password,
+>>>>>>> bdde510... travis
+        port=args.port)
+>>>>>>> 0f546da... more travis
     # disconnect this thing
     atexit.register(Disconnect, si)
 
@@ -141,10 +192,7 @@ def main():
         vm = get_obj(content, [vim.VirtualMachine], args.vm_name)
 
     if vm:
-        if args.disk and args.disk_size:
-            add_disk(vm, si, args.disk, args.disk_size)
-        else:
-            print "missing args"
+        add_disk(vm, si, args.disk, args.disk_size)
     else:
         print "VM not found"
 
