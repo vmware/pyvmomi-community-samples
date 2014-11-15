@@ -5,12 +5,12 @@ Github: https://github.com/whereismyjetpack
 Email: dannbohn@gmail.com
 
 Script to add a Hard disk to an existing VM
-This is for demonstration purposes only. 
+This is for demonstration purposes only.
 I did not do a whole lot of sanity checking, etc.
 
 
 Known issues:
-This will not add more than 15 disks to a VM 
+This will not add more than 15 disks to a VM
 To do that the VM needs an additional scsi controller
 and I have not yet worked through that
 """
@@ -79,7 +79,7 @@ def get_args():
 def get_obj(content, vimtype, name):
     obj = None
     container = content.viewManager.CreateContainerView(
-                content.rootFolder, vimtype, True)
+            content.rootFolder, vimtype, True)
     for c in container.view:
         if c.name == name:
             obj = c
