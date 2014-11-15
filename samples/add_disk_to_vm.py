@@ -1,6 +1,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 #!/usr/bin/env python
 =======
 >>>>>>> 4011aaf... add disk to vm example
@@ -10,6 +11,9 @@
 =======
 #!/usr/bin/python
 >>>>>>> 5811a25... pep8 fixes
+=======
+#!/usr/bin/env python
+>>>>>>> 3a46977... virtual env
 """
 Written by Dann Bohn
 Github: https://github.com/whereismyjetpack
