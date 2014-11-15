@@ -1,13 +1,18 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 #!/usr/bin/env python
 =======
 >>>>>>> 4011aaf... add disk to vm example
+=======
+#!/usr/bin/python
+>>>>>>> 28bc0f9... pep8 fixes
 """
 Written by Dann Bohn
 Github: https://github.com/whereismyjetpack
 Email: dannbohn@gmail.com
 
 Script to add a Hard disk to an existing VM
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -35,18 +40,23 @@ and I have not yet worked through that
 """
 =======
 This is for demonstration purposes only. I did not do a whole lot of sanity checking, etc.
+=======
+This is for demonstration purposes only. 
+I did not do a whole lot of sanity checking, etc.
+>>>>>>> 28bc0f9... pep8 fixes
 
-Example:
-Add Hard disk 2 to an existing VM with a hard drive size of 20GB:
-./add_disk_to_vm.py -s 'vcenter.server' -u 'administrator' --vm-name testing --disk 2 --disk-size 20
 
 Known issues:
-This will not add more than 15 disks to a VM, To do that the VM needs an additional scsi controller, and I have not yet worked through that
-This will not expand a but can easily be added. Let me know if you want a sample for that, too
+This will not add more than 15 disks to a VM 
+To do that the VM needs an additional scsi controller
+and I have not yet worked through that
 """
+<<<<<<< HEAD
 
 #!/usr/bin/python
 >>>>>>> 4011aaf... add disk to vm example
+=======
+>>>>>>> 28bc0f9... pep8 fixes
 from pyVmomi import vim
 from pyVmomi import vmodl
 from pyVim.connect import SmartConnect, Disconnect
@@ -120,6 +130,7 @@ def get_args():
 def get_obj(content, vimtype, name):
     obj = None
 <<<<<<< HEAD
+<<<<<<< HEAD
     container = content.viewManager.CreateContainerView(
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -137,6 +148,10 @@ def get_obj(content, vimtype, name):
 =======
     container = content.viewManager.CreateContainerView(content.rootFolder, vimtype, True)
 >>>>>>> 4011aaf... add disk to vm example
+=======
+    container = content.viewManager.CreateContainerView(
+                content.rootFolder, vimtype, True)
+>>>>>>> 28bc0f9... pep8 fixes
     for c in container.view:
         if c.name == name:
             obj = c
@@ -167,11 +182,16 @@ def add_disk(vm, si, disk_num, disk_size):
         disk_spec.operation = vim.vm.device.VirtualDeviceSpec.Operation.add
         disk_spec.device = vim.vm.device.VirtualDisk()
 <<<<<<< HEAD
+<<<<<<< HEAD
         disk_spec.device.backing = \
             vim.vm.device.VirtualDisk.FlatVer2BackingInfo()
 =======
         disk_spec.device.backing = vim.vm.device.VirtualDisk.FlatVer2BackingInfo()
 >>>>>>> 4011aaf... add disk to vm example
+=======
+        disk_spec.device.backing = \
+            vim.vm.device.VirtualDisk.FlatVer2BackingInfo()
+>>>>>>> 28bc0f9... pep8 fixes
         # comment thinProvisioned out for 'thick'
         disk_spec.device.backing.thinProvisioned = True
         disk_spec.device.backing.diskMode = 'persistent'
@@ -190,6 +210,7 @@ def main():
 
     # connect this thing
 <<<<<<< HEAD
+<<<<<<< HEAD
     si = SmartConnect(
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -199,10 +220,14 @@ def main():
         pwd=args.password,
         port=args.port)
 =======
+=======
+    si = SmartConnect(
+>>>>>>> 28bc0f9... pep8 fixes
             host=args.host, 
             user=args.user, 
             pwd=args.password, 
             port=args.port)
+<<<<<<< HEAD
 >>>>>>> 5811a25... pep8 fixes
 =======
         host=args.host, 
@@ -218,6 +243,8 @@ def main():
 =======
     si = SmartConnect(host=args.host, user=args.user, pwd=args.password, port=args.port)
 >>>>>>> 4011aaf... add disk to vm example
+=======
+>>>>>>> 28bc0f9... pep8 fixes
     # disconnect this thing
     atexit.register(Disconnect, si)
 
