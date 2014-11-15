@@ -127,6 +127,7 @@ def get_args():
     parser.add_argument('--disk',
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
                         required=True,
 =======
                         required=False,
@@ -134,12 +135,16 @@ def get_args():
 =======
                         required=True,
 >>>>>>> 93e0026... set args to required, avoid unneeded if statement
+=======
+                        required=True,
+>>>>>>> 3644b41... set args to required, avoid unneeded if statement
                         action='store',
                         help='disk number (if adding a disk)')
 
     parser.add_argument('--disk-size',
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
                         required=True,
 =======
                         required=False,
@@ -147,6 +152,9 @@ def get_args():
 =======
                         required=True,
 >>>>>>> 93e0026... set args to required, avoid unneeded if statement
+=======
+                        required=True,
+>>>>>>> 3644b41... set args to required, avoid unneeded if statement
                         action='store',
                         help='disk size, in GB, to add to the VM')
 
@@ -346,6 +354,7 @@ def main():
     if vm:
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
         add_disk(vm, si, args.disk, args.disk_size)
 =======
         if args.disk and args.disk_size:
@@ -356,6 +365,9 @@ def main():
 =======
         add_disk(vm, si, args.disk, args.disk_size)
 >>>>>>> 93e0026... set args to required, avoid unneeded if statement
+=======
+        add_disk(vm, si, args.disk, args.disk_size)
+>>>>>>> 3644b41... set args to required, avoid unneeded if statement
     else:
         print "VM not found"
 
