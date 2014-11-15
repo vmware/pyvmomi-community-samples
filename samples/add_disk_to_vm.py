@@ -1,10 +1,14 @@
+<<<<<<< HEAD
 #!/usr/bin/env python
+=======
+>>>>>>> 4011aaf... add disk to vm example
 """
 Written by Dann Bohn
 Github: https://github.com/whereismyjetpack
 Email: dannbohn@gmail.com
 
 Script to add a Hard disk to an existing VM
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 This is for demonstration purposes only.
@@ -29,6 +33,20 @@ This will not add more than 15 disks to a VM
 To do that the VM needs an additional scsi controller
 and I have not yet worked through that
 """
+=======
+This is for demonstration purposes only. I did not do a whole lot of sanity checking, etc.
+
+Example:
+Add Hard disk 2 to an existing VM with a hard drive size of 20GB:
+./add_disk_to_vm.py -s 'vcenter.server' -u 'administrator' --vm-name testing --disk 2 --disk-size 20
+
+Known issues:
+This will not add more than 15 disks to a VM, To do that the VM needs an additional scsi controller, and I have not yet worked through that
+This will not expand a but can easily be added. Let me know if you want a sample for that, too
+"""
+
+#!/usr/bin/python
+>>>>>>> 4011aaf... add disk to vm example
 from pyVmomi import vim
 from pyVmomi import vmodl
 from pyVim.connect import SmartConnect, Disconnect
@@ -73,12 +91,20 @@ def get_args():
                         help='vmuuid of vm')
 
     parser.add_argument('--disk',
+<<<<<<< HEAD
                         required=True,
+=======
+                        required=False,
+>>>>>>> 4011aaf... add disk to vm example
                         action='store',
                         help='disk number (if adding a disk)')
 
     parser.add_argument('--disk-size',
+<<<<<<< HEAD
                         required=True,
+=======
+                        required=False,
+>>>>>>> 4011aaf... add disk to vm example
                         action='store',
                         help='disk size, in GB, to add to the VM')
 
@@ -93,6 +119,7 @@ def get_args():
 
 def get_obj(content, vimtype, name):
     obj = None
+<<<<<<< HEAD
     container = content.viewManager.CreateContainerView(
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -107,6 +134,9 @@ def get_obj(content, vimtype, name):
 =======
         content.rootFolder, vimtype, True)
 >>>>>>> 519ac6c... fix over indent
+=======
+    container = content.viewManager.CreateContainerView(content.rootFolder, vimtype, True)
+>>>>>>> 4011aaf... add disk to vm example
     for c in container.view:
         if c.name == name:
             obj = c
@@ -136,8 +166,12 @@ def add_disk(vm, si, disk_num, disk_size):
         disk_spec.fileOperation = "create"
         disk_spec.operation = vim.vm.device.VirtualDeviceSpec.Operation.add
         disk_spec.device = vim.vm.device.VirtualDisk()
+<<<<<<< HEAD
         disk_spec.device.backing = \
             vim.vm.device.VirtualDisk.FlatVer2BackingInfo()
+=======
+        disk_spec.device.backing = vim.vm.device.VirtualDisk.FlatVer2BackingInfo()
+>>>>>>> 4011aaf... add disk to vm example
         # comment thinProvisioned out for 'thick'
         disk_spec.device.backing.thinProvisioned = True
         disk_spec.device.backing.diskMode = 'persistent'
@@ -155,6 +189,7 @@ def main():
     args = get_args()
 
     # connect this thing
+<<<<<<< HEAD
     si = SmartConnect(
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -180,6 +215,9 @@ def main():
 >>>>>>> bdde510... travis
         port=args.port)
 >>>>>>> 0f546da... more travis
+=======
+    si = SmartConnect(host=args.host, user=args.user, pwd=args.password, port=args.port)
+>>>>>>> 4011aaf... add disk to vm example
     # disconnect this thing
     atexit.register(Disconnect, si)
 
@@ -192,7 +230,14 @@ def main():
         vm = get_obj(content, [vim.VirtualMachine], args.vm_name)
 
     if vm:
+<<<<<<< HEAD
         add_disk(vm, si, args.disk, args.disk_size)
+=======
+        if args.disk and args.disk_size:
+            add_disk(vm, si, args.disk, args.disk_size)
+        else:
+            print "missing args"
+>>>>>>> 4011aaf... add disk to vm example
     else:
         print "VM not found"
 
