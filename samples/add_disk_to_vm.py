@@ -282,6 +282,7 @@ def main():
 >>>>>>> 28bc0f9... pep8 fixes
 =======
     si = SmartConnect(
+<<<<<<< HEAD
 >>>>>>> 5811a25... pep8 fixes
             host=args.host, 
             user=args.user, 
@@ -319,6 +320,12 @@ def main():
 >>>>>>> 6f1e1ce... more travis
 =======
 >>>>>>> 5811a25... pep8 fixes
+=======
+        host=args.host, 
+        user=args.user, 
+        pwd=args.password, 
+        port=args.port)
+>>>>>>> 0f546da... more travis
     # disconnect this thing
     atexit.register(Disconnect, si)
 
