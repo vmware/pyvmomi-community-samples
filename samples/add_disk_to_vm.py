@@ -8,7 +8,6 @@ Script to add a Hard disk to an existing VM
 This is for demonstration purposes only.
 I did not do a whole lot of sanity checking, etc.
 
-
 Known issues:
 This will not add more than 15 disks to a VM
 To do that the VM needs an additional scsi controller
