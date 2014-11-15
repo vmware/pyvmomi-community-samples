@@ -163,11 +163,15 @@ def get_obj(content, vimtype, name):
 =======
     container = content.viewManager.CreateContainerView(
 <<<<<<< HEAD
+<<<<<<< HEAD
                 content.rootFolder, vimtype, True)
 >>>>>>> 28bc0f9... pep8 fixes
 =======
             content.rootFolder, vimtype, True)
 >>>>>>> 45f2b1e... travis
+=======
+        content.rootFolder, vimtype, True)
+>>>>>>> c9b889d... fix over indent
     for c in container.view:
         if c.name == name:
             obj = c
