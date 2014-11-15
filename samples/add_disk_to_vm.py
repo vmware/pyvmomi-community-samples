@@ -58,12 +58,12 @@ def get_args():
                         help='vmuuid of vm')
 
     parser.add_argument('--disk',
-                        required=False,
+                        required=True,
                         action='store',
                         help='disk number (if adding a disk)')
 
     parser.add_argument('--disk-size',
-                        required=False,
+                        required=True,
                         action='store',
                         help='disk size, in GB, to add to the VM')
 
@@ -145,10 +145,7 @@ def main():
         vm = get_obj(content, [vim.VirtualMachine], args.vm_name)
 
     if vm:
-        if args.disk and args.disk_size:
-            add_disk(vm, si, args.disk, args.disk_size)
-        else:
-            print "missing args"
+        add_disk(vm, si, args.disk, args.disk_size)
     else:
         print "VM not found"
 
