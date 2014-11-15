@@ -79,7 +79,7 @@ def get_args():
 def get_obj(content, vimtype, name):
     obj = None
     container = content.viewManager.CreateContainerView(
-            content.rootFolder, vimtype, True)
+        content.rootFolder, vimtype, True)
     for c in container.view:
         if c.name == name:
             obj = c
