@@ -16,6 +16,7 @@ Script to add a Hard disk to an existing VM
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 This is for demonstration purposes only.
 =======
 This is for demonstration purposes only. 
@@ -23,6 +24,9 @@ This is for demonstration purposes only.
 =======
 This is for demonstration purposes only.
 >>>>>>> c63f665... travis
+=======
+This is for demonstration purposes only.
+>>>>>>> 45f2b1e... travis
 I did not do a whole lot of sanity checking, etc.
 
 Known issues:
@@ -47,7 +51,7 @@ I did not do a whole lot of sanity checking, etc.
 
 
 Known issues:
-This will not add more than 15 disks to a VM 
+This will not add more than 15 disks to a VM
 To do that the VM needs an additional scsi controller
 and I have not yet worked through that
 """
@@ -150,8 +154,12 @@ def get_obj(content, vimtype, name):
 >>>>>>> 4011aaf... add disk to vm example
 =======
     container = content.viewManager.CreateContainerView(
+<<<<<<< HEAD
                 content.rootFolder, vimtype, True)
 >>>>>>> 28bc0f9... pep8 fixes
+=======
+            content.rootFolder, vimtype, True)
+>>>>>>> 45f2b1e... travis
     for c in container.view:
         if c.name == name:
             obj = c
