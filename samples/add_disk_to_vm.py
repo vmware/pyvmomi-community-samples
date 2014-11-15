@@ -271,6 +271,7 @@ def main():
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
         host=args.host,
         user=args.user,
         pwd=args.password,
@@ -324,6 +325,11 @@ def main():
         host=args.host, 
         user=args.user, 
         pwd=args.password, 
+=======
+        host=args.host,
+        user=args.user,
+        pwd=args.password,
+>>>>>>> bdde510... travis
         port=args.port)
 >>>>>>> 0f546da... more travis
     # disconnect this thing
