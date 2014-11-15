@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 """
 Written by Dann Bohn
 Github: https://github.com/whereismyjetpack
