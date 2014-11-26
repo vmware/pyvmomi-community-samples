@@ -32,7 +32,8 @@ def setup_args():
     parser.add_argument('-i', '--ip',
                         help='IP Address of the VirtualMachine you want to '
                              'reboot')
-
+    parser.add_argument('-a', '--inventorypath',
+                        help='Full path to VM. Datacenter/vm/ParentFolder/Folder/VM1')
     my_args = parser.parse_args()
 
     return cli.prompt_for_password(my_args)
@@ -52,6 +53,7 @@ except IOError, ex:
 if not SI:
     raise SystemExit("Unable to connect to host with supplied info.")
 VM = None
+
 if ARGS.uuid:
     VM = SI.content.searchIndex.FindByUuid(None, ARGS.uuid,
                                            True,
@@ -61,6 +63,9 @@ elif ARGS.name:
                                               True)
 elif ARGS.ip:
     VM = SI.content.searchIndex.FindByIp(None, ARGS.ip, True)
+
+elif ARGS.inventorypath:
+    VM = SI.content.searchIndex.FindByInventoryPath(ARGS.inventorypath)
 
 if VM is None:
     raise SystemExit("Unable to locate VirtualMachine.")
