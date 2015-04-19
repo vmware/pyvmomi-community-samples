@@ -26,11 +26,10 @@ python execute_program_in_vm.py
 """
 from __future__ import with_statement
 import atexit
-import requests
 from tools import cli
-from tools import tasks
 from pyVim import connect
 from pyVmomi import vim, vmodl
+
 
 def get_args():
     """Get command line args from the user.
