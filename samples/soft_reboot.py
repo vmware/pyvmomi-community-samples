@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # Written by Michael Rice
 # Github: https://github.com/michaelrice
 # Website: https://michaelrice.github.io/
@@ -5,11 +6,11 @@
 # This code has been released under the terms of the Apache 2 licenses
 # http://www.apache.org/licenses/LICENSE-2.0.html
 
-__author__ = 'errr'
 
 import atexit
 
 from pyVim import connect
+
 from tools import cli
 
 
