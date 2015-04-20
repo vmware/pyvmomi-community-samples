@@ -1,4 +1,5 @@
-"""Written by Michael Rice
+"""
+Written by Michael Rice <michael@michaelrice.org>
 
 Github: https://github.com/michaelrice
 Website: https://michaelrice.github.io/
@@ -8,8 +9,6 @@ http://www.apache.org/licenses/LICENSE-2.0.html
 
 Helper module for task operations.
 """
-__author__ = 'errr'
-
 from pyVmomi import vim
 from pyVmomi import vmodl
 
