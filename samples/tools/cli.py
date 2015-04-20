@@ -16,10 +16,10 @@
 """
 This module implements simple helper functions for python samples
 """
-__author__ = "VMware, Inc."
-
 import argparse
 import getpass
+
+__author__ = "VMware, Inc."
 
 
 def build_arg_parser():
