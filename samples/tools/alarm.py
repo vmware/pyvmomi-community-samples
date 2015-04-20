@@ -1,5 +1,5 @@
 """
-Written by Michael Rice
+Written by Michael Rice <michael@michaelrice.org>
 Github: https://github.com/michaelrice
 Website: https://michaelrice.github.io/
 Blog: http://www.errr-online.com/
@@ -7,8 +7,6 @@ This code has been released under the terms of the Apache 2.0 licenses
 http://www.apache.org/licenses/LICENSE-2.0.html
 """
 from __future__ import print_function
-
-__author__ = 'michael rice <michael@michaelrice.org>'
 
 import logging
 from xml.etree.ElementTree import Element
