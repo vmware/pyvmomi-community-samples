@@ -4,6 +4,8 @@ import argparse
 import getpass
 import suds
 
+import pyVim.connect as connect
+
 # suds-to-pyvmomi.py
 #
 # Some projects will want to incorporate pyVmomi into suds based projects. This
@@ -107,8 +109,6 @@ client.__class__.extract_vmware_cookie = extract_vmware_cookie_suds
 
 print "=" * 80
 print "suds session to pyvmomi "
-
-import pyVim.connect as connect
 
 # Unfortunately, you can't connect without a login in pyVmomi
 si = connect.SmartConnect(host=args.host,
