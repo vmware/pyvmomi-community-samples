@@ -1,21 +1,21 @@
-"""Written by Michael Rice
-Github: https://github.com/michaelrice
-Website: https://michaelrice.github.io/
-Blog: http://www.errr-online.com/
+#!/usr/bin/env python
+#
+# Written by Michael Rice
+# Github: https://github.com/michaelrice
+# Website: https://michaelrice.github.io/
+# Blog: http://www.errr-online.com/
+#
+# This code is released under the terms of the Apache 2
+# http://www.apache.org/licenses/LICENSE-2.0.html
+#
+# Example script to reboot a VirtualMachine
 
-This code is released under the terms of the Apache 2
-http://www.apache.org/licenses/LICENSE-2.0.html
+import atexit
 
-Example script to reboot a VirtualMachine
-
-"""
-__author__ = 'errr'
+from pyVim import connect
 
 from tools import cli
 from tools import tasks
-from pyVim import connect
-
-import atexit
 
 
 def setup_args():
