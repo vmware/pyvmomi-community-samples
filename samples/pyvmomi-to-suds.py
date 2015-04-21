@@ -5,6 +5,8 @@ import cookielib
 import getpass
 import suds
 
+import pyVim.connect as connect
+
 # pyvmomi-to-suds.py
 #
 # Demonstrates how to move a session between the pyVmomi client and the
@@ -79,7 +81,6 @@ def get_current_session(client):
 
 
 print "pyVmomi login... "
-import pyVim.connect as connect
 
 si = connect.SmartConnect(host=args.host,
                           user=args.user,

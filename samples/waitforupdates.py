@@ -207,15 +207,15 @@ def monitor_property_changes(si, propspec, iterations=None):
                 moref = str(moref).strip('\'')
 
                 kind = getattr(objectSet, 'kind', None)
-                assert (kind is not None
-                        and kind in ('enter', 'modify', 'leave',)), \
-                    'objectSet kind must be valid'
+                assert (
+                    kind is not None and kind in ('enter', 'modify', 'leave',)
+                ), 'objectSet kind must be valid'
 
                 if kind == 'enter' or kind == 'modify':
                     changeSet = getattr(objectSet, 'changeSet', None)
-                    assert (changeSet is not None
-                            and isinstance(changeSet, collections.Sequence)
-                            and len(changeSet) > 0), \
+                    assert (changeSet is not None and isinstance(
+                        changeSet, collections.Sequence
+                    ) and len(changeSet) > 0), \
                         'enter or modify objectSet should have non-empty' \
                         ' changeSet'
 
