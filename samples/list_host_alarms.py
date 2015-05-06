@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Written by Michael Rice
 Github: https://github.com/michaelrice
