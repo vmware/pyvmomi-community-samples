@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 This module demonstrates how to find virtual machines that
 exist on a datastore, but are not part of the inventory.
@@ -11,7 +12,7 @@ Issues:
 
 Example:
 
-      $ python getorphanedvms.py -s 10.90.2.10 -u vcenter.svc -p password
+      $./getorphanedvms.py -s 10.90.2.10 -u vcenter.svc -p password
 """
 
 from pyVim.connect import SmartConnect

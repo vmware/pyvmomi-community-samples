@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Written by Reubenur Rahman
 Github: https://github.com/rreubenur/
