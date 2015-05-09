@@ -6,7 +6,7 @@ Github: https://github.com/rreubenur/
 This code is released under the terms of the Apache 2
 http://www.apache.org/licenses/LICENSE-2.0.html
 
-Example script to change the network of the Virtual Machine NIC
+Example script to upload a file from host to guest
 
 """
 from __future__ import with_statement
