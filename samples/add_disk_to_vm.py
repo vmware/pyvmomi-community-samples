@@ -114,6 +114,7 @@ def add_disk(vm, si, disk_size, disk_type):
         disk_spec.device.backing.diskMode = 'persistent'
         disk_spec.device.unitNumber = unit_number
         disk_spec.device.capacityInKB = new_disk_kb
+        # TODO (hartsock): don't hard code controller keys, this only works on brand new Linux VMs with fresh SCSI controllers
         disk_spec.device.controllerKey = 1000
         dev_changes.append(disk_spec)
 
