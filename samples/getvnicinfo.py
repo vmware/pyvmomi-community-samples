@@ -44,6 +44,7 @@ def GetVMs(content):
 
 
 def GetHostsPortgroups(hosts):
+    global hostPgDict
     print("Collecting portgroups on all hosts. This may take a while ...")
     hostPgDict = {}
     for host in hosts:
@@ -61,6 +62,7 @@ def PrintVmInfo(vm):
 
 
 def GetVMNics(vm):
+    global content, hostPgDict
     for dev in vm.config.hardware.device:
         if isinstance(dev, vim.vm.device.VirtualEthernetCard):
             dev_backing = dev.backing
@@ -125,4 +127,3 @@ def main():
 # Main section
 if __name__ == "__main__":
     sys.exit(main())
-
