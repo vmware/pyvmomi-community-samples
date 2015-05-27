@@ -60,6 +60,7 @@ def get_args():
                         required=False,
                         action='store',
                         default='thin',
+                        choices=['thick', 'thin'],
                         help='thick or thin')
 
     parser.add_argument('--disk-size',
@@ -99,7 +100,8 @@ def add_disk(vm, si, disk_size, disk_type):
                 if unit_number >= 16:
                     print "we don't support this many disks"
                     return
-
+            if isinstance(dev, vim.vm.device.VirtualSCSIController):
+                controller = dev
         # add disk here
         dev_changes = []
         new_disk_kb = int(disk_size) * 1024 * 1024
@@ -114,10 +116,8 @@ def add_disk(vm, si, disk_size, disk_type):
         disk_spec.device.backing.diskMode = 'persistent'
         disk_spec.device.unitNumber = unit_number
         disk_spec.device.capacityInKB = new_disk_kb
-        # TODO (hartsock): don't hard code controller keys, this only works on brand new Linux VMs with fresh SCSI controllers
-        disk_spec.device.controllerKey = 1000
+        disk_spec.device.controllerKey = controller.key
         dev_changes.append(disk_spec)
-
         spec.deviceChange = dev_changes
         vm.ReconfigVM_Task(spec=spec)
         print "%sGB disk added to %s" % (disk_size, vm.config.name)
