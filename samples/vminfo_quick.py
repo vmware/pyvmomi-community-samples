@@ -46,7 +46,8 @@ try:
     service_instance = connect.SmartConnect(host=args.host,
                                             user=args.user,
                                             pwd=args.password,
-                                            port=int(args.port))
+                                            port=int(args.port),
+                                            unverified=True)
     atexit.register(connect.Disconnect, service_instance)
     atexit.register(endit)
 except IOError as e:

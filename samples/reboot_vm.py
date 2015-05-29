@@ -44,7 +44,8 @@ try:
     SI = connect.SmartConnect(host=ARGS.host,
                               user=ARGS.user,
                               pwd=ARGS.password,
-                              port=ARGS.port)
+                              port=ARGS.port,
+                              unverified=True)
     atexit.register(connect.Disconnect, SI)
 except IOError, ex:
     pass

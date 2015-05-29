@@ -31,7 +31,8 @@ cli.prompt_for_password(MY_ARGS)
 SI = SmartConnect(host=MY_ARGS.host,
                   user=MY_ARGS.user,
                   pwd=MY_ARGS.password,
-                  port=MY_ARGS.port)
+                  port=MY_ARGS.port,
+                  unverified=True)
 
 atexit.register(Disconnect, SI)
 INDEX = SI.content.searchIndex

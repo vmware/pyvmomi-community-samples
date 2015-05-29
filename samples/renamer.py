@@ -76,7 +76,7 @@ args = get_args()
 
 # form a connection...
 si = connect.SmartConnect(host=args.host, user=args.user, pwd=args.password,
-                          port=args.port)
+                          port=args.port, unverified=True)
 
 # doing this means you don't need to remember to disconnect your script/objects
 atexit.register(connect.Disconnect, si)

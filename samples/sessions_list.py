@@ -69,7 +69,8 @@ else:
 si = connect.SmartConnect(host=args.host,
                           user=args.user,
                           pwd=password,
-                          port=int(args.port))
+                          port=int(args.port),
+                          unverified=True)
 
 print "logged in to %s" % args.host
 session_id = si.content.sessionManager.currentSession.key

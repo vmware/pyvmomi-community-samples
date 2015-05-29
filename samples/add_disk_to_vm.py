@@ -131,7 +131,8 @@ def main():
         host=args.host,
         user=args.user,
         pwd=args.password,
-        port=args.port)
+        port=args.port,
+        unverified=True)
     # disconnect this thing
     atexit.register(Disconnect, si)
 

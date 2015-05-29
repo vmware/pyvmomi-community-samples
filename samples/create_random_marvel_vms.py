@@ -157,7 +157,8 @@ def main():
     service_instance = connect.SmartConnect(host=args.host,
                                             user=args.user,
                                             pwd=args.password,
-                                            port=int(args.port))
+                                            port=int(args.port),
+                                            unverified=True)
     if not service_instance:
         print("Could not connect to the specified host using specified "
               "username and password")

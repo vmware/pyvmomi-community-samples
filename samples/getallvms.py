@@ -21,6 +21,7 @@ Python program for listing the vms on an ESX / vCenter host
 import atexit
 
 from pyVim import connect
+from pyVmomi import vim
 from pyVmomi import vmodl
 
 import tools.cli as cli
@@ -41,6 +42,9 @@ def print_vm_info(virtual_machine, depth=1):
         vmList = virtual_machine.childEntity
         for c in vmList:
             print_vm_info(c, depth + 1)
+        return
+
+    if not isinstance(virtual_machine, vim.VirtualMachine):
         return
 
     summary = virtual_machine.summary
@@ -80,7 +84,8 @@ def main():
         service_instance = connect.SmartConnect(host=args.host,
                                                 user=args.user,
                                                 pwd=args.password,
-                                                port=int(args.port))
+                                                port=int(args.port),
+                                                unverified=True)
 
         atexit.register(connect.Disconnect, service_instance)
 

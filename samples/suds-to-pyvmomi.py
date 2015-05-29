@@ -114,7 +114,8 @@ print "suds session to pyvmomi "
 si = connect.SmartConnect(host=args.host,
                           user=args.user,
                           pwd=password,
-                          port=int(args.port))
+                          port=int(args.port),
+                          unverified=True)
 
 # logout the current session since we won't be using it.
 si.content.sessionManager.Logout()

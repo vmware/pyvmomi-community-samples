@@ -260,7 +260,7 @@ def main():
             urllib3.disable_warnings()
 
         si = SmartConnect(host=args.host, user=args.user, pwd=password,
-                          port=int(args.port))
+                          port=int(args.port), unverified=True)
 
         if not si:
             print >>sys.stderr, "Could not connect to the specified host ' \

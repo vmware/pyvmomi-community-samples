@@ -44,7 +44,8 @@ def main():
             service_instance = connect.SmartConnect(host=args.host,
                                                     user=args.user,
                                                     pwd=args.password,
-                                                    port=int(args.port))
+                                                    port=int(args.port),
+                                                    unverified=True)
         except IOError as e:
             pass
         if not service_instance:

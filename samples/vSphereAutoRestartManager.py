@@ -23,7 +23,7 @@ __author__ = 'humayunjamal'
 def get_connection(ipadd, user, password):
     try:
         connection = SmartConnect(
-            host=ipadd, port=443, user=user, pwd=password)
+            host=ipadd, port=443, user=user, pwd=password, unverified=True)
     except Exception as e:
         print e
         raise SystemExit

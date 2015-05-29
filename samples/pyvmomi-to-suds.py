@@ -85,7 +85,8 @@ print "pyVmomi login... "
 si = connect.SmartConnect(host=args.host,
                           user=args.user,
                           pwd=password,
-                          port=int(args.port))
+                          port=int(args.port),
+                          unverified=True)
 
 print "current session id: %s" % si.content.sessionManager.currentSession.key
 pyvmomi_cookie = si._stub.cookie
