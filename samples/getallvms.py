@@ -22,36 +22,44 @@ import atexit
 
 from pyVim import connect
 from pyVmomi import vmodl
+from os import write
 
 import tools.cli as cli
 
 
-def print_vm_info(virtual_machine, depth=1):
+def print_vm_info(virtual_machine, current_depth=1, max_depth=3):
     """
     Print information for a particular virtual machine or recurse into a
     folder with depth protection
     """
-    maxdepth = 10
-
     # if this is a group it will have children. if it does, recurse into them
     # and then return
     if hasattr(virtual_machine, 'childEntity'):
-        if depth > maxdepth:
+        if current_depth > max_depth:
             return
-        vmList = virtual_machine.childEntity
-        for c in vmList:
-            print_vm_info(c, depth + 1)
+        children = virtual_machine.childEntity
+        for child in children:
+            print_vm_info(child, current_depth=current_depth + 1)
         return
 
     summary = virtual_machine.summary
-    print "Name       : ", summary.config.name
+    try:        
+        print "Name       : ", summary.config.name
+    except AttributeError:
+        return
     print "Path       : ", summary.config.vmPathName
-    print "Guest      : ", summary.config.guestFullName
+    try:
+        print "Guest      : ", summary.config.guestFullName
+    except UnicodeEncodeError:
+        write(1, "\n")
     print "Instance UUID : ", summary.config.instanceUuid
     print "Bios UUID     : ", summary.config.uuid
     annotation = summary.config.annotation
     if annotation:
-        print "Annotation : ", annotation
+        try:
+            print "Annotation : ", annotation
+        except UnicodeEncodeError:
+            write(1, "\n")
     print "State      : ", summary.runtime.powerState
     if summary.guest is not None:
         ip_address = summary.guest.ipAddress
@@ -66,7 +74,7 @@ def print_vm_info(virtual_machine, depth=1):
             print "IP         : None"
     if summary.runtime.question is not None:
         print "Question  : ", summary.runtime.question.text
-    print ""
+    write(1, "\n")
 
 
 def main():
@@ -85,21 +93,16 @@ def main():
         atexit.register(connect.Disconnect, service_instance)
 
         content = service_instance.RetrieveContent()
-        children = content.rootFolder.childEntity
-        for child in children:
-            if hasattr(child, 'vmFolder'):
-                datacenter = child
-            else:
-                # some other non-datacenter type object
-                continue
-
-            vm_folder = datacenter.vmFolder
-            vm_list = vm_folder.childEntity
-            for virtual_machine in vm_list:
-                print_vm_info(virtual_machine, 10)
+        folders = content.rootFolder.childEntity
+        for sub_folder in folders:
+            if hasattr(sub_folder, 'vmFolder'):
+                vm_folder = sub_folder.vmFolder
+                children = vm_folder.childEntity
+                for child in children:
+                    print_vm_info(child, max_depth=10)
 
     except vmodl.MethodFault as error:
-        print "Caught vmodl fault : " + error.msg
+        print "Caught vmodl fault : %s" % error.msg
         return -1
 
     return 0
