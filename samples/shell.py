@@ -10,13 +10,17 @@ from pyVmomi import vim
 from tools import cli
 from tools import vm
 
+
 def get_view(content, vimtype):
     """
+    Get the view of an object
     """
-    objview = content.viewManager.CreateContainerView(content.rootFolder, vimtype, True)
+    objview = content.viewManager.CreateContainerView(content.rootFolder,
+                                                      vimtype, True)
     view = objview.view
     objview.Destroy()
     return view
+
 
 def auth():
     """
@@ -26,7 +30,6 @@ def auth():
     args = cli.get_args()
 
     try:
-        #service instance
         si = connect.SmartConnect(host=args.host,
                                   user=args.user,
                                   pwd=args.password,
@@ -44,6 +47,7 @@ def auth():
         return None
 
     return si.RetrieveContent()
+
 
 def main():
     """

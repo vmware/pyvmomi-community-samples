@@ -15,10 +15,12 @@ from pyVmomi import vim
 
 from tools import cli
 
+
 def get_args():
     """
     Supports the command-line arguments listed below.
     """
+
     parser = argparse.ArgumentParser(
         description='Process args for retrieving all the Virtual Machines')
     parser.add_argument('-s', '--host', required=True, action='store',
@@ -35,6 +37,7 @@ def get_args():
                         help='Output to JSON')
     args = parser.parse_args()
     return args
+
 
 def main():
     """
