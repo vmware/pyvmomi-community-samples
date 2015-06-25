@@ -17,8 +17,8 @@ from tools import cli
 
 def get_args():
     """
-   Supports the command-line arguments listed below.
-   """
+    Supports the command-line arguments listed below.
+    """
     parser = argparse.ArgumentParser(
         description='Process args for retrieving all the Virtual Machines')
     parser.add_argument('-s', '--host', required=True, action='store',
@@ -38,9 +38,9 @@ def get_args():
 
 def main():
     """
-   Simple command-line program for listing all ESXi datastores and their
-   associated devices
-   """
+    Simple command-line program for listing all ESXi datastores and their
+    associated devices
+    """
 
     args = get_args()
 
