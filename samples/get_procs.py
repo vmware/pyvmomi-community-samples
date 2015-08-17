@@ -56,7 +56,7 @@ def main(vm):
     vm = content.searchIndex.FindByUuid(None, ARGS.uuid, True, True)
     procs = content.guestOperationsManager.processManager.ListProcesses(vm,
                                                                         creds)
-    vmprocs = [(proc.name, proc.pid, proc.owner) for proc in procs]
+    vmprocs = [(proc.owner, proc.pid, proc.cmdLine) for proc in procs]
     print("Process for {0}".format(vm.name))
     print("")
     print(vmprocs)
