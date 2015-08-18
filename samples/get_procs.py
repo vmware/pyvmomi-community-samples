@@ -1,19 +1,17 @@
-#!/usr/bin/env python3
+#!/usr/bin/python
 # Luis San Martin - github.com/pathcl
 # Attempts to get current processes on a given VM (uuid) and outputs to a csv
 # Through pyvmomi and vmware-tools
 # Further reference can be found at
 # https://www.vmware.com/support/developer/converter-sdk/conv50_apireference/vim.vm.guest.ProcessManager.html
+
+from __future__ import print_function
 from pyVim import connect
 from pyVmomi import vim
 
-import ssl
 import tools.cli as cli
 import atexit
 import pandas as pd
-
-# Monkey patch SSL
-ssl._create_default_https_context = ssl._create_unverified_context
 
 # Setup args function and get arguments
 
