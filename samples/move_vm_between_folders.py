@@ -52,10 +52,14 @@ def get_object_by_name(content, vimType, name):
 
 def get_service_instance(args):
     """ Connect to vSphere and return a Service Instance object."""
-    si = connect.SmartConnect(host = args.host,
+    try:
+        si = connect.SmartConnect(host = args.host,
                                   pwd = args.password,
                                   port = args.port,
                                   user = args.user)
+    except Exception:
+        print "Cannot establish vSphere connection".
+        sys.exit(1)
     atexit.register(connect.Disconnect, si)
     return si
 
