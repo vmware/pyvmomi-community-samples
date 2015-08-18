@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # Luis San Martin - github.com/pathcl
-# Attempts to get current processes on a given VM (uuid)
+# Attempts to get current processes on a given VM (uuid) and outputs to a csv
 # Through pyvmomi and vmware-tools
 # Further reference can be found at
 # https://www.vmware.com/support/developer/converter-sdk/conv50_apireference/vim.vm.guest.ProcessManager.html
@@ -10,6 +10,7 @@ from pyVmomi import vim
 import ssl
 import tools.cli as cli
 import atexit
+import pandas as pd
 
 # Monkey patch SSL
 ssl._create_default_https_context = ssl._create_unverified_context
@@ -59,7 +60,9 @@ def main(vm):
     vmprocs = [(proc.owner, proc.pid, proc.cmdLine) for proc in procs]
     print("Process for {0}".format(vm.name))
     print("")
-    print(vmprocs)
+    csv = pd.DataFrame(vmprocs)
+    csv.to_csv(vm.name + '.csv', index=False, header=False)
+    print(csv)
 
 if __name__ == '__main__':
     main(ARGS.uuid)
