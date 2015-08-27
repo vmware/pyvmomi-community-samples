@@ -18,7 +18,8 @@ from pyVmomi import vim
 from pyVim.connect import SmartConnect, Disconnect
 
 # disable  urllib3 warnings
-requests.packages.urllib3.disable_warnings()
+if hasattr(requests.packages.urllib3, 'disable_warnings'):
+    requests.packages.urllib3.disable_warnings()
 
 
 def get_args():
