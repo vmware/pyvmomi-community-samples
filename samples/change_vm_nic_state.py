@@ -19,7 +19,9 @@ from pyVim.connect import SmartConnect, Disconnect
 from tools import tasks
 
 
-requests.packages.urllib3.disable_warnings()
+# disable  urllib3 warnings
+if hasattr(requests.packages.urllib3, 'disable_warnings'):
+    requests.packages.urllib3.disable_warnings()
 
 
 def update_virtual_nic_state(si, vm_obj, nic_number, new_nic_state):
