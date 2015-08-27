@@ -200,8 +200,9 @@ def main():
             keepalive_thread.start()
             # POST the VMDK to the host via curl. Requests library would work
             # too.
-            curl_cmd = ("curl -Ss -X POST --insecure -T %s -H \
-                'Content-Type: application/x-vnd.vmware-streamVmdk' %s" %
+            curl_cmd = (
+                "curl -Ss -X POST --insecure -T %s -H 'Content-Type: \
+                application/x-vnd.vmware-streamVmdk' %s" %
                 (args.vmdk_path, url))
             system(curl_cmd)
             lease.HttpNfcLeaseComplete()
