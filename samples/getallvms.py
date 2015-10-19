@@ -77,6 +77,11 @@ def main():
     args = cli.get_args()
 
     try:
+        if(args.no_ssl == 1):
+            import ssl
+            default_context = ssl._create_default_https_context
+            ssl._create_default_https_context = ssl._create_unverified_context
+
         service_instance = connect.SmartConnect(host=args.host,
                                                 user=args.user,
                                                 pwd=args.password,
