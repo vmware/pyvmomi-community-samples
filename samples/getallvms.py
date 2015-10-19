@@ -89,8 +89,6 @@ def main():
 
         atexit.register(connect.Disconnect, service_instance)
 
-	
-
         content = service_instance.RetrieveContent()
         children = content.rootFolder.childEntity
         for child in children:
