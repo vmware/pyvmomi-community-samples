@@ -58,12 +58,13 @@ def build_arg_parser():
                         required=False,
                         action='store',
                         help='Password to use when connecting to host')
-    
+
     parser.add_argument('--no-ssl',
-			action='store_const',
-                        const=1,
                         required=False,
-                        help='Does not make ssl verification')
+                        action='store_const',
+                        const=1,
+                        help='Does not make ssl verification
+
     return parser
 
 
