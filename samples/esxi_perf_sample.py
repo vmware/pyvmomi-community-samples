@@ -95,13 +95,13 @@ def main():
                                                  startTime=startTime,
                                                  endTime=endTime)
 
-        print perfManager.QueryPerf(querySpec=[query])
+        print(perfManager.QueryPerf(querySpec=[query]))
 
-    except vmodl.MethodFault, e:
-        print "Caught vmodl fault : " + e.msg
+    except vmodl.MethodFault as e:
+        print("Caught vmodl fault : " + e.msg)
         return -1
-    except Exception, e:
-        print "Caught exception : " + str(e)
+    except Exception as e:
+        print("Caught exception : " + str(e))
         return -1
 
     return 0
