@@ -59,13 +59,13 @@ def print_fs(host_fs):
     :param host_fs:
     :return:
     """
-    print "{}\t{}\t".format("Datastore:     ", host_fs.volume.name)
-    print "{}\t{}\t".format("UUID:          ", host_fs.volume.uuid)
-    print "{}\t{}\t".format("Capacity:      ", sizeof_fmt(
-        host_fs.volume.capacity))
-    print "{}\t{}\t".format("VMFS Version:  ", host_fs.volume.version)
-    print "{}\t{}\t".format("Is Local VMFS: ", host_fs.volume.local)
-    print "{}\t{}\t".format("SSD:           ", host_fs.volume.ssd)
+    print("{}\t{}\t".format("Datastore:     ", host_fs.volume.name))
+    print("{}\t{}\t".format("UUID:          ", host_fs.volume.uuid))
+    print("{}\t{}\t".format("Capacity:      ", sizeof_fmt(
+        host_fs.volume.capacity)))
+    print("{}\t{}\t".format("VMFS Version:  ", host_fs.volume.version))
+    print("{}\t{}\t".format("Is Local VMFS: ", host_fs.volume.local))
+    print("{}\t{}\t".format("SSD:           ", host_fs.volume.ssd))
 
 
 def main():
@@ -101,7 +101,7 @@ def main():
         datastores = {}
         for esxi_host in esxi_hosts:
             if not args.json:
-                print "{}\t{}\t\n".format("ESXi Host:    ", esxi_host.name)
+                print("{}\t{}\t\n".format("ESXi Host:    ", esxi_host.name))
 
             # All Filesystems on ESXi host
             storage_system = esxi_host.configManager.storageSystem
@@ -130,9 +130,9 @@ def main():
                     extent_count = 0
                     for extent in extents:
                         if not args.json:
-                            print "{}\t{}\t".format(
+                            print("{}\t{}\t".format(
                                 "Extent[" + str(extent_count) + "]:",
-                                extent.diskName)
+                                extent.diskName))
                             extent_count += 1
                         else:
                             # create an array of the devices backing the given
@@ -150,10 +150,10 @@ def main():
             datastores[esxi_host.name] = datastore_dict
 
         if args.json:
-            print json.dumps(datastores)
+            print(json.dumps(datastores))
 
     except vmodl.MethodFault as error:
-        print "Caught vmodl fault : " + error.msg
+        print("Caught vmodl fault : " + error.msg)
         return -1
 
     return 0
