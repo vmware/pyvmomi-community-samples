@@ -82,7 +82,7 @@ def main():
 
         creds = vim.vm.guest.NamePasswordAuthentication(
             username=args.vm_user, password=args.vm_pwd)
-        with open(args.upload_file, 'r') as myfile:
+        with open(args.upload_file, 'rb') as myfile:
             args = myfile.read()
 
         try:
