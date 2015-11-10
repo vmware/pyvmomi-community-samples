@@ -76,9 +76,11 @@ def main():
 
         content = service_instance.RetrieveContent()
 
-        viewType = [vim.VirtualMachine]
+        container = content.rootFolder  # starting point to look into
+        viewType = [vim.VirtualMachine]  # object types to look for
+        recursive = True  # whether we should look into it recursively
         containerView = content.viewManager.CreateContainerView(
-            content.rootFolder, viewType, True)
+            container, viewType, recursive)
 
         children = containerView.view
         for child in children:
