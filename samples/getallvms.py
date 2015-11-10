@@ -77,7 +77,8 @@ def main():
         content = service_instance.RetrieveContent()
 
         viewType = [vim.VirtualMachine]
-        containerView = content.viewManager.CreateContainerView(content.rootFolder, viewType, True)
+        containerView = content.viewManager.CreateContainerView(
+            content.rootFolder, viewType, True)
 
         children = containerView.view
         for child in children:
