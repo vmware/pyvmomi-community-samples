@@ -22,29 +22,19 @@ import atexit
 
 from pyVim import connect
 from pyVmomi import vmodl
+from pyVmomi import vim
 
 import tools.cli as cli
 
 
-def print_vm_info(virtual_machine, depth=1):
+def print_vm_info(virtual_machine):
     """
     Print information for a particular virtual machine or recurse into a
     folder with depth protection
     """
-    maxdepth = 10
-
-    # if this is a group it will have children. if it does, recurse into them
-    # and then return
-    if hasattr(virtual_machine, 'childEntity'):
-        if depth > maxdepth:
-            return
-        vmList = virtual_machine.childEntity
-        for c in vmList:
-            print_vm_info(c, depth + 1)
-        return
-
     summary = virtual_machine.summary
     print("Name       : ", summary.config.name)
+    print("Template   : ", summary.config.template)
     print("Path       : ", summary.config.vmPathName)
     print("Guest      : ", summary.config.guestFullName)
     print("Instance UUID : ", summary.config.instanceUuid)
@@ -85,18 +75,13 @@ def main():
         atexit.register(connect.Disconnect, service_instance)
 
         content = service_instance.RetrieveContent()
-        children = content.rootFolder.childEntity
-        for child in children:
-            if hasattr(child, 'vmFolder'):
-                datacenter = child
-            else:
-                # some other non-datacenter type object
-                continue
 
-            vm_folder = datacenter.vmFolder
-            vm_list = vm_folder.childEntity
-            for virtual_machine in vm_list:
-                print_vm_info(virtual_machine, 10)
+        viewType = [vim.VirtualMachine]
+        containerView = content.viewManager.CreateContainerView(content.rootFolder, viewType, True)
+
+        children = containerView.view
+        for child in children:
+            print_vm_info(child)
 
     except vmodl.MethodFault as error:
         print("Caught vmodl fault : " + error.msg)
