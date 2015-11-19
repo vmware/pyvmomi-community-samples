@@ -2,9 +2,8 @@
 """
 Written by Chinmaya Bharadwaj
 Github: https://github.com/chinmayb/
-Email: acbharadwaj@gmail.com
+Example: Create a folder in a datacenter if not exists
 
-Create a folder in a datacenter
 """
 from __future__ import print_function
 
@@ -56,7 +55,7 @@ def create_folder(content, host_folder, folder_name):
 
 def main():
     """
-    Simple command-line program for listing the virtual machines on a system.
+    Simple command-line program for creating host and VM folders in a datacenter.
     """
     args = GetArgs()
     if args.password:
@@ -82,7 +81,9 @@ def main():
         print("Folder '%s' already exists" % args.folder)
         return 0
     create_folder(content, dc.hostFolder, args.folder)
-    print("Successfully created the folder '%s'" % args.folder)
+    print("Successfully created the host folder '%s'" % args.folder)
+    create_folder(content, dc.vmFolder, args.folder)
+    print("Successfully created the VM folder '%s'" % args.folder)
     return 0
 
 # Start program
