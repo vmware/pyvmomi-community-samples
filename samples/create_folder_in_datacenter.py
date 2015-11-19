@@ -55,7 +55,8 @@ def create_folder(content, host_folder, folder_name):
 
 def main():
     """
-    Simple command-line program for creating host and VM folders in a datacenter.
+    Simple command-line program for creating host and VM folders in a
+    datacenter.
     """
     args = GetArgs()
     if args.password:
