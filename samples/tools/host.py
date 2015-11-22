@@ -24,11 +24,11 @@ from pyVmomi import vim
 def print_host_info(host):
 
     summary = host.summary
+    print ".: HOST INFORMATION :."
+    print "\n.: vim.host.Summary (vim.host.summary):."
+    print " - mhost: ", summary.host
 
-    print ".: vim.host.summary :."
-    print "- mhost: ", summary.host
-
-    print ".: vim.host.summary.hardware :."
+    print "\n.: vim.host.Summary.HardwareSummary (vim.host.summary.hardware) :."
     hardware = summary.hardware
     print " - vendor: ", hardware.vendor
     print " - model: ", hardware.model
@@ -39,14 +39,14 @@ def print_host_info(host):
     print " - numCpuThreads: ", hardware.numCpuThreads
     print " - numNics: ", hardware.numNics
 
-    print ".: vim.host.RuntimeInfo :."
+    print "\n.: vim.host.RuntimeInfo (vim.host.summary.runtime) :."
     runtime = summary.runtime
     print " - inMaintenanceMode: ", runtime.inMaintenanceMode
     print " - bootTime: ", runtime.bootTime
     print " - powerState: ", runtime.powerState
     print " - standbyMode: ", runtime.standbyMode
 
-    print ".: vim.host.Summary.ConfigSummary :."
+    print "\n.: vim.host.Summary.ConfigSummary (vim.host.summary.config) :."
     config = summary.config
     print " - name: ", config.name
     print " - sslThumbprint: ", config.sslThumbprint
