@@ -26,7 +26,7 @@ def print_host_info(host):
     summary = host.summary
     print ".: HOST INFORMATION :."
     print "\n.: vim.host.Summary (vim.host.summary):."
-    print " - mhost: ", summary.host
+    print " - host: ", summary.host
 
     print "\n.: vim.host.Summary.HardwareSummary (vim.host.summary.hardware) :."
     hardware = summary.hardware
