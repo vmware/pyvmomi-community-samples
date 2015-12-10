@@ -18,49 +18,57 @@ Python port of William Lam's generateHTML5VMConsole.pl
 Also ported SHA fingerprint fetching to Python OpenSSL library
 """
 
-import atexit, OpenSSL, ssl, sys, time
+import atexit
+import OpenSSL
+import ssl
+import sys
+import time
 
 from pyVim.connect import SmartConnect, Disconnect
 from pyVmomi import vim
 from tools import cli
+
 
 def get_vm(content, name):
     try:
         name = unicode(name, 'utf-8')
     except TypeError:
         pass
- 
-    vm = None 
+
+    vm = None
     container = content.viewManager.CreateContainerView(
         content.rootFolder, [vim.VirtualMachine], True)
 
     for c in container.view:
         if c.name == name:
-	    vm = c
-	    break
+            vm = c
+            break
     return vm
+
 
 def get_args():
     """
     Add VM name to args
     """
     parser = cli.build_arg_parser()
-    
+
     parser.add_argument('-n', '--name',
                         required=True,
                         help='Name of Virtual Machine.')
-    
+
     args = parser.parse_args()
 
     return cli.prompt_for_password(args)
 
+
 def main():
     """
-    Simple command-line program to generate a URL to open HTML5 Console in Web browser
+    Simple command-line program to generate a URL
+    to open HTML5 Console in Web browser
     """
 
     args = get_args()
-    
+
     try:
         si = SmartConnect(host=args.host,
                           user=args.user,
@@ -77,7 +85,7 @@ def main():
 
     vm = get_vm(content, args.name)
     vm_moid = vm._moId
-   
+
     vcenter_data = content.setting
     vcenter_settings = vcenter_data.setting
     console_port = '7331'
@@ -91,12 +99,17 @@ def main():
     session = session_manager.AcquireCloneTicket()
 
     vc_cert = ssl.get_server_certificate((args.host, int(args.port)))
-    vc_pem = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, vc_cert)
+    vc_pem = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM,
+                                             vc_cert)
     vc_fingerprint = vc_pem.digest('sha1')
 
-    print "Open the following URL in your browser to access the Remote Console.\n" \
-          "You have 60 seconds to open the URL, or the session will be terminated.\n"
-    print "http://" + args.host + ":" + console_port + "/console/?vmId=" + str(vm_moid) + "&vmName=" + args.name + "&host=" + vcenter_fqdn + "&sessionTicket=" + session + "&thumbprint=" + vc_fingerprint
+    print "Open the following URL in your browser to access the " \
+          "Remote Console.\n" \
+          "You have 60 seconds to open the URL, or the session" \
+          "will be terminated.\n"
+    print "http://" + args.host + ":" + console_port + "/console/?vmId=" \
+          + str(vm_moid) + "&vmName=" + args.name + "&host=" + vcenter_fqdn \
+          + "&sessionTicket=" + session + "&thumbprint=" + vc_fingerprint
     print "Waiting for 60 seconds, then exit"
     time.sleep(60)
 
