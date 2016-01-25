@@ -66,10 +66,10 @@ def main():
     context.verify_mode = ssl.CERT_NONE
 
     service_instance = connect.SmartConnect(host=args.host,
-                                                user=args.user,
-                                                pwd=args.password,
-                                                port=int(args.port),
-                                                sslContext=context)
+                                            user=args.user,
+                                            pwd=args.password,
+                                            port=int(args.port),
+                                            sslContext=context)
     if not service_instance:
         print("Unable to connect with the vCenter Server "
               "using the provided credentials")
@@ -89,7 +89,8 @@ def main():
         if host.name == args.esx_host:
             esx = host
 
-    print "Proceeding to execute operation 'Reconfigure for HA' in host %s" % esx.name
+    print "Proceeding to execute operation 'Reconfigure for HA' in host %s" % \
+          esx.name
     reconf_ha = esx.ReconfigureHostForDAS_Task()
     task = reconf_ha
     tasks.wait_for_tasks(service_instance, [task])
