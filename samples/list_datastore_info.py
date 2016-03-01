@@ -9,6 +9,7 @@ associated devices
 import argparse
 import atexit
 import json
+import ssl
 
 from pyVim import connect
 from pyVmomi import vmodl
@@ -33,6 +34,10 @@ def get_args():
                         help='Password to use when connecting to host')
     parser.add_argument('-j', '--json', default=False, action='store_true',
                         help='Output to JSON')
+    parser.add_argument('-S', '--disable_ssl_verification',
+                        required=False,
+                        action='store_true',
+                        help='Disable ssl host certificate verification')
     args = parser.parse_args()
     return args
 
@@ -78,11 +83,18 @@ def main():
 
     cli.prompt_for_password(args)
 
+    sslContext = None
+
+    if args.disable_ssl_verification:
+        sslContext = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+        sslContext.verify_mode = ssl.CERT_NONE
+
     try:
         service_instance = connect.SmartConnect(host=args.host,
                                                 user=args.user,
                                                 pwd=args.password,
-                                                port=int(args.port))
+                                                port=int(args.port),
+                                                sslContext=sslContext)
         if not service_instance:
             print("Could not connect to the specified host using specified "
                   "username and password")
