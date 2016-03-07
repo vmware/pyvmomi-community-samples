@@ -17,7 +17,8 @@
 import argparse
 import getpass
 import requests
-# Snippet borrowed from Michael Rice (https://gist.github.com/michaelrice/a6794a017e349fc65d01)
+# Snippet borrowed from Michael Rice
+# https://gist.github.com/michaelrice/a6794a017e349fc65d01
 requests.packages.urllib3.disable_warnings()
 
 try:
