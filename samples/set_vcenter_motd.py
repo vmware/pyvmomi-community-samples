@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import argparse
+import pyVim.connect as connect
 import getpass
 import requests
 # Snippet borrowed from Michael Rice
@@ -29,8 +30,6 @@ except AttributeError:
 else:
     # Handle target environment that doesn't support HTTPS verification
     ssl._create_default_https_context = _create_unverified_https_context
-
-import pyVim.connect as connect
 
 # Demonstrates configuring the Message of the Day (MOTD) on vCenter Server
 
