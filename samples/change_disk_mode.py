@@ -25,8 +25,9 @@ def change_disk_mode(si, vm_obj, disk_number, mode,
     """Change the disk mode on a virtual hard disk.
     :param si: Service Instance
     :param vm_obj: Virtual Machine Object
-    :param disk_name: Name of the disk.
+    :param disk_number: Disk number.
     :param mode: New disk mode.
+    :param disk_prefix_label: Prefix name of disk.
     :return: True if success
     """
     disk_label = disk_prefix_label + str(disk_number)
