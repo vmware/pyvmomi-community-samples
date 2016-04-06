@@ -189,7 +189,7 @@ def main():
                                            objs["resource pool"],
                                            objs["datastore"],
                                            spec_params)
-    lease = objs["resource pool"].ImportVApp(import_spec.importSpec)
+    lease = objs["resource pool"].ImportVApp(import_spec.importSpec, objs["datacenter"].vmFolder)
     while(True):
         if (lease.state == vim.HttpNfcLease.State.ready):
             # Assuming single VMDK.
