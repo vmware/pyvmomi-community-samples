@@ -6,6 +6,8 @@ Email: dannbohn@gmail.com
 
 Clone a VM from template example
 """
+import ssl
+
 from pyVmomi import vim
 from pyVim.connect import SmartConnect, Disconnect
 import atexit
@@ -124,11 +126,12 @@ def wait_for_task(task):
             task_done = True
 
 
-def get_obj(content, vimtype, name):
+def get_obj(si, vimtype, name):
     """
     Return an object by name, if name is None the
     first found object is returned
     """
+    content = si.RetrieveContent()
     obj = None
     container = content.viewManager.CreateContainerView(
         content.rootFolder, vimtype, True)
@@ -145,33 +148,32 @@ def get_obj(content, vimtype, name):
 
 
 def clone_vm(
-        content, template, vm_name, si,
+        template, vm_name, si,
         datacenter_name, vm_folder, datastore_name,
-        cluster_name, resource_pool, power_on):
+        cluster_name, power_on, resource_pool=None,):
     """
     Clone a VM from a template/VM, datacenter_name, vm_folder, datastore_name
     cluster_name, resource_pool, and power_on are all optional.
     """
-
     # if none git the first one
-    datacenter = get_obj(content, [vim.Datacenter], datacenter_name)
+    datacenter = get_obj(si, [vim.Datacenter], datacenter_name)
 
     if vm_folder:
-        destfolder = get_obj(content, [vim.Folder], vm_folder)
+        destfolder = get_obj(si, [vim.Folder], vm_folder)
     else:
         destfolder = datacenter.vmFolder
 
     if datastore_name:
-        datastore = get_obj(content, [vim.Datastore], datastore_name)
+        datastore = get_obj(si, [vim.Datastore], datastore_name)
     else:
         datastore = get_obj(
-            content, [vim.Datastore], template.datastore[0].info.name)
+            si, [vim.Datastore], template.datastore[0].info.name)
 
     # if None, get the first one
-    cluster = get_obj(content, [vim.ClusterComputeResource], cluster_name)
+    cluster = get_obj(si, [vim.ClusterComputeResource], cluster_name)
 
     if resource_pool:
-        resource_pool = get_obj(content, [vim.ResourcePool], resource_pool)
+        resource_pool = get_obj(si, [vim.ResourcePool], resource_pool)
     else:
         resource_pool = cluster.resourcePool
 
@@ -196,22 +198,23 @@ def main():
     args = get_args()
 
     # connect this thing
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
     si = SmartConnect(
         host=args.host,
         user=args.user,
         pwd=args.password,
-        port=args.port)
+        port=args.port,
+        sslContext=ctx)
     # disconnect this thing
     atexit.register(Disconnect, si)
 
-    content = si.RetrieveContent()
-    template = None
-
-    template = get_obj(content, [vim.VirtualMachine], args.template)
+    template = get_obj(si, [vim.VirtualMachine], args.template)
 
     if template:
         clone_vm(
-            content, template, args.vm_name, si,
+            template, args.vm_name, si,
             args.datacenter_name, args.vm_folder,
             args.datastore_name, args.cluster_name,
             args.resource_pool, args.power_on)
