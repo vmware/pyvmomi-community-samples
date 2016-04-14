@@ -8,8 +8,9 @@
 
  Script to deploy VM via a single .ovf and a single .vmdk file.
 """
-from os import system, path
-from sys import exit
+import ssl
+from os import system, path, SEEK_END
+from sys import exit, stderr
 from threading import Thread
 from time import sleep
 from argparse import ArgumentParser
@@ -18,6 +19,37 @@ from getpass import getpass
 from pyVim import connect
 from pyVmomi import vim
 
+import urllib2
+
+# http://stackoverflow.com/questions/5925028/urllib2-post-progress-monitoring
+class Progress(object):
+    def __init__(self):
+        self._seen = 0.0
+
+    def update(self, total, size, name):
+        self._seen += size
+        pct = (self._seen / total) * 100.0
+        print '%s progress: %.2f' % (name, pct)
+
+class file_with_callback(file):
+    def __init__(self, path, mode, callback, *args):
+        file.__init__(self, path, mode)
+        self.seek(0, SEEK_END)
+        self._total = self.tell()
+        self.seek(0)
+        self._callback = callback
+        self._args = args
+
+    def __len__(self):
+        return self._total
+
+    def read(self, size):
+        data = file.read(self, size)
+        self._callback(self._total, len(data), *self._args)
+        return data
+
+
+# end of stack overflow reference
 
 def get_args():
     """
@@ -69,6 +101,28 @@ def get_args():
                         help='Name of the cluster you wish the VM to\
                           end up on. If left blank the first cluster found\
                           will be used')
+
+    parser.add_argument('--host_name',
+                        required=False,
+                        action='store',
+                        default=None,
+                        help='Name of the host you wish the VM to\
+                          end up on. If left blank the first cluster found\
+                          will be used')
+
+
+    parser.add_argument('--folder_name',
+                        required=False,
+                        action='store',
+                        default=None,
+                        help='Name of the VM folder you wish the VM to\
+                          end up in. If left blank it will not be in a folder.')
+
+    parser.add_argument('-n', '--vm_name',
+                        required=False,
+                        action='store',
+                        default='',
+                        help='Name of the VM after deploy')
 
     parser.add_argument('-v', '--vmdk_path',
                         required=True,
@@ -137,6 +191,15 @@ def get_objects(si, args):
     else:
         print "No datastores found in DC (%s)." % datacenter_obj.name
 
+    #Get vm folder object
+    vmFolder_List = datacenter_obj.vmFolder.childEntity
+    if args.folder_name:
+        folder_obj = get_obj_in_list(args.folder_name, vmFolder_List)
+    elif len(vmFolder_List) > 0:
+        folder_obj = vmFolder_List[0]
+    else:
+        print "No folder found in DC (%s)." % datacenter_obj.name
+
     # Get cluster object.
     cluster_list = datacenter_obj.hostFolder.childEntity
     if args.cluster_name:
@@ -146,12 +209,23 @@ def get_objects(si, args):
     else:
         print "No clusters found in DC (%s)." % datacenter_obj.name
 
+    # Get host object.
+    host_list = cluster_obj.host
+    if args.host_name:
+        host_obj = get_obj_in_list(args.host_name, host_list)
+    elif len(cluster_list) > 0:
+        host_obj = host_list[0]
+    else:
+        print "No host found in Cluster (%s)." % cluster_obj.name
+
     # Generate resource pool.
     resource_pool_obj = cluster_obj.resourcePool
 
     return {"datacenter": datacenter_obj,
             "datastore": datastore_obj,
-            "resource pool": resource_pool_obj}
+            "resource pool": resource_pool_obj,
+            "folder": folder_obj,
+            "host": host_obj}
 
 
 def keep_lease_alive(lease):
@@ -173,45 +247,62 @@ def keep_lease_alive(lease):
 
 def main():
     args = get_args()
-    ovfd = get_ovf_descriptor(args.ovf_path)
     try:
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
         si = connect.SmartConnect(host=args.host,
                                   user=args.user,
                                   pwd=args.password,
-                                  port=args.port)
+                                  port=args.port,
+                                  sslContext=ctx)
     except:
         print "Unable to connect to %s" % args.host
         exit(1)
     objs = get_objects(si, args)
+    deploy(args.host, si, args.ovf_path, args.vmdk_path, args.vm_name, objs["resource pool"], objs["datastore"], objs["folder"], objs["host"])
+    connect.Disconnect(si)
+
+
+def deploy(host, si, ovf_path, vmdk_path, vm_name, resoure_pool, datastore, folder, esxhost ):
+    ovfd = get_ovf_descriptor(ovf_path)
+
     manager = si.content.ovfManager
     spec_params = vim.OvfManager.CreateImportSpecParams()
+    spec_params.entityName = vm_name
     import_spec = manager.CreateImportSpec(ovfd,
-                                           objs["resource pool"],
-                                           objs["datastore"],
+                                           resoure_pool,
+                                           datastore,
                                            spec_params)
-    lease = objs["resource pool"].ImportVApp(import_spec.importSpec)
+    lease = resoure_pool.ImportVApp(import_spec.importSpec, folder=folder, host=esxhost)
     while(True):
         if (lease.state == vim.HttpNfcLease.State.ready):
             # Assuming single VMDK.
-            url = lease.info.deviceUrl[0].url.replace('*', args.host)
+            url = lease.info.deviceUrl[0].url.replace('*', host)
             # Spawn a dawmon thread to keep the lease active while POSTing
             # VMDK.
             keepalive_thread = Thread(target=keep_lease_alive, args=(lease,))
             keepalive_thread.start()
             # POST the VMDK to the host via curl. Requests library would work
             # too.
-            curl_cmd = (
-                "curl -Ss -X POST --insecure -T %s -H 'Content-Type: \
-                application/x-vnd.vmware-streamVmdk' %s" %
-                (args.vmdk_path, url))
-            system(curl_cmd)
+
+            # New method using urllib2
+            path = vmdk_path
+            progress = Progress()
+            stream = file_with_callback(path, 'rb', progress.update, path)
+            req = urllib2.Request(url, stream)
+
+            ctx = ssl.create_default_context()
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
+            res = urllib2.urlopen(req, context=ctx)
+
             lease.HttpNfcLeaseComplete()
             keepalive_thread.join()
             return 0
         elif (lease.state == vim.HttpNfcLease.State.error):
             print "Lease error: " + lease.state.error
             exit(1)
-    connect.Disconnect(si)
 
 if __name__ == "__main__":
     exit(main())
