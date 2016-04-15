@@ -279,7 +279,8 @@ def deploy(host, si, ovf_path, vmdk_path,
                                            resoure_pool,
                                            datastore,
                                            spec_params)
-    lease = resoure_pool.ImportVApp(import_spec.importSpec, folder=folder, host=esxhost)
+    lease = resoure_pool.ImportVApp(import_spec.importSpec,
+                                    folder=folder, host=esxhost)
     while(True):
         if (lease.state == vim.HttpNfcLease.State.ready):
             # Assuming single VMDK.
