@@ -15,6 +15,7 @@
 from __future__ import print_function
 
 import atexit
+import ssl
 
 import requests
 
@@ -40,51 +41,63 @@ def setup_args():
     my_args = parser.parse_args()
     return cli.prompt_for_password(my_args)
 
-args = setup_args()
-si = None
-try:
-    si = connect.SmartConnect(host=args.host,
-                              user=args.user,
-                              pwd=args.password,
-                              port=int(args.port))
-    atexit.register(connect.Disconnect, si)
-except IOError:
-    pass
 
-if not si:
-    raise SystemExit("Unable to connect to host with supplied info.")
-vm = si.content.searchIndex.FindByUuid(None, args.uuid, True)
-if not vm:
-    raise SystemExit("Unable to locate VirtualMachine.")
-
-print("Found: {0}".format(vm.name))
-
-spec = vim.vm.ConfigSpec()
-opt = vim.option.OptionValue()
-spec.extraConfig = []
-
-options_values = {
-    "custom_key1": "Ive tested very large xml and json, and base64 values here"
-                   " and they work",
-    "custom_key2": "Ive tested very large xml and json, and base64 values here"
-                   " and they work",
-    "custom_key3": "Ive tested very large xml and json, and base64 values here"
-                   " and they work",
-    "custom_key4": "Ive tested very large xml and json, and base64 values here"
-                   " and they work"
-}
-
-for k, v in options_values.iteritems():
-    opt.key = k
-    opt.value = v
-    spec.extraConfig.append(opt)
+def addPropertiesToVM(si, vm, options_values):
+    spec = vim.vm.ConfigSpec()
     opt = vim.option.OptionValue()
+    spec.extraConfig = []
 
-task = vm.ReconfigVM_Task(spec)
-tasks.wait_for_tasks(si, [task])
-print("Done setting values.")
-print("time to get them")
-keys_and_vals = vm.config.extraConfig
-for opts in keys_and_vals:
-    print("key: {0} => {1}".format(opts.key, opts.value))
-print("done.")
+    for k, v in options_values.iteritems():
+        opt.key = k
+        opt.value = v
+        spec.extraConfig.append(opt)
+        opt = vim.option.OptionValue()
+
+    task = vm.ReconfigVM_Task(spec)
+    tasks.wait_for_tasks(si, [task])
+    print("Done setting values.")
+    print("time to get them")
+    keys_and_vals = vm.config.extraConfig
+    for opts in keys_and_vals:
+        print("key: {0} => {1}".format(opts.key, opts.value))
+    print("done.")
+
+
+def main():
+
+    args = setup_args()
+    si = None
+    try:
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+        si = connect.SmartConnect(host=args.host,
+                                  user=args.user,
+                                  pwd=args.password,
+                                  port=int(args.port),
+                                  sslContext=ctx)
+        atexit.register(connect.Disconnect, si)
+    except IOError:
+        pass
+
+    if not si:
+        raise SystemExit("Unable to connect to host with supplied info.")
+    vm = si.content.searchIndex.FindByUuid(None, args.uuid, True)
+    if not vm:
+        raise SystemExit("Unable to locate VirtualMachine.")
+
+    print("Found: {0}".format(vm.name))
+    options_values = {
+        "custom_key1": "Ive tested very large xml and json,"
+                       " and base64 values here and they work",
+        "custom_key2": "Ive tested very large xml and json,"
+                       " and base64 values here and they work",
+        "custom_key3": "Ive tested very large xml and json,"
+                       " and base64 values here and they work",
+        "custom_key4": "Ive tested very large xml and json,"
+                       " and base64 values here and they work"
+    }
+    addPropertiesToVM(si, vm, options_values)
+
+if __name__ == "__main__":
+    exit(main())

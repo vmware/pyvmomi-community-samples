@@ -1,0 +1,47 @@
+#!/bin/bash
+
+#####################################################################
+# Configure Network                                                 #
+#####################################################################
+
+ifdown eth0
+ifdown eth1
+
+cat > /etc/sysconfig/network/ifcfg-eth0 <<EOF
+DEVICE='eth0'
+BOOTPROTO='static'
+ONBOOT='yes'
+STARTMODE='auto'
+USERCONTROL='no'
+FIREWALL='no'
+IPADDR='%(management_ip)s'
+NETMASK='%(net_mask)s'
+
+EOF
+
+cat > /etc/sysconfig/network/ifcfg-eth1 <<EOF
+DEVICE='eth1'
+STARTMODE='auto'
+BOOTPROTO='static'
+ONBOOT='yes'
+USERCONTROL='no'
+FIREWALL='no'
+IPADDR='%(application_ip)s'
+NETMASK='%(net_mask)s'
+
+EOF
+
+cat > /etc/sysconfig/network/routes <<EOF
+default %(gateway)s - eth0
+EOF
+
+#DNS info use emc default for now
+cat > /etc/resolv.conf <<EOF
+nameserver x.x.x.x
+nameserver x.x.x.x
+search lss.emc.com corp.emc.com
+EOF
+
+
+ifup eth0
+ifup eth1

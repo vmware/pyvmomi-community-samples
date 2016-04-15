@@ -28,9 +28,12 @@ from __future__ import with_statement
 import atexit
 import ssl
 
+import requests
+
 from tools import cli
 from pyVim import connect
 from pyVmomi import vim, vmodl
+import ntpath
 
 
 def get_args():
@@ -40,12 +43,12 @@ def get_args():
     parser = cli.build_arg_parser()
 
     parser.add_argument('-v', '--vm_uuid',
-                        required=False,
+                        required=True,
                         action='store',
                         help='Virtual machine uuid')
 
     parser.add_argument('-r', '--vm_user',
-                        required=False,
+                        required=True,
                         action='store',
                         help='virtual machine user name')
 
@@ -54,15 +57,10 @@ def get_args():
                         action='store',
                         help='virtual machine password')
 
-    parser.add_argument('-l', '--path_to_program',
-                        required=False,
+    parser.add_argument('-t', '--path_to_script',
+                        required=True,
                         action='store',
-                        help='Path inside VM to the program')
-
-    parser.add_argument('-f', '--program_arguments',
-                        required=False,
-                        action='store',
-                        help='Program command line options')
+                        help='Local path where the script is')
 
     args = parser.parse_args()
 
@@ -88,9 +86,26 @@ def main():
                                                 sslContext=ctx)
 
         atexit.register(connect.Disconnect, service_instance)
+    except:
+        print "Unable to connect to %s" % args.host
+        exit(1)
+
+    params = {
+        "application_ip": "x.x.x.x",
+        "management_ip": "x.x.x.x",
+        "net_mask": "x.x.x.x",
+        "gateway": "x.x.x.x"
+    }
+    runScriptInVM(service_instance, args.vm_uuid, args.vm_user,
+                  args.vm_pwd, args.path_to_script, params)
+
+
+def runScriptInVM(service_instance, vm_uuid, vm_user,
+                  vm_pwd, path_to_script, params):
+    try:
         content = service_instance.RetrieveContent()
 
-        vm = content.searchIndex.FindByUuid(None, args.vm_uuid, True)
+        vm = content.searchIndex.FindByUuid(None, vm_uuid, True)
         tools_status = vm.guest.toolsStatus
         if (tools_status == 'toolsNotInstalled' or
                 tools_status == 'toolsNotRunning'):
@@ -99,16 +114,38 @@ def main():
                 "Rerun the script after verifying that VMwareTools "
                 "is running")
 
+        script = open(path_to_script, 'rb')
+        path_on_vm = "/tmp/%s" % ntpath.basename(script.name)
+
+        vm_shell = script.readline().replace("#!", "").rstrip()
+        script.seek(0)
+        contents = script.read() % params
+        # contents += "\nrm $0"
+
         creds = vim.vm.guest.NamePasswordAuthentication(
-            username=args.vm_user, password=args.vm_pwd
+            username=vm_user, password=vm_pwd
         )
+
+        try:
+            file_attribute = vim.vm.guest.FileManager.FileAttributes()
+            url = content.guestOperationsManager.fileManager. \
+                InitiateFileTransferToGuest(vm, creds, path_on_vm,
+                                            file_attribute,
+                                            len(contents), True)
+            resp = requests.put(url, data=contents, verify=False)
+            if not resp.status_code == 200:
+                print "Error while uploading file"
+            else:
+                print "Successfully uploaded file"
+        except IOError, e:
+            print e
 
         try:
             pm = content.guestOperationsManager.processManager
 
             ps = vim.vm.guest.ProcessManager.ProgramSpec(
-                programPath=args.path_to_program,
-                arguments=args.program_arguments
+                programPath=vm_shell,
+                arguments=path_on_vm
             )
             res = pm.StartProgramInGuest(vm, creds, ps)
 
@@ -122,6 +159,7 @@ def main():
         return -1
 
     return 0
+
 
 # Start program
 if __name__ == "__main__":

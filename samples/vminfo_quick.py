@@ -12,10 +12,12 @@
 """
 from __future__ import print_function
 import atexit
+import ssl
 from time import clock
 
 from pyVim import connect
 from pyVmomi import vim
+
 from tools import cli
 from tools import pchelper
 
@@ -43,10 +45,14 @@ vm_properties = ["name", "config.uuid", "config.hardware.numCPU",
 args = cli.get_args()
 service_instance = None
 try:
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
     service_instance = connect.SmartConnect(host=args.host,
                                             user=args.user,
                                             pwd=args.password,
-                                            port=int(args.port))
+                                            port=int(args.port),
+                                            sslContext=ctx)
     atexit.register(connect.Disconnect, service_instance)
     atexit.register(endit)
 except IOError as e:
