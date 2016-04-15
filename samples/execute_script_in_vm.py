@@ -36,7 +36,6 @@ from pyVmomi import vim, vmodl
 import ntpath
 
 
-
 def get_args():
     """Get command line args from the user.
     """
@@ -91,11 +90,18 @@ def main():
         print "Unable to connect to %s" % args.host
         exit(1)
 
-    params = {"application_ip": "x.x.x.x", "management_ip": "x.x.x.x", "net_mask": "x.x.x.x", "gateway": "x.x.x.x"}
-    runScriptInVM(service_instance, args.vm_uuid, args.vm_user, args.vm_pwd, args.path_to_script, params)
+    params = {
+        "application_ip": "x.x.x.x",
+        "management_ip": "x.x.x.x",
+        "net_mask": "x.x.x.x",
+        "gateway": "x.x.x.x"
+    }
+    runScriptInVM(service_instance, args.vm_uuid, args.vm_user,
+                  args.vm_pwd, args.path_to_script, params)
 
 
-def runScriptInVM(service_instance, vm_uuid, vm_user, vm_pwd, path_to_script, params):
+def runScriptInVM(service_instance, vm_uuid, vm_user,
+                  vm_pwd, path_to_script, params):
     try:
         content = service_instance.RetrieveContent()
 
@@ -115,7 +121,6 @@ def runScriptInVM(service_instance, vm_uuid, vm_user, vm_pwd, path_to_script, pa
         script.seek(0)
         contents = script.read() % params
         # contents += "\nrm $0"
-
 
         creds = vim.vm.guest.NamePasswordAuthentication(
             username=vm_user, password=vm_pwd

@@ -21,6 +21,7 @@ from pyVmomi import vim
 
 import urllib2
 
+
 # http://stackoverflow.com/questions/5925028/urllib2-post-progress-monitoring
 class Progress(object):
     def __init__(self):
@@ -30,6 +31,7 @@ class Progress(object):
         self._seen += size
         pct = (self._seen / total) * 100.0
         print '%s progress: %.2f' % (name, pct)
+
 
 class file_with_callback(file):
     def __init__(self, path, mode, callback, *args):
@@ -110,13 +112,13 @@ def get_args():
                           end up on. If left blank the first cluster found\
                           will be used')
 
-
     parser.add_argument('--folder_name',
                         required=False,
                         action='store',
                         default=None,
                         help='Name of the VM folder you wish the VM to\
-                          end up in. If left blank it will not be in a folder.')
+                          end up in. \
+                          If left blank it will not be in a folder.')
 
     parser.add_argument('-n', '--vm_name',
                         required=False,
@@ -191,7 +193,7 @@ def get_objects(si, args):
     else:
         print "No datastores found in DC (%s)." % datacenter_obj.name
 
-    #Get vm folder object
+    # Get vm folder object
     vmFolder_List = datacenter_obj.vmFolder.childEntity
     if args.folder_name:
         folder_obj = get_obj_in_list(args.folder_name, vmFolder_List)
@@ -260,11 +262,14 @@ def main():
         print "Unable to connect to %s" % args.host
         exit(1)
     objs = get_objects(si, args)
-    deploy(args.host, si, args.ovf_path, args.vmdk_path, args.vm_name, objs["resource pool"], objs["datastore"], objs["folder"], objs["host"])
+    deploy(args.host, si, args.ovf_path, args.vmdk_path, args.vm_name,
+           objs["resource pool"], objs["datastore"],
+           objs["folder"], objs["host"])
     connect.Disconnect(si)
 
 
-def deploy(host, si, ovf_path, vmdk_path, vm_name, resoure_pool, datastore, folder, esxhost ):
+def deploy(host, si, ovf_path, vmdk_path,
+           vm_name, resoure_pool, datastore, folder, esxhost):
     ovfd = get_ovf_descriptor(ovf_path)
 
     manager = si.content.ovfManager

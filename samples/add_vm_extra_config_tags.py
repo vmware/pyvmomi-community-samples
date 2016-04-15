@@ -41,7 +41,8 @@ def setup_args():
     my_args = parser.parse_args()
     return cli.prompt_for_password(my_args)
 
-def addPropertiesToVM(si,vm,options_values):
+
+def addPropertiesToVM(si, vm, options_values):
     spec = vim.vm.ConfigSpec()
     opt = vim.option.OptionValue()
     spec.extraConfig = []
@@ -60,6 +61,7 @@ def addPropertiesToVM(si,vm,options_values):
     for opts in keys_and_vals:
         print("key: {0} => {1}".format(opts.key, opts.value))
     print("done.")
+
 
 def main():
 
@@ -86,18 +88,16 @@ def main():
 
     print("Found: {0}".format(vm.name))
     options_values = {
-        "custom_key1": "Ive tested very large xml and json, and base64 values here"
-                       " and they work",
-        "custom_key2": "Ive tested very large xml and json, and base64 values here"
-                       " and they work",
-        "custom_key3": "Ive tested very large xml and json, and base64 values here"
-                       " and they work",
-        "custom_key4": "Ive tested very large xml and json, and base64 values here"
-                       " and they work"
+        "custom_key1": "Ive tested very large xml and json,"
+                       " and base64 values here and they work",
+        "custom_key2": "Ive tested very large xml and json,"
+                       " and base64 values here and they work",
+        "custom_key3": "Ive tested very large xml and json,"
+                       " and base64 values here and they work",
+        "custom_key4": "Ive tested very large xml and json,"
+                       " and base64 values here and they work"
     }
-
-
-    addPropertiesToVM(si,vm, options_values)
+    addPropertiesToVM(si, vm, options_values)
 
 if __name__ == "__main__":
     exit(main())

@@ -16,8 +16,6 @@ from getpass import getpass
 from pyVim import connect
 
 
-
-
 def get_args():
     """
     Get CLI arguments.
@@ -121,6 +119,7 @@ def get_objects(si, args):
     return {"datacenter": datacenter_obj,
             "host": host_obj}
 
+
 def wait_for_task(task):
     """ wait for a vCenter task to finish """
     task_done = False
@@ -153,6 +152,7 @@ def main():
 
     connect.Disconnect(si)
 
+
 def enableSSH(host):
     for service in host.configManager.serviceSystem.serviceInfo.service:
         print "key: %s" % service.key
@@ -163,6 +163,7 @@ def enableSSH(host):
         print
 
     host.configManager.serviceSystem.Start("TSM-SSH")
+
 
 def disableSSH(host):
     for service in host.configManager.serviceSystem.serviceInfo.service:
