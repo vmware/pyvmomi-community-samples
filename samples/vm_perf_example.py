@@ -3,7 +3,7 @@
  Written by Lance Hasson
  Github: https://github.com/JLHasson
 
- Script to report all available realtime performance metrics from a 
+ Script to report all available realtime performance metrics from a
  virtual machine. Based on a Java example available in the VIM API 6.0
  documentationavailable online at:
  https://pubs.vmware.com/vsphere-60/index.jsp?topic=%2Fcom.vmware.wssdk.pg.
@@ -22,7 +22,7 @@ def main():
     args = cli.get_args()
 
     # Connect to the host without SSL signing
-    try: 
+    try:
         si = SmartConnectNoSSL(
             host=args.host,
             user=args.user,
@@ -63,21 +63,21 @@ def main():
     # Loop through all the VMs
     for child in children:
         # Get all available metric IDs for this VM
-        counterIDs = [m.counterId for m in 
-                      perfManager.QueryAvailablePerfMetric(entity=child)]
+        counterIDs = [m.counterId for m in
+            perfManager.QueryAvailablePerfMetric(entity=child)]
 
-        # Using the IDs form a list of MetricId 
+        # Using the IDs form a list of MetricId
         # objects for building the Query Spec
         metricIDs = [vim.PerformanceManager.MetricId(counterId=c,
-                                                     instance="*") 
+                                                     instance="*")
                                                      for c in counterIDs]
-        
-        # Build the specification to be used 
+
+        # Build the specification to be used
         # for querying the performance manager
         spec = vim.PerformanceManager.QuerySpec(maxSample=1,
                                                 entity=child,
                                                 metricId=metricIDs)
-        # Query the performance manager 
+        # Query the performance manager
         # based on the metrics created above
         result = perfManager.QueryStats(querySpec=[spec])
 
