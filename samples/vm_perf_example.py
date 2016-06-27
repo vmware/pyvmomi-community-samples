@@ -64,13 +64,13 @@ def main():
     for child in children:
         # Get all available metric IDs for this VM
         counterIDs = [m.counterId for m in
-            perfManager.QueryAvailablePerfMetric(entity=child)]
+                      perfManager.QueryAvailablePerfMetric(entity=child)]
 
         # Using the IDs form a list of MetricId
         # objects for building the Query Spec
         metricIDs = [vim.PerformanceManager.MetricId(counterId=c,
                                                      instance="*")
-                                                     for c in counterIDs]
+                     for c in counterIDs]
 
         # Build the specification to be used
         # for querying the performance manager
