@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env pytho)n
 # VMware vSphere Python SDK
 # Copyright (c) 2008-2013 VMware, Inc. All Rights Reserved.
 #
@@ -19,6 +19,7 @@ Python program for listing the vms on an ESX / vCenter host
 """
 
 import atexit
+import ssl
 
 from pyVim import connect
 from pyVmomi import vmodl
@@ -38,7 +39,7 @@ def parse_service_instance(service_instance):
     object_view = content.viewManager.CreateContainerView(content.rootFolder,
                                                           [], True)
     for obj in object_view.view:
-        print obj
+        print(obj)
         if isinstance(obj, vim.VirtualMachine):
             vm.print_vm_info(obj)
 
@@ -54,10 +55,13 @@ def main():
     args = cli.get_args()
 
     try:
+        context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+        context.verify_mode = ssl.CERT_NONE
         service_instance = connect.SmartConnect(host=args.host,
                                                 user=args.user,
                                                 pwd=args.password,
-                                                port=int(args.port))
+                                                port=int(args.port),
+                                                sslContext=context)
 
         if not service_instance:
             print("Could not connect to the specified host using specified "
@@ -69,8 +73,8 @@ def main():
         # ## Do the actual parsing of data ## #
         parse_service_instance(service_instance)
 
-    except vmodl.MethodFault, e:
-        print "Caught vmodl fault : " + e.msg
+    except vmodl.MethodFault as e:
+        print("Caught vmodl fault : {}".format(e.msg))
         return -1
 
     return 0
