@@ -17,7 +17,11 @@ import requests
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
+
 def get_args():
+    """
+    Supports the command-line arguments listed below.
+    """
     parser = argparse.ArgumentParser(
         description='Arguments for talking to vCenter')
 
@@ -48,10 +52,9 @@ def get_args():
                         help='uuid of disk')
 
     parser.add_argument('--dsname',
-                        required=True,
+                        required=False,
                         action='store',
                         help='name of datastore')
-
 
     args = parser.parse_args()
 
@@ -63,15 +66,23 @@ def get_args():
 
 
 def createDatastore(si, uuid, dsname):
-    dp="/vmfs/devices/disks/"+ str(uuid)
+    dp = "/vmfs/devices/disks/" + str(uuid)
     content = si.RetrieveContent()
-    container = content.viewManager.CreateContainerView(content.rootFolder, [vim.HostSystem], True)
+    container = content.viewManager.CreateContainerView(
+                                               content.rootFolder,
+                                               [vim.HostSystem],
+                                               True)
     for esx_host in container.view:
         try:
             hostdssystem = esx_host.configManager.datastoreSystem
-            vmfs_ds_options = vim.host.DatastoreSystem.QueryVmfsDatastoreCreateOptions(hostdssystem, dp, 5)
-            vmfs_ds_options[0].spec.vmfs.volumeName=dsname
-            new_ds = vim.host.DatastoreSystem.CreateVmfsDatastore(hostdssystem, vmfs_ds_options[0].spec)
+            dssystem = vim.host.DatastoreSystem
+            vmfs_ds_options = dssystem.QueryVmfsDatastoreCreateOptions(
+                                                       hostdssystem, dp, 5)
+            if dsname is not None:
+                vmfs_ds_options[0].spec.vmfs.volumeName = dsname
+
+            new_ds = dssystem.CreateVmfsDatastore(hostdssystem,
+                                                  vmfs_ds_options[0].spec)
         except vim.fault.NotFound:
             print "Not found"
         except vim.fault.HostConfigFault:
@@ -79,7 +90,7 @@ def createDatastore(si, uuid, dsname):
         except vmodl.fault.NotSupported:
             print "Not supported"
         except Exception as e:
-            print "Unexpected error: %s" %e
+            print "Unexpected error:", e
         else:
             print "Datastore created"
 
