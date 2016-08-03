@@ -14,20 +14,25 @@ import sys
 import ssl
 
 
-
 def GetArgs():
-   """
-   Supports the command-line arguments listed below.
-   """
+    """
+    Supports the command-line arguments listed below.
+    """
 
-   parser = argparse.ArgumentParser(description='Process args for shutting down a Virtual Machine')
-   parser.add_argument('-s', '--host', required=True, action='store', help='Remote host to connect to')
-   parser.add_argument('-o', '--port', type=int, default=443, action='store', help='Port to connect on')
-   parser.add_argument('-u', '--user', required=True, action='store', help='User name to use when connecting to host')
-   parser.add_argument('-p', '--password', required=False, action='store', help='Password to use when connecting to host')
-   parser.add_argument('-v', '--vmname', required=True, action='append', help='Names of the Virtual Machines to shutdown')
-   args = parser.parse_args()
-   return args
+    parser = argparse.ArgumentParser(
+        description='Process args for shutting down a Virtual Machine')
+    parser.add_argument('-s', '--host', required=True,
+                        action='store', help='Remote host to connect to')
+    parser.add_argument('-o', '--port', type=int, default=443,
+                        action='store', help='Port to connect on')
+    parser.add_argument('-u', '--user', required=True, action='store',
+                        help='User name to use when connecting to host')
+    parser.add_argument('-p', '--password', required=False,
+                        action='store', help='Password to use when connecting to host')
+    parser.add_argument('-v', '--vmname', required=True, action='append',
+                        help='Names of the Virtual Machines to shutdown')
+    args = parser.parse_args()
+    return args
 
 
 def main():
@@ -37,9 +42,10 @@ def main():
 
     args = GetArgs()
     if args.password:
-      password = args.password
+        password = args.password
     else:
-      password = getpass.getpass(prompt='Enter password for host %s and user %s: ' % (args.host,args.user))
+        password = getpass.getpass(
+            prompt='Enter password for host %s and user %s: ' % (args.host, args.user))
 
     service_instance = None
     context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
@@ -47,10 +53,10 @@ def main():
 
     try:
         service_instance = SmartConnect(host=args.host,
-                                                user=args.user,
-                                                pwd=args.password,
-                                                port=int(args.port),
-                                                sslContext=context)
+                                        user=args.user,
+                                        pwd=args.password,
+                                        port=int(args.port),
+                                        sslContext=context)
         if not service_instance:
             print("Could not connect to the specified host using specified "
                   "username and password")
