@@ -28,7 +28,7 @@ def GetArgs():
     parser.add_argument('-u', '--user', required=True, action='store',
                         help='User name to use when connecting to host')
     parser.add_argument('-p', '--password', required=False,
-                        action='store', help='Password to use when connecting to host')
+                        action='store', help='Password to connect to host')
     parser.add_argument('-v', '--vmname', required=True, action='append',
                         help='Names of the Virtual Machines to shutdown')
     args = parser.parse_args()
@@ -45,7 +45,7 @@ def main():
         password = args.password
     else:
         password = getpass.getpass(
-            prompt='Enter password for host %s and user %s: ' % (args.host, args.user))
+            prompt='Password to host %s and user %s:' % (args.host, args.user))
 
     service_instance = None
     context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
