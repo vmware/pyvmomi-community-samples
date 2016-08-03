@@ -32,7 +32,7 @@ def GetArgs():
 
 def main():
     """
-   Simple command-line program for shutting down virtual machines on a system. 
+   Simple command-line program for shutting down virtual machines on a system.
    """
 
     args = GetArgs()
@@ -43,7 +43,7 @@ def main():
 
     service_instance = None
     context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
-    context.verify_mode = ssl.CERT_NONE   
+    context.verify_mode = ssl.CERT_NONE
 
     try:
         service_instance = SmartConnect(host=args.host,
