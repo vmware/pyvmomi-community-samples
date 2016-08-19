@@ -89,6 +89,13 @@ def get_args():
                         help='Resource Pool to use. If left blank the first\
                             resource pool found will be used')
 
+    parser.add_argument('--compute-name',
+                       required=False,
+                       action='store',
+                       default=None,
+                       help='Compute node to use. If left blank, a resource from a pool \
+                            found will be used')
+
     parser.add_argument('--power-on',
                         dest='power_on',
                         required=False,
@@ -147,7 +154,7 @@ def get_obj(content, vimtype, name):
 def clone_vm(
         content, template, vm_name, si,
         datacenter_name, vm_folder, datastore_name,
-        cluster_name, resource_pool, power_on):
+        cluster_name, resource_pool, compute_name, power_on):
     """
     Clone a VM from a template/VM, datacenter_name, vm_folder, datastore_name
     cluster_name, resource_pool, and power_on are all optional.
@@ -175,10 +182,16 @@ def clone_vm(
     else:
         resource_pool = cluster.resourcePool
 
+    if compute_name:
+        compute_name = get_obj(content, [vim.HostSystem], compute_name)
+    else:
+        compute_name = cluster.compute_name
+
     # set relospec
     relospec = vim.vm.RelocateSpec()
     relospec.datastore = datastore
     relospec.pool = resource_pool
+    relospec.host = compute_name
 
     clonespec = vim.vm.CloneSpec()
     clonespec.location = relospec
@@ -214,7 +227,7 @@ def main():
             content, template, args.vm_name, si,
             args.datacenter_name, args.vm_folder,
             args.datastore_name, args.cluster_name,
-            args.resource_pool, args.power_on)
+            args.resource_pool, args.compute_name, args.power_on)
     else:
         print "template not found"
 
