@@ -90,10 +90,10 @@ def get_args():
                             resource pool found will be used')
 
     parser.add_argument('--compute-name',
-                       required=False,
-                       action='store',
-                       default=None,
-                       help='Compute node to use. If left blank, a resource from a pool \
+                        required=False,
+                        action='store',
+                        default=None,
+                        help='Compute node to use. If left blank, a resource from a pool \
                             found will be used')
 
     parser.add_argument('--power-on',
