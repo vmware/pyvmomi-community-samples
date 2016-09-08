@@ -64,6 +64,9 @@ def GetVMNics(vm):
     for dev in vm.config.hardware.device:
         if isinstance(dev, vim.vm.device.VirtualEthernetCard):
             dev_backing = dev.backing
+            portGroup = None
+            vlanId = None
+            vSwitch = None
             if hasattr(dev_backing, 'port'):
                 portGroupKey = dev.backing.port.portgroupKey
                 dvsUuid = dev.backing.port.switchUuid
@@ -92,6 +95,10 @@ def GetVMNics(vm):
                         vSwitch = str(p.spec.vswitchName)
             if portGroup is None:
                 portGroup = 'NA'
+            if vlanId is None:
+                vlanId = 'NA'
+            if vSwitch is None:
+                vSwitch = 'NA'
             print('\t' + dev.deviceInfo.label + '->' + dev.macAddress +
                   ' @ ' + vSwitch + '->' + portGroup +
                   ' (VLAN ' + vlanId + ')')
