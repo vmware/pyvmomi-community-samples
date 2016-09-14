@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from setuptools import setup
+from setuptools import find_packages, setup
 import os
 
 
@@ -27,7 +27,7 @@ setup(name='pyvmomi-community-samples',
       author_email='hartsocks@vmware.com',
       url='http://vmware.github.io/pyvmomi-community-samples/',
       install_requires=['pyvmomi'],
-      packages=['samples'],
+      packages=find_packages(),
       test_suite='samples.tests',
       license='Apache',
       long_description=read('README.md'),
