@@ -1,10 +1,10 @@
 #!/usr/bin/python
-""
+'''
 Written by Gaurav Dogra
 Github: https://github.com/dograga
 
 Script to extract cpu usage of esxhosts on vcenter for last 1 hour with multithreading
-""
+'''
 import atexit
 from pyVmomi import vim
 from pyVim.connect import SmartConnect, Disconnect
@@ -44,14 +44,15 @@ class perfdata():
           query = vim.PerformanceManager.QuerySpec(entity=host,metricId=[metricId],intervalId=20,startTime=startTime,endTime=endTime)
           stats=perfManager.QueryPerf(querySpec=[query])
           count=0
-          for val in stats[0].value[0].value:
-              perfinfo={}
-              val=float(val/100)
-              perfinfo['timestamp']=stats[0].sampleInfo[count].timestamp
-              perfinfo['hostname']=vihost
-              perfinfo['value']=val
-              output.append(perfinfo)
-              count+=1
+          if (stats[0].value[0].value):
+              for val in stats[0].value[0].value:
+                  perfinfo={}
+                  val=float(val/100)
+                  perfinfo['timestamp']=stats[0].sampleInfo[count].timestamp
+                  perfinfo['hostname']=vihost
+                  perfinfo['value']=val
+                  output.append(perfinfo)
+                  count+=1
           for out in output:
 	      print "Hostname: {}  TimeStame: {} Usage: {}".format (out['hostname'],out['timestamp'],out['value'])
        except vmodl.MethodFault as e:
