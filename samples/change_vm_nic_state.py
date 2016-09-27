@@ -51,8 +51,6 @@ def update_virtual_nic_state(si, vm_obj, nic_number, new_nic_state):
     virtual_nic_spec.device.key = virtual_nic_device.key
     virtual_nic_spec.device.macAddress = virtual_nic_device.macAddress
     virtual_nic_spec.device.backing = virtual_nic_device.backing
-    virtual_nic_spec.device.backing.port = \
-        virtual_nic_device.backing.port
     virtual_nic_spec.device.wakeOnLanEnabled = \
         virtual_nic_device.wakeOnLanEnabled
     connectable = vim.vm.device.VirtualDevice.ConnectInfo()
