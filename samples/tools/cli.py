@@ -57,6 +57,13 @@ def build_arg_parser():
                         required=False,
                         action='store',
                         help='Password to use when connecting to host')
+
+    parser.add_argument('-i', '--insecure',
+                        required=False,
+                        type=bool,
+                        default=False,
+                        action='store',
+                        help='Ignore server certificate')
     return parser
 
 

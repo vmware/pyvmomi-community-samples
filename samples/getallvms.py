@@ -26,6 +26,8 @@ from pyVmomi import vim
 
 import tools.cli as cli
 
+import ssl
+
 
 def print_vm_info(virtual_machine):
     """
@@ -66,11 +68,18 @@ def main():
 
     args = cli.get_args()
 
+    ssl_options = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH,
+                                             capath=None, cadata=None)
+    if args.insecure:
+        ssl_options.check_hostname = False
+        ssl_options.verify_mode = ssl.CERT_NONE
+
     try:
         service_instance = connect.SmartConnect(host=args.host,
                                                 user=args.user,
                                                 pwd=args.password,
-                                                port=int(args.port))
+                                                port=int(args.port),
+                                                sslContext=ssl_options)
 
         atexit.register(connect.Disconnect, service_instance)
 
