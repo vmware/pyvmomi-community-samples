@@ -60,9 +60,8 @@ def build_arg_parser():
 
     parser.add_argument('-i', '--insecure',
                         required=False,
-                        type=bool,
                         default=False,
-                        action='store',
+                        action='store_true',
                         help='Ignore server certificate')
     return parser
 
