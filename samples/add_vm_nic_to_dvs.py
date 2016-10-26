@@ -74,7 +74,7 @@ def search_port(dvs, portgroupkey):
 
 def get_args():
     if len(sys.argv) > 1:
-        host, user, password, vm_name,port_group, macAddress = sys.argv[1:]
+        host, user, password, vm_name, port_group, macAddress = sys.argv[1:]
     else:
         host = raw_input("Vcenter IP : ")
         user = raw_input("User: ")
@@ -97,10 +97,10 @@ def port_find(dvs, key):
 def main():
     host, user, password, vm_name, port_group, macAddress = get_args()
     default_port = "443"
-    serviceInstance = SmartConnect(host = host,
-                                   user = user,
-                                   pwd = password,
-                                   port = default_port)
+    serviceInstance = SmartConnect(host=host,
+                                   user=user,
+                                   pwd=password,
+                                   port=default_port)
     atexit.register(Disconnect, serviceInstance)
     content = serviceInstance.RetrieveContent()
     print "Search VDS PortGroup by Name ..."
@@ -112,7 +112,7 @@ def main():
         exit(0)
     print "Search Available(Unused) port for VM..."
     dvs = portgroup.config.distributedVirtualSwitch
-    portKey = search_port(dvs,portgroup.key)
+    portKey = search_port(dvs, portgroup.key)
     port = port_find(dvs, portKey)
     print "Search VM by Name ..."
     vm = None
