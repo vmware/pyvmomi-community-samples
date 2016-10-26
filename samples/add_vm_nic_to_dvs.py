@@ -54,7 +54,7 @@ def get_obj(content, vimtype, name):
     )
     for c in container.view:
         if c.name == name:
-            obj=c
+            obj = c
             break
     return obj
 
@@ -73,8 +73,8 @@ def search_port(dvs, portgroupkey):
 
 
 def get_args():
-    if len(sys.argv)>1:
-        host,user,password,vm_name,port_group,macAddress = sys.argv[1:]
+    if len(sys.argv) > 1:
+        host, user, password, vm_name,port_group, macAddress = sys.argv[1:]
     else:
         host = raw_input("Vcenter IP : ")
         user = raw_input("User: ")
@@ -84,6 +84,7 @@ def get_args():
         macAddress = raw_input("Input MacAddress :")
     return host, user, password, vm_name, port_group, macAddress
 
+
 def port_find(dvs, key):
     obj = None
     ports = dvs.FetchDVPorts()
@@ -92,30 +93,27 @@ def port_find(dvs, key):
             obj = c
     return obj
 
+
 def main():
     host, user, password, vm_name, port_group, macAddress = get_args()
     default_port = "443"
-
     serviceInstance = SmartConnect(host = host,
-                                 user = user,
-                                 pwd = password,
-                                 port = default_port)
-
+                                   user = user,
+                                   pwd = password,
+                                   port = default_port)
     atexit.register(Disconnect, serviceInstance)
     content = serviceInstance.RetrieveContent()
-
     print "Search VDS PortGroup by Name ..."
     portgroup = None
-    portgroup = get_obj(content, [vim.dvs.DistributedVirtualPortgroup], port_group)
+    portgroup = get_obj(content,
+                        [vim.dvs.DistributedVirtualPortgroup], port_group)
     if portgroup is None:
         print "Portgroup not Found in DVS ..."
         exit(0)
-
     print "Search Available(Unused) port for VM..."
     dvs = portgroup.config.distributedVirtualSwitch
     portKey = search_port(dvs,portgroup.key)
     port = port_find(dvs, portKey)
-
     print "Search VM by Name ..."
     vm = None
     vm = get_obj(content, [vim.VirtualMachine], vm_name)
@@ -124,6 +122,7 @@ def main():
         add_nic(vm, macAddress, port)
     else:
         print "Vm not Found ..."
+
 
 if __name__ == '__main__':
     sys.exit(main())
