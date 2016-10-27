@@ -25,6 +25,7 @@ import sys
 import argparse
 import getpass
 
+
 def add_nic(vm, mac, port):
     spec = vim.vm.ConfigSpec()
     nic_changes = []
