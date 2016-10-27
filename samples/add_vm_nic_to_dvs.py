@@ -5,6 +5,16 @@ Github: https://github.com/Luckylau
 Email: laujunbupt0913@163.com
 
 # Note: Example code For testing purposes only
+if you python3.5 add_vm_nic_to_dvs ,occur "certificate verify failed",you can
+change the way to coonnect ,eg:
+python 3.5:
+    context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+    context.verify_mode = ssl.CERT_NONE
+    serviceInstance = SmartConnect(host=args.host,
+                                   user=args.user,
+                                   pwd=args.password,
+                                   port=args.port,
+                                   sslContext=context)
 """
 
 
@@ -12,7 +22,8 @@ from pyVim.connect import SmartConnect, Disconnect
 import atexit
 from pyVmomi import vim
 import sys
-
+import argparse
+import getpass
 
 def add_nic(vm, mac, port):
     spec = vim.vm.ConfigSpec()
@@ -44,7 +55,7 @@ def add_nic(vm, mac, port):
     nic_changes.append(nic_spec)
     spec.deviceChange = nic_changes
     e = vm.ReconfigVM_Task(spec=spec)
-    print "Nic card added success ..."
+    print ("Nic card added success ...")
 
 
 def get_obj(content, vimtype, name):
@@ -68,21 +79,57 @@ def search_port(dvs, portgroupkey):
     ports = dvs.FetchDVPorts(criteria)
     for port in ports:
         search_portkey.append(port.key)
-    print search_portkey
+    print (search_portkey)
     return search_portkey[0]
 
 
 def get_args():
-    if len(sys.argv) > 1:
-        host, user, password, vm_name, port_group, macAddress = sys.argv[1:]
-    else:
-        host = raw_input("Vcenter IP : ")
-        user = raw_input("User: ")
-        password = raw_input("Password: ")
-        vm_name = raw_input("VM_name: ")
-        port_group = raw_input("Port_Group: ")
-        macAddress = raw_input("Input MacAddress :")
-    return host, user, password, vm_name, port_group, macAddress
+    parser = argparse.ArgumentParser(
+        description='Arguments for talking to vCenter')
+
+    parser.add_argument('-s', '--host',
+                        required=True,
+                        action='store',
+                        help='vSphere service to connect to')
+
+    parser.add_argument('-o', '--port',
+                        type=int,
+                        default=443,
+                        action='store',
+                        help='Port to connect on')
+
+    parser.add_argument('-u', '--user',
+                        required=True,
+                        action='store',
+                        help='User name to use')
+
+    parser.add_argument('-p', '--password',
+                        required=False,
+                        action='store',
+                        help='Password to use')
+
+    parser.add_argument('-v', '--vm-name',
+                        required=True,
+                        action='store',
+                        help='Name of the vm')
+
+    parser.add_argument('-pg', '--portgroup',
+                        required=True,
+                        action='store',
+                        help='Port group to connect on')
+
+    parser.add_argument('-mac', '--macaddress',
+                        required=True,
+                        action='store',
+                        help='Macadress of vm')
+
+    args = parser.parse_args()
+
+    if not args.password:
+        args.password = getpass.getpass(
+            prompt='Enter password')
+
+    return args
 
 
 def port_find(dvs, key):
@@ -95,33 +142,33 @@ def port_find(dvs, key):
 
 
 def main():
-    host, user, password, vm_name, port_group, macAddress = get_args()
-    default_port = "443"
-    serviceInstance = SmartConnect(host=host,
-                                   user=user,
-                                   pwd=password,
-                                   port=default_port)
+    args = get_args()
+    serviceInstance = SmartConnect(host=args.host,
+                                   user=args.user,
+                                   pwd=args.password,
+                                   port=args.port)
     atexit.register(Disconnect, serviceInstance)
+
     content = serviceInstance.RetrieveContent()
-    print "Search VDS PortGroup by Name ..."
+    print ("Search VDS PortGroup by Name ...")
     portgroup = None
     portgroup = get_obj(content,
-                        [vim.dvs.DistributedVirtualPortgroup], port_group)
+                        [vim.dvs.DistributedVirtualPortgroup], args.portgroup)
     if portgroup is None:
-        print "Portgroup not Found in DVS ..."
+        print ("Portgroup not Found in DVS ...")
         exit(0)
-    print "Search Available(Unused) port for VM..."
+    print ("Search Available(Unused) port for VM...")
     dvs = portgroup.config.distributedVirtualSwitch
     portKey = search_port(dvs, portgroup.key)
     port = port_find(dvs, portKey)
-    print "Search VM by Name ..."
+    print ("Search VM by Name ...")
     vm = None
-    vm = get_obj(content, [vim.VirtualMachine], vm_name)
+    vm = get_obj(content, [vim.VirtualMachine], args.vm_name)
     if vm:
-        print "Find Vm , Add Nic Card ..."
-        add_nic(vm, macAddress, port)
+        print ("Find Vm , Add Nic Card ...")
+        add_nic(vm, args.macaddress, port)
     else:
-        print "Vm not Found ..."
+        print ("Vm not Found ...")
 
 
 if __name__ == '__main__':
