@@ -77,7 +77,7 @@ def main():
             vm.ShutdownGuest()
 
     except vmodl.MethodFault as error:
-        print("Caught vmodl fault : " + e.msg)
+        print("Caught vmodl fault : " + error.msg)
         return -1
 
     return 0
