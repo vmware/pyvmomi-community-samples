@@ -48,7 +48,7 @@ def main():
             prompt='Password to host %s and user %s:' % (args.host, args.user))
 
     service_instance = None
-    context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+    context=ssl._create_unverified_context()
     context.verify_mode = ssl.CERT_NONE
 
     try:
