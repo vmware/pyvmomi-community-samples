@@ -8,8 +8,7 @@ Email: laujunbupt0913@163.com
 if you python3.5 add_vm_nic_to_dvs ,occur "certificate verify failed",you can
 change the way to coonnect ,eg:
 python 3.5:
-    context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
-    context.verify_mode = ssl.CERT_NONE
+    context = ssl._create_unverified_context()
     serviceInstance = SmartConnect(host=args.host,
                                    user=args.user,
                                    pwd=args.password,
