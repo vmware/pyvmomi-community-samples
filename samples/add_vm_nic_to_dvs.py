@@ -5,15 +5,6 @@ Github: https://github.com/Luckylau
 Email: laujunbupt0913@163.com
 
 # Note: Example code For testing purposes only
-if you python3.5 add_vm_nic_to_dvs ,occur "certificate verify failed",you can
-change the way to coonnect ,eg:
-python 3.5:
-    context = ssl._create_unverified_context()
-    serviceInstance = SmartConnect(host=args.host,
-                                   user=args.user,
-                                   pwd=args.password,
-                                   port=args.port,
-                                   sslContext=context)
 """
 
 
@@ -23,6 +14,7 @@ from pyVmomi import vim
 import sys
 import argparse
 import getpass
+import ssl
 
 
 def add_nic(vm, mac, port):
@@ -143,10 +135,14 @@ def port_find(dvs, key):
 
 def main():
     args = get_args()
+    context = None
+    if hasattr(ssl, "_create_unverified_context"):
+        context = ssl._create_unverified_context()
     serviceInstance = SmartConnect(host=args.host,
                                    user=args.user,
                                    pwd=args.password,
-                                   port=args.port)
+                                   port=args.port,
+                                   sslContext=context)
     atexit.register(Disconnect, serviceInstance)
 
     content = serviceInstance.RetrieveContent()
