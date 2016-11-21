@@ -1,6 +1,28 @@
 #!/usr/bin/env python
 
+# Copyright 2016 Abdul Anshad <abdulanshad33@gmail.com>
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+
 """
+Written by Abdul Anshad
+Github: https://github.com/Abdul-Anshad-A
+Email: abdulanshad33@gmail.com
+
+Credits:
+Thanks to "reuben.13@gmail.com" for the initial code.
+
+Note: Example code For testing purposes only
 vSphere Python SDK program to perform snapshot operations.
 """
 
@@ -136,21 +158,19 @@ def main():
 
     try:
         si = None
-        try:
-            print("Trying to connect to VCENTER SERVER . . .")
 
-            context = None
-            if inputs['ignore_ssl']:
-                context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
-                context.verify_mode = ssl.CERT_NONE
+        print("Trying to connect to VCENTER SERVER . . .")
 
-            si = connect.Connect(inputs['vcenter_ip'], 443,
-                                 inputs['vcenter_user'], inputs[
-                                     'vcenter_password'],
-                                 sslContext=context)
-        except IOError, e:
-            pass
-            atexit.register(Disconnect, si)
+        context = None
+        if inputs['ignore_ssl'] and hasattr(ssl, "_create_unverified_context"):
+            context = ssl._create_unverified_context()
+
+        si = connect.Connect(inputs['vcenter_ip'], 443,
+                             inputs['vcenter_user'], inputs[
+                                 'vcenter_password'],
+                             sslContext=context)
+
+        atexit.register(Disconnect, si)
 
         print("Connected to VCENTER SERVER !")
 
@@ -160,6 +180,10 @@ def main():
         vm_name = inputs['vm_name']
 
         vm = get_obj(content, [vim.VirtualMachine], vm_name)
+
+        if not vm:
+            print("Virtual Machine %s doesn't exists" % vm_name)
+            sys.exit()
 
         if operation != 'create' and vm.snapshot is None:
             print("Virtual Machine %s doesn't have any snapshots" % vm.name)
@@ -189,6 +213,9 @@ def main():
                 else:
                     print("Reverting to snapshot %s" % snapshot_name)
                     invoke_and_track(snap_obj.RevertToSnapshot_Task())
+            else:
+                print("No snapshots found with name: %s on VM: %s" % (
+                                                    snapshot_name, vm.name))
 
         elif operation == 'list_all':
             print("Display list of snapshots on virtual machine %s" % vm.name)
@@ -218,9 +245,6 @@ def main():
             print("Specify operation in "
                   "create/remove/revert/list_all/list_current/remove_all")
 
-    except vmodl.MethodFault, e:
-        print("Caught vmodl fault: %s" % e.msg)
-        return 1
     except Exception, e:
         if str(e).startswith("'vim.Task'"):
             return 1
