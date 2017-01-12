@@ -91,6 +91,7 @@ def get_obj(content, vimtype, name):
 def add_disk(vm, si, disk_size, disk_type):
         spec = vim.vm.ConfigSpec()
         # get all disks on a VM, set unit_number to the next available
+        unit_number = 0
         for dev in vm.config.hardware.device:
             if hasattr(dev.backing, 'fileName'):
                 unit_number = int(dev.unitNumber) + 1
