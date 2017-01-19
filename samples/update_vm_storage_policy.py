@@ -91,9 +91,9 @@ def GetArgs():
                        help='User name to use when connecting to host')
    parser.add_argument('-p', '--password', required=False, action='store',
                        help='Password to use when connecting to host')
-   parser.add_argument('-n', '--policy-name', required=False, action='store',
+   parser.add_argument('-n', '--policy-name', required=True, action='store',
                        help='VM Storage Policy ID')
-   parser.add_argument('-r', '--policy-rule', required=False, action='store',
+   parser.add_argument('-r', '--policy-rule', required=True, action='store',
                        help="VM Storage Policy Rule encoded as dictionary e.g. \"{\'VSAN.hostFailuresToTolerate\':1,\'VSAN.stripeWidth\':2,\'VSAN.forceProvisioning\':False}\"")
    args = parser.parse_args()
    return args
