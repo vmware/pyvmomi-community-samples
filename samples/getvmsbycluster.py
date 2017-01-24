@@ -146,28 +146,28 @@ def main():
 
     content = si.RetrieveContent()
     children = content.rootFolder.childEntity
-    for child in children:  #Iterate though DataCenters
+    for child in children:  # Iterate though DataCenters
         if hasattr(child, 'hostFolder'):
             dc = child
-            data[dc.name] = {} # Add data Centers to data dict
+            data[dc.name] = {}  # Add data Centers to data dict
             clusters = dc.hostFolder.childEntity
-            for cluster in clusters: # Iterate through the clusters in the DC
+            for cluster in clusters:  # Iterate through the clusters in the DC
                 # Add Clusters to data dict
                 data[dc.name][cluster.name] = {}
                 hosts = cluster.host
-                for host in hosts: #Iterate through Hosts in the Cluster
+                for host in hosts:  # Iterate through Hosts in the Cluster
                     hostname = host.summary.config.name
                     # Add VMs to data dict by config name
                     data[dc.name][cluster.name][hostname] = {}
                     vms = host.vm
-                    for vm in vms: # Iterate through each VM on the host
+                    for vm in vms:  # Iterate through each VM on the host
                         vmname = vm.summary.config.name
                         data[dc.name][cluster.name][hostname][vmname] = {}
-                        summary = vmsummary(vm.summary) # get vmguest info
+                        summary = vmsummary(vm.summary)  # get vmguest info
                         vm2dict(dc.name, cluster.name, hostname, vm, summary)
                         if not args.silent:
                             vmprint(dc.name, cluster.name,
-                            hostname, vm, summary)
+                                    hostname, vm, summary)
         else:
             # some other non-datacenter type object
             continue
