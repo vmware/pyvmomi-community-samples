@@ -274,7 +274,7 @@ def main():
         else:
             vm_descriptor = vm_descriptor_result.ovfDescriptor
             target_ovf_descriptor_path = os.path.join(target_directory,
-                                                      args.name + '.ovf')
+                                                      vm_descriptor_name + '.ovf')
             print 'Writing OVF Descriptor {}'.format(
                 target_ovf_descriptor_path)
             with open(target_ovf_descriptor_path, 'wb') as handle:
