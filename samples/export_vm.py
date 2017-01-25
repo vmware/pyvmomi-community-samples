@@ -227,11 +227,13 @@ def main():
 
                 for deviceUrl in http_nfc_lease.info.deviceUrl:
                     if not deviceUrl.targetId:
-                        print "No targetId found for url: {}.".format(deviceUrl.url)
-                        print "Device is not eligible for export. This could be a mounted iso or img of some sort"
+                        print "No targetId found for url: {}."\
+                            .format(deviceUrl.url)
+                        print "Device is not eligible for export. This " \
+                              "could be a mounted iso or img of some sort"
                         print "Skipping..."
                         continue
-                        
+
                     temp_target_disk = os.path.join(target_directory,
                                                     deviceUrl.targetId)
                     print 'Downloading {} to {}'.format(deviceUrl.url,
@@ -274,7 +276,8 @@ def main():
         else:
             vm_descriptor = vm_descriptor_result.ovfDescriptor
             target_ovf_descriptor_path = os.path.join(target_directory,
-                                                      vm_descriptor_name + '.ovf')
+                                                      vm_descriptor_name +
+                                                      '.ovf')
             print 'Writing OVF Descriptor {}'.format(
                 target_ovf_descriptor_path)
             with open(target_ovf_descriptor_path, 'wb') as handle:
