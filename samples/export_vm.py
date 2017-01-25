@@ -226,6 +226,12 @@ def main():
                 print_http_nfc_lease_info(http_nfc_lease.info)
 
                 for deviceUrl in http_nfc_lease.info.deviceUrl:
+                    if not deviceUrl.targetId:
+                        print "No targetId found for url: {}.".format(deviceUrl.url)
+                        print "Device is not eligible for export. This could be a mounted iso or img of some sort"
+                        print "Skipping..."
+                        continue
+                        
                     temp_target_disk = os.path.join(target_directory,
                                                     deviceUrl.targetId)
                     print 'Downloading {} to {}'.format(deviceUrl.url,
