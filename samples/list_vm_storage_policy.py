@@ -1,5 +1,13 @@
 #!/usr/bin/env python
 
+import atexit
+import argparse
+import getpass
+import ssl
+
+from pyVmomi import pbm, VmomiSupport
+from pyVim.connect import SmartConnect, Disconnect
+
 """
 Example of using Storage Policy Based Management (SPBM) API
 to list all VM Storage Policies
@@ -8,14 +16,6 @@ Required Prviledge: Profile-driven storage view
 """
 
 __author__ = 'William Lam'
-from pyVmomi import vim, pbm, VmomiSupport
-from pyVim.connect import SmartConnect, Disconnect
-
-import atexit
-import argparse
-import getpass
-import sys
-import ssl
 
 
 # retrieve SPBM API endpoint
@@ -29,11 +29,12 @@ def GetPbmConnection(vpxdStub):
     httpContext["cookies"] = cookie
     VmomiSupport.GetRequestContext()["vcSessionCookie"] = sessionCookie
     hostname = vpxdStub.host.split(":")[0]
-    pbmStub = pyVmomi.SoapStubAdapter(host=hostname,
-                                      version="pbm.version.version1",
-                                      path="/pbm/sdk",
-                                      poolSize=0,
-                                      sslContext=ssl._create_unverified_context())
+    pbmStub = pyVmomi.SoapStubAdapter(
+        host=hostname,
+        version="pbm.version.version1",
+        path="/pbm/sdk",
+        poolSize=0,
+        sslContext=ssl._create_unverified_context())
     pbmSi = pbm.ServiceInstance("ServiceInstance", pbmStub)
     pbmContent = pbmSi.RetrieveContent()
 
@@ -58,14 +59,24 @@ def GetArgs():
     return args
 
 
+def showCapabilities(capabilities):
+    for capability in capabilities:
+        for constraint in capability.constraint:
+            if hasattr(constraint, 'propertyInstance'):
+                for propertyInstance in constraint.propertyInstance:
+                    print("\tKey: %s Value: %s" % (propertyInstance.id,
+                                                   propertyInstance.value))
+
+
 # Start program
 def main():
     args = GetArgs()
     if args.password:
         password = args.password
     else:
-        password = getpass.getpass(prompt='Enter password for host %s and '
-                                        'user %s: ' % (args.host, args.user))
+        password = getpass.getpass(
+            prompt='Enter password for host %s and '
+                   'user %s: ' % (args.host, args.user))
 
     si = SmartConnect(host=args.host,
                       user=args.user,
@@ -79,8 +90,8 @@ def main():
     pbmSi, pbmContent = GetPbmConnection(si._stub)
 
     pm = pbmContent.profileManager
-    profileIds = pm.PbmQueryProfile(resourceType=pbm.profile.ResourceType(resourceType="STORAGE"),
-                                    profileCategory="REQUIREMENT"
+    profileIds = pm.PbmQueryProfile(resourceType=pbm.profile.ResourceType(
+        resourceType="STORAGE"), profileCategory="REQUIREMENT"
     )
 
     profiles = []
@@ -96,11 +107,7 @@ def main():
             for subprofile in subprofiles:
                 print("RuleSetName: %s " % subprofile.name)
                 capabilities = subprofile.capability
-                for capability in capabilities:
-                    for constraint in capability.constraint:
-                        if hasattr(constraint, 'propertyInstance'):
-                            for propertyInstance in constraint.propertyInstance:
-                                print("\tKey: %s Value: %s" % (propertyInstance.id, propertyInstance.value))
+                showCapabilities(capabilities)
         print("")
 
 
