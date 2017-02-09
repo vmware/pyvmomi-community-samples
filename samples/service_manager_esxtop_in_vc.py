@@ -9,7 +9,7 @@ from pyVmomi import vim
 from pyVim.connect import SmartConnect, Disconnect
 
 """
-Example of fonnecting to the ESXTOP service provided 
+Example of fonnecting to the ESXTOP service provided
 by vCenter Server's Service Manager
 """
 
