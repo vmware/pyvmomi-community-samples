@@ -17,6 +17,7 @@ from __future__ import print_function
 
 import atexit
 
+import ssl
 import requests
 from pyVim import connect
 
@@ -24,7 +25,6 @@ from tools import cli
 from tools import tasks
 
 requests.packages.urllib3.disable_warnings()
-
 
 def setup_args():
     """Adds additional ARGS to allow the vm name or uuid to
@@ -50,10 +50,13 @@ def setup_args():
 ARGS = setup_args()
 SI = None
 try:
+    context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+
     SI = connect.SmartConnect(host=ARGS.host,
                               user=ARGS.user,
                               pwd=ARGS.password,
-                              port=ARGS.port)
+                              port=ARGS.port,
+                              sslContext=context)
     atexit.register(connect.Disconnect, SI)
 except IOError, ex:
     pass
