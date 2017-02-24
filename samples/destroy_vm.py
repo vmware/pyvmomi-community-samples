@@ -34,13 +34,13 @@ def setup_args():
     # using j here because -u is used for user
     parser.add_argument('-j', '--uuid',
                         help='BIOS UUID of the VirtualMachine you want '
-                             'to reboot.')
+                             'to destroy.')
     parser.add_argument('-n', '--name',
                         help='DNS Name of the VirtualMachine you want to '
-                             'reboot.')
+                             'destroy.')
     parser.add_argument('-i', '--ip',
                         help='IP Address of the VirtualMachine you want to '
-                             'reboot')
+                             'destroy')
 
     my_args = parser.parse_args()
 
