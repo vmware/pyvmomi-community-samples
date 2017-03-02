@@ -21,6 +21,8 @@ import ssl
 import requests
 from pyVim import connect
 
+from pyVmomi import vim
+
 from tools import cli
 from tools import tasks
 
@@ -41,11 +43,28 @@ def setup_args():
     parser.add_argument('-i', '--ip',
                         help='IP Address of the VirtualMachine you want to '
                              'destroy')
+    parser.add_argument('-v', '--vm',
+                        help='VM name of the VirtualMachine you want '
+                             'to destroy.')
 
     my_args = parser.parse_args()
 
     return cli.prompt_for_password(my_args)
 
+def get_obj(content, vimtype, name):
+    obj = None
+    container = content.viewManager.CreateContainerView(
+        content.rootFolder, vimtype, True)
+    for c in container.view:
+        if name:
+            if c.name == name:
+                obj = c
+                break
+        else:
+            obj = c
+            break
+
+    return obj
 
 ARGS = setup_args()
 SI = None
@@ -63,8 +82,11 @@ except IOError, ex:
 
 if not SI:
     raise SystemExit("Unable to connect to host with supplied info.")
+
 VM = None
-if ARGS.uuid:
+if ARGS.vm:
+    VM = get_obj(SI.content, [vim.VirtualMachine], ARGS.vm)
+elif ARGS.uuid:
     VM = SI.content.searchIndex.FindByUuid(None, ARGS.uuid,
                                            True,
                                            False)
@@ -75,7 +97,7 @@ elif ARGS.ip:
     VM = SI.content.searchIndex.FindByIp(None, ARGS.ip, True)
 
 if VM is None:
-    raise SystemExit("Unable to locate VirtualMachine.")
+    raise SystemExit("Unable to locate VirtualMachine. Arguments given: vm - %s , uuid - %s , name - %s , ip - %s" % (ARGS.vm, ARGS.uuid, ARGS.name, ARGS.ip))
 
 print("Found: {0}".format(VM.name))
 print("The current powerState is: {0}".format(VM.runtime.powerState))
