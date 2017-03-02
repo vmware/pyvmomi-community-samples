@@ -97,7 +97,7 @@ elif ARGS.ip:
 
 if VM is None:
     raise SystemExit(
-        "Unable to locate VirtualMachine. Arguments given: "\
+        "Unable to locate VirtualMachine. Arguments given: "
         "vm - {0} , uuid - {1} , name - {2} , ip - {3}"
         .format(ARGS.vm, ARGS.uuid, ARGS.name, ARGS.ip)
         )
