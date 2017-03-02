@@ -17,16 +17,16 @@ from __future__ import print_function
 
 import atexit
 
-import requests
 from pyVim import connect
+
+from pyVmomi import vim
 
 from tools import cli
 from tools import tasks
 
-requests.packages.urllib3.disable_warnings()
-
 
 def setup_args():
+
     """Adds additional ARGS to allow the vm name or uuid to
     be set.
     """
@@ -41,27 +41,51 @@ def setup_args():
     parser.add_argument('-i', '--ip',
                         help='IP Address of the VirtualMachine you want to '
                              'destroy')
+    parser.add_argument('-v', '--vm',
+                        help='VM name of the VirtualMachine you want '
+                             'to destroy.')
 
     my_args = parser.parse_args()
 
     return cli.prompt_for_password(my_args)
 
 
+def get_obj(content, vimtype, name):
+
+    """Create contrainer view and search for object in it"""
+    obj = None
+    container = content.viewManager.CreateContainerView(
+        content.rootFolder, vimtype, True)
+    for c in container.view:
+        if name:
+            if c.name == name:
+                obj = c
+                break
+        else:
+            obj = c
+            break
+
+    container.Destroy()
+    return obj
+
 ARGS = setup_args()
 SI = None
 try:
-    SI = connect.SmartConnect(host=ARGS.host,
-                              user=ARGS.user,
-                              pwd=ARGS.password,
-                              port=ARGS.port)
+    SI = connect.SmartConnectNoSSL(host=ARGS.host,
+                                   user=ARGS.user,
+                                   pwd=ARGS.password,
+                                   port=ARGS.port)
     atexit.register(connect.Disconnect, SI)
-except IOError, ex:
+except (IOError, vim.fault.InvalidLogin):
     pass
 
 if not SI:
-    raise SystemExit("Unable to connect to host with supplied info.")
+    raise SystemExit("Unable to connect to host with supplied credentials.")
+
 VM = None
-if ARGS.uuid:
+if ARGS.vm:
+    VM = get_obj(SI.content, [vim.VirtualMachine], ARGS.vm)
+elif ARGS.uuid:
     VM = SI.content.searchIndex.FindByUuid(None, ARGS.uuid,
                                            True,
                                            False)
@@ -72,7 +96,11 @@ elif ARGS.ip:
     VM = SI.content.searchIndex.FindByIp(None, ARGS.ip, True)
 
 if VM is None:
-    raise SystemExit("Unable to locate VirtualMachine.")
+    raise SystemExit(
+        "Unable to locate VirtualMachine. Arguments given: "
+        "vm - {0} , uuid - {1} , name - {2} , ip - {3}"
+        .format(ARGS.vm, ARGS.uuid, ARGS.name, ARGS.ip)
+        )
 
 print("Found: {0}".format(VM.name))
 print("The current powerState is: {0}".format(VM.runtime.powerState))
