@@ -24,7 +24,9 @@ from pyVmomi import vim
 from tools import cli
 from tools import tasks
 
+
 def setup_args():
+
     """Adds additional ARGS to allow the vm name or uuid to
     be set.
     """
@@ -47,7 +49,10 @@ def setup_args():
 
     return cli.prompt_for_password(my_args)
 
+
 def get_obj(content, vimtype, name):
+
+    """Create contrainer view and search for object in it"""
     obj = None
     container = content.viewManager.CreateContainerView(
         content.rootFolder, vimtype, True)
@@ -91,7 +96,11 @@ elif ARGS.ip:
     VM = SI.content.searchIndex.FindByIp(None, ARGS.ip, True)
 
 if VM is None:
-    raise SystemExit("Unable to locate VirtualMachine. Arguments given: vm - {0} , uuid - {1} , name - {2} , ip - {3}".format(ARGS.vm, ARGS.uuid, ARGS.name, ARGS.ip))
+    raise SystemExit(
+        "Unable to locate VirtualMachine. Arguments given: "\
+        "vm - {0} , uuid - {1} , name - {2} , ip - {3}"
+        .format(ARGS.vm, ARGS.uuid, ARGS.name, ARGS.ip)
+        )
 
 print("Found: {0}".format(VM.name))
 print("The current powerState is: {0}".format(VM.runtime.powerState))
