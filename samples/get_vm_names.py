@@ -23,6 +23,7 @@ from tools import cli
 
 MAX_DEPTH = 10
 
+
 def setup_args():
 
     """
