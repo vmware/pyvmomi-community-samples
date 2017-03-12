@@ -7,6 +7,12 @@
  http://www.apache.org/licenses/LICENSE-2.0.html
 
  Script to deploy VM via a single .ovf and a single .vmdk file.
+
+ OVA unpacking and multiple disk image support contributed by Maciej Grela
+ Github: https://github.com/mgrela
+ Website: http://pop.fsck.pl/
+ This code has been released under the terms of the Apache 2 licenses
+ http://www.apache.org/licenses/LICENSE-2.0.html
 """
 from os import system, path
 from sys import exit
@@ -18,6 +24,7 @@ from getpass import getpass
 from pyVim import connect
 from pyVmomi import vim
 
+import requests, tarfile, re, ssl
 
 def get_args():
     """
@@ -70,17 +77,16 @@ def get_args():
                           end up on. If left blank the first cluster found\
                           will be used')
 
-    parser.add_argument('-v', '--vmdk_path',
+    parser.add_argument('-f', '--ova_path',
                         required=True,
                         action='store',
                         default=None,
-                        help='Path of the VMDK file to deploy.')
+                        help='Path of the OVF package (.ova) file to deploy.')
 
-    parser.add_argument('-f', '--ovf_path',
-                        required=True,
-                        action='store',
-                        default=None,
-                        help='Path of the OVF file to deploy.')
+    parser.add_argument('-S', '--disable_ssl_verification',
+                        required=False,
+                        action='store_true',
+                        help='Disable ssl host certificate verification')
 
     args = parser.parse_args()
 
@@ -90,20 +96,24 @@ def get_args():
     return args
 
 
-def get_ovf_descriptor(ovf_path):
+def parse_ovf_package(ova_path):
     """
-    Read in the OVF descriptor.
+    Parse the OVF package, read the OVF descriptor
     """
-    if path.exists(ovf_path):
-        with open(ovf_path, 'r') as f:
+    if path.exists(ova_path):
             try:
-                ovfd = f.read()
-                f.close()
-                return ovfd
-            except:
-                print "Could not read file: %s" % ovf_path
-                exit(1)
+                f = tarfile.open(ova_path, 'r')
+                descriptor_member = next( iter(filter(lambda m: re.match(r'^.+\.ovf', m.name), f.getmembers())), None)
+                if descriptor_member is None:
+                    print "OVF package '%s' doesn't seem to contain a descriptor file" % (ova_path)
+                    exit(1)
 
+                return {"ovfd": f.extractfile(descriptor_member).read(),
+                        "tarfile": f}
+            except Exception as e:
+                print "Could not read file: %s" % ova_path
+                print "Exception: %s" % e
+                exit(1)
 
 def get_obj_in_list(obj_name, obj_list):
     """
@@ -173,46 +183,77 @@ def keep_lease_alive(lease):
 
 def main():
     args = get_args()
-    ovfd = get_ovf_descriptor(args.ovf_path)
+    pkg = parse_ovf_package(args.ova_path)
     try:
+
+        sslContext = None
+
+        if args.disable_ssl_verification:
+            sslContext = ssl.create_default_context(purpose=ssl.Purpose.CLIENT_AUTH)
+            sslContext.verify_mode = ssl.CERT_NONE
+
         si = connect.SmartConnect(host=args.host,
                                   user=args.user,
                                   pwd=args.password,
-                                  port=args.port)
-    except:
+                                  port=args.port,
+                                  sslContext=sslContext)
+    except Exception as e:
         print "Unable to connect to %s" % args.host
+        print "Exception: %s" % (e)
+        pkg['tarfile'].close()
         exit(1)
+
     objs = get_objects(si, args)
     manager = si.content.ovfManager
     spec_params = vim.OvfManager.CreateImportSpecParams()
-    import_spec = manager.CreateImportSpec(ovfd,
+    import_spec = manager.CreateImportSpec(pkg['ovfd'],
                                            objs["resource pool"],
                                            objs["datastore"],
                                            spec_params)
+
+    # Prepare a list of files we will upload when we get a lease
+    disk_images = {}
+    for item in import_spec.fileItem:
+        disk_images[item.deviceId] = item
+
     lease = objs["resource pool"].ImportVApp(import_spec.importSpec,
                                              objs["datacenter"].vmFolder)
     while(True):
         if (lease.state == vim.HttpNfcLease.State.ready):
-            # Assuming single VMDK.
-            url = lease.info.deviceUrl[0].url.replace('*', args.host)
             # Spawn a dawmon thread to keep the lease active while POSTing
             # VMDK.
             keepalive_thread = Thread(target=keep_lease_alive, args=(lease,))
             keepalive_thread.start()
-            # POST the VMDK to the host via curl. Requests library would work
-            # too.
-            curl_cmd = (
-                "curl -Ss -X POST --insecure -T %s -H 'Content-Type: \
-                application/x-vnd.vmware-streamVmdk' %s" %
-                (args.vmdk_path, url))
-            system(curl_cmd)
+
+            for device_url in lease.info.deviceUrl:
+                if device_url.importKey not in disk_images:
+                    print "Warning, we don't have an image file to upload as '%s'" % (device_url.importKey)
+                    if device_url.disk is False:
+                        continue
+                    else:
+                        print "Disk image '%s' could not be uploaded, balking out" % (device_url.importKey)
+                        pkg['tarfile'].close()
+                        exit(1)
+
+                url = device_url.url.replace('*', args.host)
+
+                # Look for the image we need to import in the OVF package
+                image_path = disk_images[device_url.importKey].path
+                print "Uploading image '%s' as '%s'" % (image_path, device_url.importKey)
+
+                image_member = pkg['tarfile'].getmember(image_path)
+                requests.post(url, data=pkg['tarfile'].extractfile(image_member), verify=not args.disable_ssl_verification, headers={'Content-Type': 'application/x-vnd.vmware-streamVmdk'})
+
             lease.HttpNfcLeaseComplete()
             keepalive_thread.join()
+            pkg['tarfile'].close()
             return 0
         elif (lease.state == vim.HttpNfcLease.State.error):
             print "Lease error: " + lease.state.error
+            pkg['tarfile'].close()
             exit(1)
     connect.Disconnect(si)
+    pkg['tarfile'].close()
 
 if __name__ == "__main__":
     exit(main())
