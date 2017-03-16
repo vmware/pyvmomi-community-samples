@@ -72,7 +72,6 @@ def main():
     context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
     context.verify_mode = ssl.CERT_NONE
 
-
     try:
         si = SmartConnect(host=args.host,
                           user=args.user,
@@ -113,15 +112,19 @@ def main():
 
     if vcenter_version <= 5:
         console_port = '7331'
-        console_url = "http://" + args.host + ":" + console_port + "/console/?vmId=" \
-                + str(vm_moid) + "&vmName=" + args.name + "&host=" + vcenter_fqdn \
-                + "&sessionTicket=" + session + "&thumbprint=" + vc_fingerprint
+        console_url = "http://" + args.host + ":" + console_port \
+            + "/console/?vmId=" + str(vm_moid) + "&vmName=" \
+            + args.name + "&host=" + vcenter_fqdn \
+            + "&sessionTicket=" + session + "&thumbprint=" \
+            + vc_fingerprint
     else:
         console_port = '9443'
-        console_url = "https://" + args.host + ":" + console_port \
-                + "/vsphere-client/webconsole.html?vmId=" + str(vm_moid) + "&vmName=" \
-                + args.name + "&serverGuid=" + str(vcenter_uuid) + "&locale=en_GB&host=" \
-                + vcenter_fqdn + "&sessionTicket=" + session + "&thumbprint=" + vc_fingerprint
+        console_url = "https://" + args.host + ":" \
+            + console_port + "/vsphere-client/webconsole.html?vmId=" \
+            + str(vm_moid) + "&vmName=" + args.name + "&serverGuid=" \
+            + str(vcenter_uuid) + "&locale=en_GB&host=" \
+            + vcenter_fqdn + "&sessionTicket=" + session \
+            + "&thumbprint=" + vc_fingerprint
 
     print "Open the following URL in your browser to access the " \
           "Remote Console.\n" \
@@ -134,4 +137,3 @@ def main():
 # Start program
 if __name__ == "__main__":
     main()
-
