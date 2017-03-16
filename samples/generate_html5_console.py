@@ -69,11 +69,16 @@ def main():
 
     args = get_args()
 
+    context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+    context.verify_mode = ssl.CERT_NONE
+
+
     try:
         si = SmartConnect(host=args.host,
                           user=args.user,
                           pwd=args.password,
-                          port=int(args.port))
+                          port=int(args.port),
+                          sslContext=context)
     except Exception as e:
         print 'Could not connect to vCenter host'
         print repr(e)
@@ -88,7 +93,10 @@ def main():
 
     vcenter_data = content.setting
     vcenter_settings = vcenter_data.setting
-    console_port = '7331'
+
+    vcenter_about = content.about
+    vcenter_version = vcenter_about.version
+    vcenter_uuid = vcenter_about.instanceUuid
 
     for item in vcenter_settings:
         key = getattr(item, 'key')
@@ -103,16 +111,27 @@ def main():
                                              vc_cert)
     vc_fingerprint = vc_pem.digest('sha1')
 
+    if vcenter_version <= 5:
+        console_port = '7331'
+        console_url = "http://" + args.host + ":" + console_port + "/console/?vmId=" \
+                + str(vm_moid) + "&vmName=" + args.name + "&host=" + vcenter_fqdn \
+                + "&sessionTicket=" + session + "&thumbprint=" + vc_fingerprint
+    else:
+        console_port = '9443'
+        console_url = "https://" + args.host + ":" + console_port \
+                + "/vsphere-client/webconsole.html?vmId=" + str(vm_moid) + "&vmName=" \
+                + args.name + "&serverGuid=" + str(vcenter_uuid) + "&locale=en_GB&host=" \
+                + vcenter_fqdn + "&sessionTicket=" + session + "&thumbprint=" + vc_fingerprint
+
     print "Open the following URL in your browser to access the " \
           "Remote Console.\n" \
           "You have 60 seconds to open the URL, or the session" \
           "will be terminated.\n"
-    print "http://" + args.host + ":" + console_port + "/console/?vmId=" \
-          + str(vm_moid) + "&vmName=" + args.name + "&host=" + vcenter_fqdn \
-          + "&sessionTicket=" + session + "&thumbprint=" + vc_fingerprint
+    print console_url
     print "Waiting for 60 seconds, then exit"
     time.sleep(60)
 
 # Start program
 if __name__ == "__main__":
     main()
+
