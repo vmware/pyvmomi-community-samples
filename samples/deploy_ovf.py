@@ -24,7 +24,11 @@ from getpass import getpass
 from pyVim import connect
 from pyVmomi import vim
 
-import requests, tarfile, re, ssl
+import requests
+import tarfile
+import re
+import ssl
+
 
 def get_args():
     """
@@ -103,9 +107,14 @@ def parse_ovf_package(ova_path):
     if path.exists(ova_path):
             try:
                 f = tarfile.open(ova_path, 'r')
-                descriptor_member = next( iter(filter(lambda m: re.match(r'^.+\.ovf', m.name), f.getmembers())), None)
+                descriptor_member = next(
+                    iter(filter(lambda m: re.match(r'^.+\.ovf', m.name),
+                                f.getmembers())), None
+                )
                 if descriptor_member is None:
-                    print "OVF package '%s' doesn't seem to contain a descriptor file" % (ova_path)
+                    print("No descriptor file in OVF package '%s'" % (
+                        ova_path
+                    ))
                     exit(1)
 
                 return {"ovfd": f.extractfile(descriptor_member).read(),
@@ -115,6 +124,7 @@ def parse_ovf_package(ova_path):
                 print "Exception: %s" % e
                 exit(1)
 
+
 def get_obj_in_list(obj_name, obj_list):
     """
     Gets an object out of a list (obj_list) whos name matches obj_name.
@@ -122,8 +132,8 @@ def get_obj_in_list(obj_name, obj_list):
     for o in obj_list:
         if o.name == obj_name:
             return o
-    print ("Unable to find object by the name of %s in list:\n%s" %
-           (o.name, map(lambda o: o.name, obj_list)))
+    print("Unable to find object by the name of %s in list:\n%s" %
+          (o.name, map(lambda o: o.name, obj_list)))
     exit(1)
 
 
@@ -189,7 +199,9 @@ def main():
         sslContext = None
 
         if args.disable_ssl_verification:
-            sslContext = ssl.create_default_context(purpose=ssl.Purpose.CLIENT_AUTH)
+            sslContext = ssl.create_default_context(
+                purpose=ssl.Purpose.CLIENT_AUTH
+            )
             sslContext.verify_mode = ssl.CERT_NONE
 
         si = connect.SmartConnect(host=args.host,
@@ -227,11 +239,15 @@ def main():
 
             for device_url in lease.info.deviceUrl:
                 if device_url.importKey not in disk_images:
-                    print "Warning, we don't have an image file to upload as '%s'" % (device_url.importKey)
+                    print "Warning, no file to upload as '%s'" % (
+                        device_url.importKey
+                    )
                     if device_url.disk is False:
                         continue
                     else:
-                        print "Disk image '%s' could not be uploaded, balking out" % (device_url.importKey)
+                        print "Error uploading image '%s'" % (
+                            device_url.importKey
+                        )
                         pkg['tarfile'].close()
                         exit(1)
 
@@ -239,10 +255,19 @@ def main():
 
                 # Look for the image we need to import in the OVF package
                 image_path = disk_images[device_url.importKey].path
-                print "Uploading image '%s' as '%s'" % (image_path, device_url.importKey)
+                print "Uploading image '%s' as '%s'" % (
+                    image_path,
+                    device_url.importKey
+                )
 
                 image_member = pkg['tarfile'].getmember(image_path)
-                requests.post(url, data=pkg['tarfile'].extractfile(image_member), verify=not args.disable_ssl_verification, headers={'Content-Type': 'application/x-vnd.vmware-streamVmdk'})
+                requests.post(url,
+                              data=pkg['tarfile'].extractfile(image_member),
+                              verify=not args.disable_ssl_verification,
+                              headers={
+                                  'Content-Type':
+                                  'application/x-vnd.vmware-streamVmdk'
+                              })
 
             lease.HttpNfcLeaseComplete()
             keepalive_thread.join()
