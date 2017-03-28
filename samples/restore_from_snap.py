@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# checks for snapshots on a list of specific VMs, and restores them to those states
+# checks for a specific snapshot for a named VMs, and restores it
 #
 
 import atexit
@@ -14,6 +14,7 @@ from pyVim import connect
 from pyVim.task import WaitForTask
 from pyVmomi import vmodl, vim
 
+# creds etc can be stores in a file
 DEFAULT_CONFIG_FILENAME = ".restore_config"
 
 
@@ -30,19 +31,18 @@ class EsxTalker(object):
             s = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
             s.verify_mode = ssl.CERT_NONE
         try:
-            self.service_instance = connect.SmartConnect(host=args.host,
-                                                         user=args.user,
-                                                         pwd=args.password,
-                                                         port=int(args.port),
-                                                         sslContext=s)
-            atexit.register(connect.Disconnect, self.service_instance)
-            self.session_id = self.service_instance.content.sessionManager.currentSession.key
-            assert self.session_id is not None, "Connection to ESX failed"
-
+            self.svc_inst = connect.SmartConnect(host=args.host,
+                                                 user=args.user,
+                                                 pwd=args.password,
+                                                 port=int(args.port),
+                                                 sslContext=s)
+            atexit.register(connect.Disconnect, self.svc_inst)
+            self.sid = self.svc_inst.content.sessionManager.currentSession.key
+            assert self.sid is not None, "Connection to ESX failed"
         except vmodl.MethodFault as error:
             print "Caught vmodl fault : " + error.msg
             sys.exit(1)
-        self.content = self.service_instance.RetrieveContent()
+        self.content = self.svc_inst.RetrieveContent()
 
     def get_obj(self, vimtype, name):
         """
@@ -75,18 +75,18 @@ class EsxTalker(object):
         return [s for s in snapshots if re.search(regex, s.name)]
 
 
-
 def get_args():
     """
     Get command line args from the user.
-    Uses configargparse so can use combination of command line, config file and env vars
+    Uses configargparse so can use combination of command line,
+    config file and env vars
     """
     parser = configargparse.ArgParser(
         config_file_parser_class=configargparse.YAMLConfigFileParser,
         default_config_files=[DEFAULT_CONFIG_FILENAME],
         description='Tool to manipulate VM snapshots on ESX cluster')
     parser.add_argument('-c', '--my-config',
-                        required=False, 
+                        required=False,
                         is_config_file=True,
                         help='config file path')
     parser.add_argument('-H', '--host',
@@ -125,7 +125,8 @@ def get_args():
     parser.add_argument('-i', '--insecure',
                         required=False,
                         action='store_true',
-                        help='Insecure mode - do not validate the SSL certificate')
+                        help='Insecure mode - ' +
+                        'do not validate the SSL certificate')
     args = parser.parse_args()
     if not args.password:
         args.password = getpass.getpass(
@@ -143,29 +144,22 @@ def main():
 
     print "Get VM by name =", args.vm_name
     dcsvm = et.get_vm_by_name(args.vm_name)
- 
     print "Get snapshots from %s ..." % args.vm_name
     snaps = et.get_snapshots(dcsvm.snapshot.rootSnapshotList)
-
     print "Finding initial snapshot ..."
     initial_snap = et.find_matching_snapshot(snaps, args.snap_name)
-
     print "Snap found matching name ..."
     for s in initial_snap:
         print "initial snap name = ", s.name
-
-    assert len(initial_snap) == 1, "More than one snap identified!"
- 
+    assert len(initial_snap) == 1, "More than one snap identified - confused!"
     thesnap2use = initial_snap[0]
     if args.debug:
-        print "DEBUG : This task will cause the VM to revert", thesnap2use.snapshot.RevertToSnapshot_Task
+        print "DEBUG : This task will cause the VM to revert",
+        thesnap2use.snapshot.RevertToSnapshot_Task
     else:
-        print "NOT_DEBUG : WaitForTask(thesname2use.snapshot.RevertToSnapshot_Task())"
-    
-    
+        print "NOT_DEBUG:",
+        "WaitForTask(thesname2use.snapshot.RevertToSnapshot_Task())"
 
 
-# Start program
 if __name__ == "__main__":
     main()
-
