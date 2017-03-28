@@ -1,0 +1,6 @@
+host: 10.16.240.12
+user: Administrator@vsphere.local
+vm_name: dcs1
+snap_name: initial
+debug: true
+insecure: true
