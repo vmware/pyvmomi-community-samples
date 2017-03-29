@@ -129,10 +129,10 @@ class EsxTalker(object):
                                           quiesce))
             """
         else:
-            WaitForTaskvm(vm.CreateSnapshot(snap_name,
-                                            description,
-                                            dumpMem,
-                                            quiesce))
+            WaitForTask(vm.CreateSnapshot(snapname,
+                                          description,
+                                          dumpMem,
+                                          quiesce))
 
     def revert_to_snap(self, vmname, snapnameregex):
         """
@@ -156,7 +156,7 @@ class EsxTalker(object):
             print "DEBUG : This task will cause the VM to revert",
             thesnap2use.snapshot.RevertToSnapshot_Task
         else:
-            WaitForTask(thesname2use.snapshot.RevertToSnapshot_Task())
+            WaitForTask(thesnap2use.snapshot.RevertToSnapshot_Task())
 
 
 def get_args():
@@ -207,6 +207,10 @@ def get_args():
                         action='store_true',
                         env_var="DEBUG",
                         help='Debug mode - do not do the revert')
+    parser.add_argument('-S', '--save_first',
+                        required=False,
+                        action='store_true',
+                        help='Before doing a revert, snapshot the current state.')
     parser.add_argument('-i', '--insecure',
                         required=False,
                         action='store_true',
@@ -229,11 +233,12 @@ def main():
 
     print "Get VM by names =", args.vm_names
     for vmname in args.vm_names:
-        # prior to winding back, create a snapshot of now - just in case
-        print "snapshotting prior to revert"
-        new_snap_name = "%s_PREREVERT_%s" % (vmname, str(time.time()))
-        description = "Snapshot prior to revert operation"
-        et.create_snapshot(vmname, new_snap_name, description)
+        if args.save_first:
+            # prior to winding back, create a snapshot of now - just in case
+            print "snapshotting prior to revert"
+            new_snap_name = "%s_PREREVERT_%s" % (vmname, str(time.time()))
+            description = "Snapshot prior to revert operation"
+            et.create_snapshot(vmname, new_snap_name, description)
         # now do the revert
         et.revert_to_snap(vmname, args.snap_name)
 
