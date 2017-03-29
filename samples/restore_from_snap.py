@@ -9,6 +9,7 @@ import getpass
 import re
 import ssl
 import sys
+import time
 
 from pyVim import connect
 from pyVim.task import WaitForTask
@@ -30,18 +31,23 @@ class EsxTalker(object):
                       the username, password and host for the vSphere
         """
         self.args = args  # as there may be more than just the esx creds
+        if self.args.debug:  # see :)
+            print "Debug mode"
         # magic to disable SSL cert checking
         s = None
         if args.insecure:
             s = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
             s.verify_mode = ssl.CERT_NONE
+        # OK - let's get a connection
         try:
             self.svc_inst = connect.SmartConnect(host=args.host,
                                                  user=args.user,
                                                  pwd=args.password,
                                                  port=int(args.port),
                                                  sslContext=s)
+            # incantation to close at the end
             atexit.register(connect.Disconnect, self.svc_inst)
+            # verify that the connection has worked.
             self.sid = self.svc_inst.content.sessionManager.currentSession.key
             assert self.sid is not None, "Connection to ESX failed"
         except vmodl.MethodFault as error:
@@ -99,6 +105,58 @@ class EsxTalker(object):
         if len(snapshots) < 1:
             return None
         return [s for s in snapshots if re.search(regex, s.name)]
+
+    def create_snapshot(self,
+                        vmname,
+                        snapname,
+                        description="",
+                        dumpMem=False,
+                        quiesce=False):
+        """
+        Create a snapshot of a named VM
+        :param vmname - VM to be snapshotted
+        :param snapname - name to use for snapshot
+        """
+        vm = self.get_vm_by_name(vmname)
+        assert vm is not None, "Did not find specified VM!"
+        print "Creating snapshot %s for %s ..." % (snapname, vmname)
+        if self.args.debug:
+            print """
+            DEBUG :
+            WaitForTask(vm.CreateSnapshot(snap_name,
+                                          description,
+                                          dumpMem,
+                                          quiesce))
+            """
+        else:
+            WaitForTaskvm(vm.CreateSnapshot(snap_name,
+                                            description,
+                                            dumpMem,
+                                            quiesce))
+
+    def revert_to_snap(self, vmname, snapnameregex):
+        """
+        Revert the named VM to the named snapshot
+        :param vmname - the name of the VM
+        :param snapnameregex - the search pattern for the chosen snapshot
+        """
+        print "Get snapshots from %s ..." % vmname
+        vm = self.get_vm_by_name(vmname)
+        snaps = self.get_snapshots(vm.snapshot.rootSnapshotList)
+        print "Finding snapshot ..."
+        target_snap = self.find_matching_snapshot(snaps, snapnameregex)
+        assert len(target_snap) == 1,\
+            "More than one snap identified - confused!\n" +\
+            "Please use a more unique string."
+        print "Snap found matching name ..."
+        thesnap2use = target_snap[0]
+        print "thesnap2use = ", thesnap2use
+        assert thesnap2use is not None
+        if self.args.debug:
+            print "DEBUG : This task will cause the VM to revert",
+            thesnap2use.snapshot.RevertToSnapshot_Task
+        else:
+            WaitForTask(thesname2use.snapshot.RevertToSnapshot_Task())
 
 
 def get_args():
@@ -170,25 +228,14 @@ def main():
     et = EsxTalker(args)
 
     print "Get VM by names =", args.vm_names
-    for name in args.vm_names:
-        vm = et.get_vm_by_name(name)
-        print "Get snapshots from %s ..." % vm
-        snaps = et.get_snapshots(vm.snapshot.rootSnapshotList)
-        print "Finding initial snapshot ..."
-        initial_snap = et.find_matching_snapshot(snaps, args.snap_name)
-        print "Snap found matching name ..."
-        for s in initial_snap:
-            print "initial snap name = ", s.name
-            assert len(initial_snap) == 1,\
-                "More than one snap identified - confused!\n" +\
-                "Please use more unique string."
-        thesnap2use = initial_snap[0]
-        if args.debug:
-            print "DEBUG : This task will cause the VM to revert",
-            thesnap2use.snapshot.RevertToSnapshot_Task
-        else:
-            print "NOT_DEBUG:",
-            "WaitForTask(thesname2use.snapshot.RevertToSnapshot_Task())"
+    for vmname in args.vm_names:
+        # prior to winding back, create a snapshot of now - just in case
+        print "snapshotting prior to revert"
+        new_snap_name = "%s_PREREVERT_%s" % (vmname, str(time.time()))
+        description = "Snapshot prior to revert operation"
+        et.create_snapshot(vmname, new_snap_name, description)
+        # now do the revert
+        et.revert_to_snap(vmname, args.snap_name)
 
 
 if __name__ == "__main__":
