@@ -210,7 +210,7 @@ def get_args():
     parser.add_argument('-S', '--save_first',
                         required=False,
                         action='store_true',
-                        help='Before doing a revert, snapshot the current state.')
+                        help='Before doing a revert, snapshot current state.')
     parser.add_argument('-i', '--insecure',
                         required=False,
                         action='store_true',
