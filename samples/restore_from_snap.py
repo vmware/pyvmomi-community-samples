@@ -107,10 +107,11 @@ def get_args():
                         action='store',
                         env_var="ESX_PASSWORD",
                         help='Password to use when connecting to host')
-    parser.add_argument('-v', '--vm_name',
+    parser.add_argument('-v', '--vm_names',
                         required=True,
-                        action='store',
+                        action='append',
                         env_var="VM_NAME",
+                        default=[],
                         help='VM name')
     parser.add_argument('-s', '--snap_name',
                         required=True,
@@ -142,23 +143,26 @@ def main():
     args = get_args()
     et = EsxTalker(args)
 
-    print "Get VM by name =", args.vm_name
-    dcsvm = et.get_vm_by_name(args.vm_name)
-    print "Get snapshots from %s ..." % args.vm_name
-    snaps = et.get_snapshots(dcsvm.snapshot.rootSnapshotList)
-    print "Finding initial snapshot ..."
-    initial_snap = et.find_matching_snapshot(snaps, args.snap_name)
-    print "Snap found matching name ..."
-    for s in initial_snap:
-        print "initial snap name = ", s.name
-    assert len(initial_snap) == 1, "More than one snap identified - confused!"
-    thesnap2use = initial_snap[0]
-    if args.debug:
-        print "DEBUG : This task will cause the VM to revert",
-        thesnap2use.snapshot.RevertToSnapshot_Task
-    else:
-        print "NOT_DEBUG:",
-        "WaitForTask(thesname2use.snapshot.RevertToSnapshot_Task())"
+    print "Get VM by names =", args.vm_names
+    for name in args.vm_names:
+        vm = et.get_vm_by_name(name)
+        print "Get snapshots from %s ..." % vm
+        snaps = et.get_snapshots(vm.snapshot.rootSnapshotList)
+        print "Finding initial snapshot ..."
+        initial_snap = et.find_matching_snapshot(snaps, args.snap_name)
+        print "Snap found matching name ..."
+        for s in initial_snap:
+            print "initial snap name = ", s.name
+            assert len(initial_snap) == 1,\
+                "More than one snap identified - confused!\n" +\
+                "Please use more unique string."
+        thesnap2use = initial_snap[0]
+        if args.debug:
+            print "DEBUG : This task will cause the VM to revert",
+            thesnap2use.snapshot.RevertToSnapshot_Task
+        else:
+            print "NOT_DEBUG:",
+            "WaitForTask(thesname2use.snapshot.RevertToSnapshot_Task())"
 
 
 if __name__ == "__main__":
