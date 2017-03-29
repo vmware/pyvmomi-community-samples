@@ -24,6 +24,11 @@ class EsxTalker(object):
     """
 
     def __init__(self, args):
+        """
+        Initialise the EsxTalker.
+        :param args - the params passed to the program, which must include
+                      the username, password and host for the vSphere
+        """
         self.args = args  # as there may be more than just the esx creds
         # magic to disable SSL cert checking
         s = None
@@ -46,7 +51,10 @@ class EsxTalker(object):
 
     def get_obj(self, vimtype, name):
         """
-         Get the vsphere object associated with a given text name
+        Get the vsphere object associated with a given text name
+        :param vimtype - type of object searched for.
+        :param name - name of item searched for.
+        :return matching object or None
         """
         obj = None
         container = self.content.viewManager.CreateContainerView(
@@ -57,9 +65,20 @@ class EsxTalker(object):
         return None
 
     def get_vm_by_name(self, name):
+        """
+        Get the VM object for the VM with the given name
+        :param name - exact name of target VM
+        :return matching VM or None
+        """
         return self.get_obj([vim.VirtualMachine], name)
 
     def get_snapshots(self, rootlist):
+        """
+        Starting from the root list, return
+        a list of snapshots.
+        :param rootlist - the VM snapshot rootlist
+        :return list of snapshots
+        """
         results = []
         for s in rootlist:
             results.append(s)
@@ -67,11 +86,18 @@ class EsxTalker(object):
         return results
 
     def find_matching_snapshot(self, snapshots, regex):
+        """
+        Return the list of existing snapshots filtered using
+        a regex - which can be a simple substring expected to
+        be found in the name field.
+        :param snapshots - list of snapshots
+        :param regex - string with an expression to re.search on.
+        :return filtered list
+        """
         if snapshots is None:
             return None
         if len(snapshots) < 1:
             return None
-        results = []
         return [s for s in snapshots if re.search(regex, s.name)]
 
 
