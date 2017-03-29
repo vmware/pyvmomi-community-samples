@@ -2,6 +2,8 @@
 #
 # checks for a specific snapshot for a named VMs, and restores it
 #
+# Author: gavin.brebner@hpe.com
+# Copyright Hewlett Packard Enterprise 2017
 
 import atexit
 import configargparse
@@ -14,9 +16,20 @@ import time
 from pyVim import connect
 from pyVim.task import WaitForTask
 from pyVmomi import vmodl, vim
+from time import localtime, strftime
 
 # creds etc can be stores in a file
 DEFAULT_CONFIG_FILENAME = ".restore_config"
+
+BASE_DESCRIPTION = 'Tool to automate reverting VMs to known snapshots' +\
+                    ' via vSphere.'
+
+def report(message):
+    """
+    Timestamped message output.
+    :param message - message to display.
+    """
+    print strftime("%a, %d %b %Y %H:%M:%S", localtime()) + " : " + message
 
 
 class EsxTalker(object):
@@ -32,7 +45,7 @@ class EsxTalker(object):
         """
         self.args = args  # as there may be more than just the esx creds
         if self.args.debug:  # see :)
-            print "Debug mode"
+            report("Debug mode")
         # magic to disable SSL cert checking
         s = None
         if args.insecure:
@@ -51,7 +64,7 @@ class EsxTalker(object):
             self.sid = self.svc_inst.content.sessionManager.currentSession.key
             assert self.sid is not None, "Connection to ESX failed"
         except vmodl.MethodFault as error:
-            print "Caught vmodl fault : " + error.msg
+            report("Caught vmodl fault : " + error.msg)
             sys.exit(1)
         self.content = self.svc_inst.RetrieveContent()
 
@@ -119,20 +132,22 @@ class EsxTalker(object):
         """
         vm = self.get_vm_by_name(vmname)
         assert vm is not None, "Did not find specified VM!"
-        print "Creating snapshot %s for %s ..." % (snapname, vmname)
+        report("Creating snapshot %s for %s ..." % (snapname, vmname))
         if self.args.debug:
-            print """
+            report("""
             DEBUG :
             WaitForTask(vm.CreateSnapshot(snap_name,
                                           description,
                                           dumpMem,
                                           quiesce))
-            """
+            """)
         else:
+            report("Starting to create snapshot ...")
             WaitForTask(vm.CreateSnapshot(snapname,
                                           description,
                                           dumpMem,
                                           quiesce))
+            report("  done.")
 
     def revert_to_snap(self, vmname, snapnameregex):
         """
@@ -140,23 +155,23 @@ class EsxTalker(object):
         :param vmname - the name of the VM
         :param snapnameregex - the search pattern for the chosen snapshot
         """
-        print "Get snapshots from %s ..." % vmname
+        report("Get snapshots from %s ..." % vmname)
         vm = self.get_vm_by_name(vmname)
         snaps = self.get_snapshots(vm.snapshot.rootSnapshotList)
-        print "Finding snapshot ..."
+        report("Finding snapshot ...")
         target_snap = self.find_matching_snapshot(snaps, snapnameregex)
         assert len(target_snap) == 1,\
             "More than one snap identified - confused!\n" +\
             "Please use a more unique string."
-        print "Snap found matching name ..."
+        report("Snap found matching name ...")
         thesnap2use = target_snap[0]
-        print "thesnap2use = ", thesnap2use
         assert thesnap2use is not None
         if self.args.debug:
-            print "DEBUG : This task will cause the VM to revert",
-            thesnap2use.snapshot.RevertToSnapshot_Task
+            report("DEBUG : This task will cause the VM to revert")
         else:
+            report("Reverting to snapshot ...")
             WaitForTask(thesnap2use.snapshot.RevertToSnapshot_Task())
+            report("  done")
 
 
 def get_args():
@@ -168,7 +183,7 @@ def get_args():
     parser = configargparse.ArgParser(
         config_file_parser_class=configargparse.YAMLConfigFileParser,
         default_config_files=[DEFAULT_CONFIG_FILENAME],
-        description='Tool to manipulate VM snapshots on ESX cluster')
+        description=BASE_DESCRIPTION)
     parser.add_argument('-c', '--my-config',
                         required=False,
                         is_config_file=True,
@@ -176,7 +191,7 @@ def get_args():
     parser.add_argument('-H', '--host',
                         required=True,
                         action='store',
-                        help='vSphere service to connect to')
+                        help='vSphere instance to connect to')
     parser.add_argument('-P', '--port',
                         type=int,
                         default=443,
@@ -184,19 +199,19 @@ def get_args():
                         help='Port to connect on')
     parser.add_argument('-u', '--user',
                         required=True,
+                        env_var="VSPHERE_USER",
                         action='store',
-                        help='User name to use when connecting to host')
+                        help='User name to use for vSphere.')
     parser.add_argument('-p', '--password',
                         required=False,
                         action='store',
-                        env_var="ESX_PASSWORD",
-                        help='Password to use when connecting to host')
-    parser.add_argument('-v', '--vm_names',
+                        env_var="VSPHERE_PASSWORD",
+                        help='Password to use for vSphere.')
+    parser.add_argument('-v', '--vm_name',
                         required=True,
                         action='append',
-                        env_var="VM_NAME",
                         default=[],
-                        help='VM name')
+                        help='VM name - can be repeated')
     parser.add_argument('-s', '--snap_name',
                         required=True,
                         env_var="SNAP_NAME",
@@ -214,6 +229,7 @@ def get_args():
     parser.add_argument('-i', '--insecure',
                         required=False,
                         action='store_true',
+                        env_var='VSPHERE_INSECURE',
                         help='Insecure mode - ' +
                         'do not validate the SSL certificate')
     args = parser.parse_args()
@@ -231,11 +247,11 @@ def main():
     args = get_args()
     et = EsxTalker(args)
 
-    print "Get VM by names =", args.vm_names
-    for vmname in args.vm_names:
+    report("Get VM by names =" + str(args.vm_name))
+    for vmname in args.vm_name:
         if args.save_first:
             # prior to winding back, create a snapshot of now - just in case
-            print "snapshotting prior to revert"
+            report("snapshotting prior to revert")
             new_snap_name = "%s_PREREVERT_%s" % (vmname, str(time.time()))
             description = "Snapshot prior to revert operation"
             et.create_snapshot(vmname, new_snap_name, description)
