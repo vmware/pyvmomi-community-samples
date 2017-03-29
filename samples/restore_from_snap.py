@@ -24,6 +24,7 @@ DEFAULT_CONFIG_FILENAME = ".restore_config"
 BASE_DESCRIPTION = 'Tool to automate reverting VMs to known snapshots' +\
                     ' via vSphere.'
 
+
 def report(message):
     """
     Timestamped message output.
