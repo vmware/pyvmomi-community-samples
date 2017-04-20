@@ -229,24 +229,29 @@ class OvfHandler(object):
         """
         self.spec = spec
 
-    def get_disk(self, importKey):
+    def get_disk(self, fileItem, lease):
         """
         Does translation for disk key to file name, returning a file handle.
         """
-        fileItem = list(filter(lambda x: x.deviceId == importKey,
-                               self.spec.fileItem))[0]
         ovffilename = list(filter(lambda x: x == fileItem.path,
                                   self.tarfile.getnames()))[0]
         return self.tarfile.extractfile(ovffilename)
+
+    def get_device_url(self, fileItem, lease):
+        for deviceUrl in lease.info.deviceUrl:
+            if deviceUrl.importKey == fileItem.deviceId:
+                return deviceUrl
+        raise Exception("Failed to find deviceUrl for file %s" % fileItem.path)
 
     def upload_disks(self, lease, host):
         """
         Uploads all the disks, with a progress keep-alive.
         """
+        self.lease = lease
         try:
-            self.start_timer(lease)
-            for deviceUrl in lease.info.deviceUrl:
-                self.upload_disk(deviceUrl, host)
+            self.start_timer()
+            for fileItem in self.spec.fileItem:
+                self.upload_disk(fileItem, lease, host)
             lease.Complete()
             print("Finished deploy successfully.")
             return 0
@@ -254,17 +259,21 @@ class OvfHandler(object):
             print("Hit an error in upload: %s" % e)
             lease.Abort(e)
         except Exception as e:
+            print("Lease: %s" % lease.info)
             print("Hit an error in upload: %s" % e)
             lease.Abort(vmodl.fault.SystemError(reason=str(e)))
         return 1
 
-    def upload_disk(self, deviceUrl, host):
+    def upload_disk(self, fileItem, lease, host):
         """
         Upload an individual disk. Passes the file handle of the
         disk directly to the urlopen request.
         """
+        ovffile = self.get_disk(fileItem, lease)
+        if ovffile is None:
+            return
+        deviceUrl = self.get_device_url(fileItem, lease)
         url = deviceUrl.url.replace('*', host)
-        ovffile = self.get_disk(deviceUrl.importKey)
         headers = {'Content-length': ovffile.size}
         if hasattr(ssl, '_create_unverified_context'):
             sslContext = ssl._create_unverified_context()
@@ -273,21 +282,21 @@ class OvfHandler(object):
         req = Request(url, ovffile, headers)
         urlopen(req, context=sslContext)
 
-    def start_timer(self, lease):
+    def start_timer(self):
         """
         A simple way to keep updating progress while the disks are transferred.
         """
-        Timer(5, OvfHandler.timer, args=[self, lease]).start()
+        Timer(5, OvfHandler.timer, args=[self]).start()
 
-    def timer(self, lease):
+    def timer(self):
         """
         Update the progress and reschedule the timer if not complete.
         """
         try:
             prog = self.handle.progress()
-            lease.Progress(prog)
-            if lease.state not in [vim.HttpNfcLease.State.done,
-                                   vim.HttpNfcLease.State.error]:
+            self.lease.Progress(prog)
+            if self.lease.state not in [vim.HttpNfcLease.State.done,
+                                        vim.HttpNfcLease.State.error]:
                 self.start_timer(lease)
             sys.stderr.write("Progress: %d%%\r" % prog)
         except:  # Any exception means we should stop updating progress.
