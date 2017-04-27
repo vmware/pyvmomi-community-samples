@@ -30,6 +30,7 @@ def build_arg_parser():
     -o optional_port_number
     -u required_user
     -p optional_password
+    --no-ssl optional for not checking ssl
 
     """
     parser = argparse.ArgumentParser(
@@ -57,6 +58,13 @@ def build_arg_parser():
                         required=False,
                         action='store',
                         help='Password to use when connecting to host')
+
+    parser.add_argument('--no-ssl',
+                        required=False,
+                        action='store_const',
+                        const=1,
+                        help='Does not make ssl verification
+
     return parser
 
 
