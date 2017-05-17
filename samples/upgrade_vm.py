@@ -28,10 +28,10 @@ the host supports is used.
 from __future__ import print_function
 import atexit
 
-from pyVim import connect
+from pyVim import connect, task
 from pyVmomi import vim
 
-from tools import cli, tasks
+from tools import cli
 
 
 def get_args():
@@ -84,10 +84,10 @@ def connect_vsphere(username, password, hostname, port, use_ssl):
             server = connect.SmartConnectNoSSL(host=hostname, user=username,
                                                pwd=password, port=port)
     except vim.fault.InvalidLogin:
-        print("ERROR: Invalid vSphere login credentials for user %s", username)
+        print("ERROR: Invalid vSphere login credentials for user '%s'" % username)
         exit(1)
     except vim.fault as message:
-        print("Error connecting to vSphere: %s", str(message))
+        print("Error connecting to vSphere: %s" % str(message))
         exit(1)
 
     # Ensures clean disconnect upon program termination
@@ -112,12 +112,14 @@ def main():
         # Set the hardware version to use if specified
         if args.version is not None:
             print("New version will be %s" % args.version)
-            new_version = "vmx-" + str(args.version)
+            new_version = "vmx-{:02d}".format(args.version)
         else:
             new_version = None
-        task = virtual_machine.UpgradeVM_Task(new_version)  # Upgrade the VM
+
+        # Upgrade the VM
         try:
-            tasks.wait_for_tasks(service_instance, [task])
+            task.WaitForTask(task=virtual_machine.UpgradeVM_Task(new_version),
+                             si=service_instance)
         except vim.fault.AlreadyUpgraded:
             print("VM is already upgraded")
 
