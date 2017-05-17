@@ -112,13 +112,13 @@ def main():
         # Set the hardware version to use if specified
         if args.version is not None:
             print("New version will be %s" % args.version)
-            new_version = "vmx-{:02d}".format(args.version)
+            version = "vmx-{:02d}".format(args.version)
         else:
-            new_version = None
+            version = None
 
         # Upgrade the VM
         try:
-            task.WaitForTask(task=virtual_machine.UpgradeVM_Task(new_version),
+            task.WaitForTask(task=virtual_machine.UpgradeVM_Task(version),
                              si=service_instance)
         except vim.fault.AlreadyUpgraded:
             print("VM is already upgraded")
