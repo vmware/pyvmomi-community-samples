@@ -1,5 +1,4 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python
 
 """
 Upgrades the hardware version of a Virtual Machine.
@@ -13,28 +12,30 @@ This code is released under the terms of the Apache 2
 http://www.apache.org/licenses/LICENSE-2.0.html
 
 Example:
-    
-python upgrade_vm.py 
-    -h <vsphere host> 
+
+python upgrade_vm.py
+    -h <vsphere host>
     -o <port>
-    -u <username> 
-    -p <password> 
+    -u <username>
+    -p <password>
     -n <vm name>
     -v <version to upgrade to>
 
-If version is not specified, the default of the highest version 
+If version is not specified, the default of the highest version
 the host supports is used.
 """
 
 from __future__ import print_function
 import atexit
 
-from .tools import cli, tasks
 from pyVim import connect
 from pyVmomi import vim
 
+from tools import cli, tasks
+
 
 def get_args():
+    """ Get commandline arguments from the user. """
     parser = cli.build_arg_parser()
 
     parser.add_argument('-v', '--version',
@@ -60,16 +61,16 @@ def get_args():
 
 def get_vm(content, name):
     """ Gets a named virtual machine. """
-    vm = None
+    virtual_machine = None
     container = content.viewManager.CreateContainerView(content.rootFolder,
                                                         [vim.VirtualMachine],
                                                         True)
     for item in container.view:
         if item.name == name:
-            vm = item
+            virtual_machine = item
             break
     container.Destroy()  # Best practice. Frees up resources on host.
-    return vm
+    return virtual_machine
 
 
 def connect_vsphere(username, password, hostname, port, use_ssl):
@@ -85,8 +86,8 @@ def connect_vsphere(username, password, hostname, port, use_ssl):
     except vim.fault.InvalidLogin:
         print("ERROR: Invalid vSphere login credentials for user %s", username)
         exit(1)
-    except Exception as e:
-        print("Error connecting to vSphere: %s", str(e))
+    except vim.fault as message:
+        print("Error connecting to vSphere: %s", str(message))
         exit(1)
 
     # Ensures clean disconnect upon program termination
@@ -102,8 +103,8 @@ def main():
                                        args.host, int(args.port), args.use_ssl)
 
     content = service_instance.RetrieveContent()
-    vm = get_vm(content, args.name)
-    if not vm:
+    virtual_machine = get_vm(content, args.name)
+    if not virtual_machine:
         print("Could not find VM %s" % args.name)
     else:
         print("Upgrading VM %s" % args.name)
@@ -114,7 +115,7 @@ def main():
             new_version = "vmx-" + str(args.version)
         else:
             new_version = None
-        task = vm.UpgradeVM_Task(new_version)  # Upgrade the VM
+        task = virtual_machine.UpgradeVM_Task(new_version)  # Upgrade the VM
         try:
             tasks.wait_for_tasks(service_instance, [task])
         except vim.fault.AlreadyUpgraded:
