@@ -14,7 +14,13 @@ http://www.apache.org/licenses/LICENSE-2.0.html
 
 Example:
     
-python upgrade_vm.py -s <vcenter> -u <username> -p <password> -v <version>
+python upgrade_vm.py 
+    -h <vsphere host> 
+    -o <port>
+    -u <username> 
+    -p <password> 
+    -n <vm name>
+    -v <version to upgrade to>
 
 If version is not specified, the default of the highest version 
 the host supports is used.
