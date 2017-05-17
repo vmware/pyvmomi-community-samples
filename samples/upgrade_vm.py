@@ -84,7 +84,7 @@ def connect_vsphere(username, password, hostname, port, use_ssl):
             server = connect.SmartConnectNoSSL(host=hostname, user=username,
                                                pwd=password, port=port)
     except vim.fault.InvalidLogin:
-        print("ERROR: Invalid vSphere login credentials for user '%s'" % username)
+        print("ERROR: Invalid login credentials for user '%s'" % username)
         exit(1)
     except vim.fault as message:
         print("Error connecting to vSphere: %s" % str(message))
