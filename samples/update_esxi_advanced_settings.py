@@ -18,6 +18,7 @@ import ssl
 
 from pyVmomi import vim, vmodl
 from pyVim import connect
+from pyVim.connect import SmartConnectNoSSL
 
 
 def get_args():
@@ -96,11 +97,10 @@ def main():
 
     args = get_args()
     try:
-        service_instance = connect.SmartConnect(host=args.host,
+        service_instance = connect.SmartConnectNoSSL(host=args.host,
                                                 user=args.user,
                                                 pwd=args.password,
-                                                port=int(args.port),
-                                                sslContext=ssl._create_unverified_context())
+                                                port=int(args.port))
         if not service_instance:
             print("Could not connect to the specified host using specified "
                   "username and password")
@@ -111,7 +111,7 @@ def main():
         content = service_instance.RetrieveContent()
 
         cluster = get_obj(content,
-                          [vim.ClusterCoputeResource], args.cluster_name)
+                          [vim.ClusterComputeResource], args.cluster_name)
 
         hosts = cluster.host
         for host in hosts:
