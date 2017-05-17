@@ -57,6 +57,12 @@ def build_arg_parser():
                         required=False,
                         action='store',
                         help='Password to use when connecting to host')
+
+    parser.add_argument('-S', '--disable_ssl_verification',
+                        required=False,
+                        action='store_true',
+                        help='Disable ssl host certificate verification')
+
     return parser
 
 
