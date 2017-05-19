@@ -7,7 +7,6 @@ Email: laujunbupt0913@163.com
 # Note: Example code For testing purposes only
 """
 
-
 from pyVim.connect import SmartConnect, Disconnect
 import atexit
 from pyVmomi import vim
@@ -47,7 +46,7 @@ def add_nic(vm, mac, port):
     nic_changes.append(nic_spec)
     spec.deviceChange = nic_changes
     e = vm.ReconfigVM_Task(spec=spec)
-    print ("Nic card added success ...")
+    print("Nic card added success ...")
 
 
 def get_obj(content, vimtype, name):
@@ -71,7 +70,7 @@ def search_port(dvs, portgroupkey):
     ports = dvs.FetchDVPorts(criteria)
     for port in ports:
         search_portkey.append(port.key)
-    print (search_portkey)
+    print(search_portkey)
     return search_portkey[0]
 
 
@@ -146,25 +145,25 @@ def main():
     atexit.register(Disconnect, serviceInstance)
 
     content = serviceInstance.RetrieveContent()
-    print ("Search VDS PortGroup by Name ...")
+    print("Search VDS PortGroup by Name ...")
     portgroup = None
     portgroup = get_obj(content,
                         [vim.dvs.DistributedVirtualPortgroup], args.portgroup)
     if portgroup is None:
-        print ("Portgroup not Found in DVS ...")
+        print("Portgroup not Found in DVS ...")
         exit(0)
-    print ("Search Available(Unused) port for VM...")
+    print("Search Available(Unused) port for VM...")
     dvs = portgroup.config.distributedVirtualSwitch
     portKey = search_port(dvs, portgroup.key)
     port = port_find(dvs, portKey)
-    print ("Search VM by Name ...")
+    print("Search VM by Name ...")
     vm = None
     vm = get_obj(content, [vim.VirtualMachine], args.vm_name)
     if vm:
-        print ("Find Vm , Add Nic Card ...")
+        print("Find Vm , Add Nic Card ...")
         add_nic(vm, args.macaddress, port)
     else:
-        print ("Vm not Found ...")
+        print("Vm not Found ...")
 
 
 if __name__ == '__main__':

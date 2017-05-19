@@ -128,9 +128,10 @@ def main():
                                     "{}?".format(args.unitnumber),
                                     default='no')
         delete_virtual_disk(si, vm_obj, args.unitnumber)
-        print ('VM HDD "{}" successfully deleted.'.format(args.unitnumber))
+        print('VM HDD "{}" successfully deleted.'.format(args.unitnumber))
     else:
-        print ('VM not found')
+        print('VM not found')
+
 
 # start
 if __name__ == "__main__":

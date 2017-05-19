@@ -112,8 +112,8 @@ def get_obj_in_list(obj_name, obj_list):
     for o in obj_list:
         if o.name == obj_name:
             return o
-    print ("Unable to find object by the name of %s in list:\n%s" %
-           (o.name, map(lambda o: o.name, obj_list)))
+    print("Unable to find object by the name of %s in list:\n%s" %
+          (o.name, map(lambda o: o.name, obj_list)))
     exit(1)
 
 
