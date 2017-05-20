@@ -76,15 +76,29 @@ def main():
 
     args = get_args()
     try:
-        service_instance = connect.SmartConnect(host=args.host,
-                                                user=args.user,
-                                                pwd=args.password,
-                                                port=int(args.port))
+        if args.disable_ssl_verification:
+            service_instance = connect.SmartConnectNoSSL(host=args.host,
+                                                         user=args.user,
+                                                         pwd=args.password,
+                                                         port=int(args.port))
+        else:
+            service_instance = connect.SmartConnect(host=args.host,
+                                                    user=args.user,
+                                                    pwd=args.password,
+                                                    port=int(args.port))
 
         atexit.register(connect.Disconnect, service_instance)
         content = service_instance.RetrieveContent()
 
-        vm = content.searchIndex.FindByUuid(None, args.vm_uuid, True)
+        # if instanceUuid is false it will search for VM BIOS UUID instead
+        vm = content.searchIndex.FindByUuid(datacenter=None,
+                                            uuid=args.vm_uuid,
+                                            vmSearch=True,
+                                            instanceUuid=False)
+
+        if not vm:
+            raise SystemExit("Unable to locate the virtual machine.")
+
         tools_status = vm.guest.toolsStatus
         if (tools_status == 'toolsNotInstalled' or
                 tools_status == 'toolsNotRunning'):
