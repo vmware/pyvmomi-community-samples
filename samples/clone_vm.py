@@ -80,7 +80,7 @@ def get_args():
                         default=None,
                         help='Datastorecluster (DRS Storagepod) you wish the VM to end up on \
                             Will override the datastore-name parameter.')
-    
+
     parser.add_argument('--cluster-name',
                         required=False,
                         action='store',
@@ -173,7 +173,7 @@ def clone_vm(
     else:
         datastore = get_obj(
             content, [vim.Datastore], template.datastore[0].info.name)
-        
+
     # if None, get the first one
     cluster = get_obj(content, [vim.ClusterComputeResource], cluster_name)
 
@@ -183,7 +183,7 @@ def clone_vm(
         resource_pool = cluster.resourcePool
 
     vmconf = vim.vm.ConfigSpec()
-        
+
     if datastorecluster_name:
         podsel = vim.storageDrs.PodSelectionSpec()
         pod = get_obj(content, [vim.StoragePod], datastorecluster_name)
@@ -197,8 +197,10 @@ def clone_vm(
         storagespec.configSpec = vmconf
 
         try:
-            rec = content.storageResourceManager.RecommendDatastores(storageSpec=storagespec)
-            real_datastore_name = rec.recommendations[0].action[0].destination.name
+            rec = content.storageResourceManager.RecommendDatastores(
+                storageSpec=storagespec)
+            rec_action = rec.recommendations[0].action[0]
+            real_datastore_name = rec_action.destination.name
         except:
             real_datastore_name = template.datastore[0].info.name
 
