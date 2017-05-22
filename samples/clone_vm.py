@@ -245,7 +245,7 @@ def main():
             content, template, args.vm_name, si,
             args.datacenter_name, args.vm_folder,
             args.datastore_name, args.cluster_name,
-            args.resource_pool, args.power_on)
+            args.resource_pool, args.power_on, args.datastorecluster_name)
     else:
         print "template not found"
 
