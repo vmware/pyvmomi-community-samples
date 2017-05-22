@@ -74,6 +74,13 @@ def get_args():
                             If left blank, VM will be put on the same \
                             datastore as the template')
 
+    parser.add_argument('--datastorecluster-name',
+                        required=False,
+                        action='store',
+                        default=None,
+                        help='Datastorecluster (DRS Storagepod) you wish the VM to end up on \
+                            Will override the datastore-name parameter.')
+    
     parser.add_argument('--cluster-name',
                         required=False,
                         action='store',
@@ -147,7 +154,7 @@ def get_obj(content, vimtype, name):
 def clone_vm(
         content, template, vm_name, si,
         datacenter_name, vm_folder, datastore_name,
-        cluster_name, resource_pool, power_on):
+        cluster_name, resource_pool, power_on, datastorecluster_name):
     """
     Clone a VM from a template/VM, datacenter_name, vm_folder, datastore_name
     cluster_name, resource_pool, and power_on are all optional.
@@ -166,7 +173,7 @@ def clone_vm(
     else:
         datastore = get_obj(
             content, [vim.Datastore], template.datastore[0].info.name)
-
+        
     # if None, get the first one
     cluster = get_obj(content, [vim.ClusterComputeResource], cluster_name)
 
@@ -174,6 +181,28 @@ def clone_vm(
         resource_pool = get_obj(content, [vim.ResourcePool], resource_pool)
     else:
         resource_pool = cluster.resourcePool
+
+    vmconf = vim.vm.ConfigSpec()
+        
+    if datastorecluster_name:
+        podsel = vim.storageDrs.PodSelectionSpec()
+        pod = get_obj(content, [vim.StoragePod], datastorecluster_name)
+        podsel.storagePod = pod
+
+        storagespec = vim.storageDrs.StoragePlacementSpec()
+        storagespec.podSelectionSpec = podsel
+        storagespec.type = 'create'
+        storagespec.folder = destfolder
+        storagespec.resourcePool = resource_pool
+        storagespec.configSpec = vmconf
+
+        try:
+            rec = content.storageResourceManager.RecommendDatastores(storageSpec=storagespec)
+            real_datastore_name = rec.recommendations[0].action[0].destination.name
+        except:
+            real_datastore_name = template.datastore[0].info.name
+
+        datastore = get_obj(content, [vim.Datastore], real_datastore_name)
 
     # set relospec
     relospec = vim.vm.RelocateSpec()
