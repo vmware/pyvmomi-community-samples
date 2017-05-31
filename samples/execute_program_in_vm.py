@@ -122,6 +122,19 @@ def main():
 
             if res > 0:
                 print "Program executed, PID is %d" % res
+                while (pm.ListProcessesInGuest(vm, creds, [res]).pop().exitCode == None):
+                    print "Program running, PID is %d" % res
+                    time.sleep(5)
+                if (pm.ListProcessesInGuest(vm, creds, [res]).pop().exitCode == 0):
+                    print "Program %d completed with success" % res				
+                else :
+                    print ""				
+                    print "ERROR: Program %d completed with Failute" % res
+                    print "  tip: Try running this on guest %r to debug" %summary.guest.ipAddress
+                    print ""				
+                    print "ERROR: More info on process"					
+                    print pm.ListProcessesInGuest(vm, creds, [res])
+                    print ""				                
 
         except IOError, e:
             print e
