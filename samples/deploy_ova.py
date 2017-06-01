@@ -207,7 +207,7 @@ class OvfHandler(object):
         ovffilename = list(filter(lambda x: x.endswith(".ovf"),
                                   self.tarfile.getnames()))[0]
         ovffile = self.tarfile.extractfile(ovffilename)
-        self.descriptor = ovffile.read()
+        self.descriptor = ovffile.read().decode()
 
     def _create_file_handle(self, entry):
         """
@@ -274,7 +274,9 @@ class OvfHandler(object):
             return
         deviceUrl = self.get_device_url(fileItem, lease)
         url = deviceUrl.url.replace('*', host)
-        headers = {'Content-length': ovffile.size}
+        headers = {}
+        if hasattr(ovffile, 'size'):
+            headers['Content-length'] = ovffile.size
         if hasattr(ssl, '_create_unverified_context'):
             sslContext = ssl._create_unverified_context()
         else:
@@ -286,7 +288,7 @@ class OvfHandler(object):
         """
         A simple way to keep updating progress while the disks are transferred.
         """
-        Timer(5, OvfHandler.timer, args=[self]).start()
+        Timer(5, self.timer).start()
 
     def timer(self):
         """
@@ -297,7 +299,7 @@ class OvfHandler(object):
             self.lease.Progress(prog)
             if self.lease.state not in [vim.HttpNfcLease.State.done,
                                         vim.HttpNfcLease.State.error]:
-                self.start_timer(lease)
+                self.start_timer()
             sys.stderr.write("Progress: %d%%\r" % prog)
         except:  # Any exception means we should stop updating progress.
             pass
@@ -306,7 +308,7 @@ class OvfHandler(object):
 class FileHandle(object):
     def __init__(self, filename):
         self.filename = filename
-        self.fh = open(filename, 'r')
+        self.fh = open(filename, 'rb')
 
         self.st_size = os.stat(filename).st_size
         self.offset = 0
@@ -343,18 +345,22 @@ class WebHandle(object):
         r = urlopen(url)
         if r.code != 200:
             raise FileNotFoundError(url)
-        self.headers = self._headers_to_dict(r.info().headers)
+        self.headers = self._headers_to_dict(r)
         if 'accept-ranges' not in self.headers:
             raise Exception("Site does not accept ranges")
         self.st_size = int(self.headers['content-length'])
         self.offset = 0
 
-    def _headers_to_dict(self, rawHeader):
+    def _headers_to_dict(self, r):
         result = {}
-        for line in rawHeader:
-            if line.find(':') != -1:
-                n, v = line.split(': ', 1)
-                result[n.lower()] = v.strip()
+        if hasattr(r, 'getheaders'):
+           for n, v in r.getheaders():
+               result[n.lower()] = v.strip()
+        else:
+           for line in r.info().headers:
+               if line.find(':') != -1:
+                   n, v = line.split(': ', 1)
+                   result[n.lower()] = v.strip()
         return result
 
     def tell(self):
