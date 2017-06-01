@@ -354,13 +354,13 @@ class WebHandle(object):
     def _headers_to_dict(self, r):
         result = {}
         if hasattr(r, 'getheaders'):
-           for n, v in r.getheaders():
-               result[n.lower()] = v.strip()
+            for n, v in r.getheaders():
+                result[n.lower()] = v.strip()
         else:
-           for line in r.info().headers:
-               if line.find(':') != -1:
-                   n, v = line.split(': ', 1)
-                   result[n.lower()] = v.strip()
+            for line in r.info().headers:
+                if line.find(':') != -1:
+                    n, v = line.split(': ', 1)
+                    result[n.lower()] = v.strip()
         return result
 
     def tell(self):
