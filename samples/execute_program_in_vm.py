@@ -141,7 +141,8 @@ def main():
                             % summary.guest.ipAddress
                         print "ERROR: More info on process"
                         print pm.ListProcessesInGuest(vm, creds, [res])
-                        break                    
+                        break
+                        
         except IOError, e:
             print e
     except vmodl.MethodFault as error:
