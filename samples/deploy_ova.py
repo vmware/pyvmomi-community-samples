@@ -191,6 +191,19 @@ def get_largest_free_ds(dc):
     return largest
 
 
+def get_tarfile_size(tarfile):
+    """
+    Determine the size of a file inside the tarball.
+    If the object has a size attribute, use that. Otherwise seek to the end
+    and report that.
+    """
+    if hasattr(tarfile, 'size'):
+        return tarfile.size
+    size = tarfile.seek(0, 2)
+    tarfile.seek(0, 0)
+    return size
+
+
 class OvfHandler(object):
     """
     OvfHandler handles most of the OVA operations.
@@ -262,6 +275,7 @@ class OvfHandler(object):
             print("Lease: %s" % lease.info)
             print("Hit an error in upload: %s" % e)
             lease.Abort(vmodl.fault.SystemError(reason=str(e)))
+            raise
         return 1
 
     def upload_disk(self, fileItem, lease, host):
@@ -274,9 +288,7 @@ class OvfHandler(object):
             return
         deviceUrl = self.get_device_url(fileItem, lease)
         url = deviceUrl.url.replace('*', host)
-        headers = {}
-        if hasattr(ovffile, 'size'):
-            headers['Content-length'] = ovffile.size
+        headers = {'Content-length': get_tarfile_size(ovffile)}
         if hasattr(ssl, '_create_unverified_context'):
             sslContext = ssl._create_unverified_context()
         else:
@@ -327,7 +339,10 @@ class FileHandle(object):
         elif whence == 2:
             self.offset = self.st_size - offset
 
-        self.fh.seek(offset, whence)
+        return self.fh.seek(offset, whence)
+
+    def seekable(self):
+        return True
 
     def read(self, amount):
         self.offset += amount
@@ -373,15 +388,20 @@ class WebHandle(object):
             self.offset += offset
         elif whence == 2:
             self.offset = self.st_size - offset
+        return self.offset
+
+    def seekable(self):
+        return True
 
     def read(self, amount):
         start = self.offset
-        end = self.offset + amount
+        end = self.offset + amount - 1
         req = Request(self.url,
                       headers={'Range': 'bytes=%d-%d' % (start, end)})
         r = urlopen(req)
         self.offset += amount
         result = r.read(amount)
+        r.close()
         return result
 
     # A slightly more accurate percentage
