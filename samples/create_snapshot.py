@@ -20,7 +20,7 @@ import requests
 
 from pyVim.connect import SmartConnect, Disconnect
 
-from tools import cli
+from tools import cli, tasks
 
 requests.packages.urllib3.disable_warnings()
 
@@ -66,13 +66,13 @@ desc = None
 if args.description:
     desc = args.description
 
-task = vm.CreateSnapshot_Task(name=args.name,
+TASK = vm.CreateSnapshot_Task(name=args.name,
                               description=desc,
                               memory=True,
                               quiesce=False)
-
-
+tasks.wait_for_tasks(si, [TASK])
 print("Snapshot Completed.")
+
 del vm
 vm = si.content.searchIndex.FindByUuid(None, args.uuid, True, instance_search)
 snap_info = vm.snapshot
