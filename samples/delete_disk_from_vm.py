@@ -76,35 +76,6 @@ def get_obj(content, vim_type, name):
     return obj
 
 
-def prompt_y_n_question(question, default="no"):
-    """ based on:
-        http://code.activestate.com/recipes/577058/
-    :param question: Question to ask
-    :param default: No
-    :return: True/False
-    """
-    valid = {"yes": True, "y": True, "ye": True,
-             "no": False, "n": False}
-    if default is None:
-        prompt = " [y/n] "
-    elif default == "yes":
-        prompt = " [Y/n] "
-    elif default == "no":
-        prompt = " [y/N] "
-    else:
-        raise ValueError("Invalid default answer: '{}'".format(default))
-
-    while True:
-        print(question + prompt)
-        choice = raw_input().lower()
-        if default is not None and choice == '':
-            return valid[default]
-        elif choice in valid:
-            return valid[choice]
-        else:
-            print("Please, respond with 'yes' or 'no' or 'y' or 'n'.")
-
-
 def main():
     args = get_args()
 
