@@ -224,11 +224,11 @@ elif args.ip:
     vm = search_index.FindByIp(None, args.ip, True)
 
 if not vm:
-    print("Could not a virtual machine to examine.")
+    print(u"Could not a virtual machine to examine.")
     exit(1)
 
-print("Found Virtual Machine")
-print("=====================")
+print(u"Found Virtual Machine")
+print(u"=====================")
 details = {'name': vm.summary.config.name,
            'instance UUID': vm.summary.config.instanceUuid,
            'bios UUID': vm.summary.config.uuid,
@@ -239,10 +239,10 @@ details = {'name': vm.summary.config.name,
            'last booted timestamp': vm.runtime.bootTime}
 
 for name, value in details.items():
-    print("  {0:{width}{base}}: {1}".format(name, value, width=25, base='s'))
+    print(u"  {0:{width}{base}}: {1}".format(name, value, width=25, base='s'))
 
-print("  Devices:")
-print("  --------")
+print(u"  Devices:")
+print(u"  --------")
 for device in vm.config.hardware.device:
     # diving into each device, we pull out a few interesting bits
     dev_details = {'key': device.key,
@@ -250,11 +250,11 @@ for device in vm.config.hardware.device:
                    'device type': type(device).__name__,
                    'backing type': type(device.backing).__name__}
 
-    print("  label: {0}".format(device.deviceInfo.label))
-    print("  ------------------")
+    print(u"  label: {0}".format(device.deviceInfo.label))
+    print(u"  ------------------")
     for name, value in dev_details.items():
-        print("    {0:{width}{base}}: {1}".format(name, value,
-                                                  width=15, base='s'))
+        print(u"    {0:{width}{base}}: {1}".format(name, value,
+                                                   width=15, base='s'))
 
     if device.backing is None:
         continue
@@ -266,25 +266,25 @@ for device in vm.config.hardware.device:
     if hasattr(device.backing, 'fileName'):
             datastore = device.backing.datastore
             if datastore:
-                print("    datastore")
-                print("        name: {0}".format(datastore.name))
+                print(u"    datastore")
+                print(u"        name: {0}".format(datastore.name))
                 # there may be multiple hosts, the host property
                 # is a host mount info type not a host system type
                 # but we can navigate to the host system from there
                 for host_mount in datastore.host:
                     host_system = host_mount.key
-                    print("        host: {0}".format(host_system.name))
-                print("        summary")
+                    print(u"        host: {0}".format(host_system.name))
+                print(u"        summary")
                 summary = {'capacity': datastore.summary.capacity,
                            'freeSpace': datastore.summary.freeSpace,
                            'file system': datastore.summary.type,
                            'url': datastore.summary.url}
                 for key, val in summary.items():
-                    print("            {0}: {1}".format(key, val))
-            print("    fileName: {0}".format(device.backing.fileName))
-            print("    device ID: {0}".format(device.backing.backingObjectId))
+                    print(u"            {0}: {1}".format(key, val))
+            print(u"    fileName: {0}".format(device.backing.fileName))
+            print(u"    device ID: {0}".format(device.backing.backingObjectId))
 
-    print("  ------------------")
+    print(u"  ------------------")
 
-print("=====================")
+print(u"=====================")
 exit()
