@@ -29,12 +29,16 @@ def GetPbmConnection(vpxdStub):
     httpContext["cookies"] = cookie
     VmomiSupport.GetRequestContext()["vcSessionCookie"] = sessionCookie
     hostname = vpxdStub.host.split(":")[0]
+
+    context = None
+    if hasattr(ssl, "_create_unverified_context"):
+        context = ssl._create_unverified_context()
     pbmStub = pyVmomi.SoapStubAdapter(
         host=hostname,
         version="pbm.version.version1",
         path="/pbm/sdk",
         poolSize=0,
-        sslContext=ssl._create_unverified_context())
+        sslContext=context)
     pbmSi = pbm.ServiceInstance("ServiceInstance", pbmStub)
     pbmContent = pbmSi.RetrieveContent()
 
@@ -78,11 +82,14 @@ def main():
             prompt='Enter password for host %s and '
                    'user %s: ' % (args.host, args.user))
 
+    context = None
+    if hasattr(ssl, "_create_unverified_context"):
+        context = ssl._create_unverified_context()
     si = SmartConnect(host=args.host,
                       user=args.user,
                       pwd=password,
                       port=int(args.port),
-                      sslContext=ssl._create_unverified_context())
+                      sslContext=context)
 
     atexit.register(Disconnect, si)
 
