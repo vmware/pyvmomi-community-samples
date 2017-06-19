@@ -46,11 +46,14 @@ def main():
             prompt='Enter password for host %s and '
                    'user %s: ' % (args.host, args.user))
 
+    context = None
+    if hasattr(ssl, "_create_unverified_context"):
+        context = ssl._create_unverified_context()
     si = SmartConnect(host=args.host,
                       user=args.user,
                       pwd=password,
                       port=int(args.port),
-                      sslContext=ssl._create_unverified_context())
+                      sslContext=context)
 
     atexit.register(Disconnect, si)
 
