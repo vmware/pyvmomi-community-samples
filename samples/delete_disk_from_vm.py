@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #
 # Written by JM Lopez
 # GitHub: https://github.com/jm66
@@ -23,14 +24,26 @@ if hasattr(requests.packages.urllib3, 'disable_warnings'):
     requests.packages.urllib3.disable_warnings()
 
 
-def delete_virtual_disk(si, vm_obj, disk_number):
+def get_hdd_prefix_label(language):
+    language_prefix_label_mapper = {
+        'English': 'Hard disk ',
+        'Chinese': u'硬盘 '
+    }
+    return language_prefix_label_mapper.get(language)
+
+
+def delete_virtual_disk(si, vm_obj, disk_number, language):
     """ Deletes virtual Disk based on disk number
     :param si: Service Instance
     :param vm_obj: Virtual Machine Object
     :param disk_number: Hard Disk Unit Number
+    :param language: Vcenter API language
     :return: True if success
     """
-    hdd_prefix_label = 'Hard disk '
+    hdd_prefix_label = get_hdd_prefix_label(language)
+    if not hdd_prefix_label:
+        raise RuntimeError('Hdd prefix label could not be found')
+
     hdd_label = hdd_prefix_label + str(disk_number)
     virtual_hdd_device = None
     for dev in vm_obj.config.hardware.device:
@@ -61,6 +74,8 @@ def get_args():
                         help='HDD number to delete.', type=int)
     parser.add_argument('-y', '--yes',
                         help='Confirm disk deletion.', action='store_true')
+    parser.add_argument('-l', '--language', default='English',
+                        help='Language your vcenter used.')
     my_args = parser.parse_args()
     return cli.prompt_for_password(my_args)
 
@@ -98,7 +113,7 @@ def main():
                                     "to delete HDD "
                                     "{}?".format(args.unitnumber),
                                     default='no')
-        delete_virtual_disk(si, vm_obj, args.unitnumber)
+        delete_virtual_disk(si, vm_obj, args.unitnumber, args.language)
         print('VM HDD "{}" successfully deleted.'.format(args.unitnumber))
     else:
         print('VM not found')
