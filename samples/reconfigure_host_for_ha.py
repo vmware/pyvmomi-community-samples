@@ -17,7 +17,6 @@
 import argparse
 import getpass
 import atexit
-import ssl
 
 from pyVmomi import vim
 from pyVim import connect
@@ -62,14 +61,10 @@ def get_args():
 def main():
     args = get_args()
 
-    context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
-    context.verify_mode = ssl.CERT_NONE
-
-    service_instance = connect.SmartConnect(host=args.host,
-                                            user=args.user,
-                                            pwd=args.password,
-                                            port=int(args.port),
-                                            sslContext=context)
+    service_instance = connect.SmartConnectNoSSL(host=args.host,
+                                                 user=args.user,
+                                                 pwd=args.password,
+                                                 port=int(args.port))
     if not service_instance:
         print("Unable to connect with the vCenter Server "
               "using the provided credentials")

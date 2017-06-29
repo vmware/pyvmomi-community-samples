@@ -83,18 +83,17 @@ def main():
 
     cli.prompt_for_password(args)
 
-    sslContext = None
-
-    if args.disable_ssl_verification:
-        sslContext = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
-        sslContext.verify_mode = ssl.CERT_NONE
-
     try:
-        service_instance = connect.SmartConnect(host=args.host,
-                                                user=args.user,
-                                                pwd=args.password,
-                                                port=int(args.port),
-                                                sslContext=sslContext)
+        if args.disable_ssl_verification:
+            service_instance = connect.SmartConnectNoSSL(host=args.host,
+                                                         user=args.user,
+                                                         pwd=args.password,
+                                                         port=int(args.port))
+        else:
+            service_instance = connect.SmartConnect(host=args.host,
+                                                    user=args.user,
+                                                    pwd=args.password,
+                                                    port=int(args.port))
         if not service_instance:
             print("Could not connect to the specified host using specified "
                   "username and password")
