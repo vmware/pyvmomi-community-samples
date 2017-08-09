@@ -1,5 +1,5 @@
 argparse
-pyvmomi>=5.5.0.2014.1.1
+pyvmomi>=v6.5.0.2017.5-1
 requests
 suds>=0.4,<0.7
 vcrpy>=1.1.1
