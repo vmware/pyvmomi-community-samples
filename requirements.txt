@@ -1,5 +1,6 @@
 argparse
 pyvmomi>=v6.5.0.2017.5-1
 requests
-suds>=0.4,<0.7
+suds>=0.4,<0.7 ; python_version < '3'
+suds-jurko ; python_version >= '3.0'
 vcrpy>=1.1.1
