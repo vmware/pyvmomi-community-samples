@@ -93,7 +93,8 @@ def main():
                                             file_attribute,
                                             len(args), True)
             # When : host argument becomes https://*:443/guestFile?
-            # Ref: https://github.com/vmware/pyvmomi/blob/master/docs/vim/vm/guest/FileManager.rst
+            # Ref: https://github.com/vmware/pyvmomi/blob/master/docs/ \
+            #            vim/vm/guest/FileManager.rst
             # Script fails in that case, saying URL has an invalid label.
             # By having hostname in place will take take care of this.
             url = re.sub(r"^https://\*:", "https://"+str(args.host)+":", url)
