@@ -38,10 +38,12 @@ def main():
     try:
         service_instance = None
         sslContext = None
+        verify_cert = None
 
         if args.disable_ssl_verification:
             sslContext = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
             sslContext.verify_mode = ssl.CERT_NONE
+            verify_cert = False
         
         try:
             service_instance = connect.SmartConnect(host=args.host,
@@ -123,7 +125,7 @@ def main():
                                    data=f,
                                    headers=headers,
                                    cookies=cookie,
-                                   verify=args.disable_ssl_verification)
+                                   verify=verify_cert)
 
     except vmodl.MethodFault as e:
         print("Caught vmodl fault : " + e.msg)
