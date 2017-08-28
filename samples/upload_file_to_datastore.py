@@ -3,6 +3,7 @@
 from __future__ import print_function  # This import is for python2.*
 import atexit
 import requests
+import ssl
 
 from pyVim import connect
 from pyVmomi import vim
