@@ -47,7 +47,7 @@ def main():
             # disable urllib3 warnings
             if hasattr(requests.packages.urllib3, 'disable_warnings'):
                 requests.packages.urllib3.disable_warnings()
-        
+
         try:
             service_instance = connect.SmartConnect(host=args.host,
                                                     user=args.user,
