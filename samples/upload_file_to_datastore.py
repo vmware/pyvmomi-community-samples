@@ -44,6 +44,9 @@ def main():
             sslContext = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
             sslContext.verify_mode = ssl.CERT_NONE
             verify_cert = False
+            # disable urllib3 warnings
+            if hasattr(requests.packages.urllib3, 'disable_warnings'):
+                requests.packages.urllib3.disable_warnings()
         
         try:
             service_instance = connect.SmartConnect(host=args.host,
