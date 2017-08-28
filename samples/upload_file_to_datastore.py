@@ -25,10 +25,6 @@ def get_args():
                         required=True,
                         action='store',
                         help='Path on datastore to place file')
-    parser.add_argument('-S', '--disable_ssl_verification',
-                        required=False,
-                        action='store_true',
-                        help='Disable ssl host certificate verification')
     args = parser.parse_args()
 
     return cli.prompt_for_password(args)
@@ -40,7 +36,6 @@ def main():
 
     try:
         service_instance = None
-        
         sslContext = None
 
         if args.disable_ssl_verification:
