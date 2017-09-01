@@ -29,14 +29,14 @@ def modify_disk(si, vm_obj, disk_number, size):
 
     # Search for the vm disk
     for dev in vm_obj.config.hardware.device:
-        if isinstance(
-                dev,
-                vim.vm.device.VirtualDisk) and dev.deviceInfo.label == disk_label:
+        if isinstance( dev, vim.vm.device.VirtualDisk) \
+        		and dev.deviceInfo.label == disk_label:
             vm_disk = dev
     if not vm_disk:
-        raise RuntimeError('Virtual {} could not be found.'.format(disk_label))
+        raise RuntimeError(
+            'Virtual {} could not be found.'.format(disk_label))
 
-        # Configure the vm disk with the appropriate size
+    # Configure the vm disk with the appropriate size
     vm_disk_spec = vim.vm.device.VirtualDeviceSpec()
     vm_disk_spec.operation = vim.vm.device.VirtualDeviceSpec.Operation.edit
     vm_disk_spec.device = vm_disk
@@ -54,8 +54,8 @@ def modify_disk(si, vm_obj, disk_number, size):
 
 def get_args():
 
-    # Parse through the arguments. Style and format taken from the other samples
-    # in the samples directory
+    # Parse through the arguments. Style and format taken from the other
+    # samples in the samples directory
     parser = argparse.ArgumentParser()
 
     parser.add_argument('-s', '--host',
@@ -79,9 +79,11 @@ def get_args():
                         help="Port to use, default is 443",
                         default=443)
 
-    parser.add_argument('-v', '--vmname',
-                        required=True,
-                        help='Name of the VirtualMachine you wish to modify')
+    parser.add_argument(
+        '-v',
+        '--vmname',
+        required=True,
+        help='Name of the VirtualMachine you wish to modify')
 
     parser.add_argument('-d', '--disk-number',
                         required=False,
@@ -128,8 +130,8 @@ def main():
     if vm_obj:
         print "Found a VM succesfully, configuring the size now."
         modify_disk(si, vm_obj, args.disk_number, args.size)
-        print 'VM Hard Disk {} successfully ' 'changed to a size of {} Gb.'.format(
-            args.disk_number, args.size)
+        print 'VM Hard Disk {} successfully ' \
+        	'changed to a size of {} Gb.'.format(args.disk_number, args.size)
     else:
         print "VM with the specified name not found."
 
