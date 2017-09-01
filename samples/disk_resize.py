@@ -21,6 +21,7 @@ from tools import tasks
 
 __author__ = 'sahilmgandhi'
 
+
 def modify_disk(si, vm_obj, disk_number, size):
 
     disk_label = 'Hard disk ' + str(disk_number)
@@ -29,13 +30,13 @@ def modify_disk(si, vm_obj, disk_number, size):
     # Search for the vm disk
     for dev in vm_obj.config.hardware.device:
         if isinstance(
-            dev,
-            vim.vm.device.VirtualDisk) and dev.deviceInfo.label == disk_label:
+                dev,
+                vim.vm.device.VirtualDisk) and dev.deviceInfo.label == disk_label:
             vm_disk = dev
     if not vm_disk:
         raise RuntimeError('Virtual {} could not be found.'.format(disk_label))
 
-	# Configure the vm disk with the appropriate size
+        # Configure the vm disk with the appropriate size
     vm_disk_spec = vim.vm.device.VirtualDeviceSpec()
     vm_disk_spec.operation = vim.vm.device.VirtualDeviceSpec.Operation.edit
     vm_disk_spec.device = vm_disk
@@ -53,7 +54,7 @@ def modify_disk(si, vm_obj, disk_number, size):
 
 def get_args():
 
-    # Parse through the arguments. Style and format taken from the other samples 
+    # Parse through the arguments. Style and format taken from the other samples
     # in the samples directory
     parser = argparse.ArgumentParser()
 
@@ -131,6 +132,7 @@ def main():
             args.disk_number, args.size)
     else:
         print "VM with the specified name not found."
+
 
 # start
 if __name__ == "__main__":
