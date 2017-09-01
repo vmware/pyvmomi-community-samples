@@ -29,8 +29,8 @@ def modify_disk(si, vm_obj, disk_number, size):
 
     # Search for the vm disk
     for dev in vm_obj.config.hardware.device:
-        if isinstance( dev, vim.vm.device.VirtualDisk) \
-        		and dev.deviceInfo.label == disk_label:
+        if isinstance(dev, vim.vm.device.VirtualDisk) \
+                and dev.deviceInfo.label == disk_label:
             vm_disk = dev
     if not vm_disk:
         raise RuntimeError(
@@ -131,7 +131,7 @@ def main():
         print "Found a VM succesfully, configuring the size now."
         modify_disk(si, vm_obj, args.disk_number, args.size)
         print 'VM Hard Disk {} successfully ' \
-        	'changed to a size of {} Gb.'.format(args.disk_number, args.size)
+            'changed to a size of {} Gb.'.format(args.disk_number, args.size)
     else:
         print "VM with the specified name not found."
 
