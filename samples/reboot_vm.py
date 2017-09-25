@@ -46,7 +46,7 @@ try:
                               pwd=ARGS.password,
                               port=ARGS.port)
     atexit.register(connect.Disconnect, SI)
-except IOError, ex:
+except IOError as ex:
     pass
 
 if not SI:
@@ -65,8 +65,8 @@ elif ARGS.ip:
 if VM is None:
     raise SystemExit("Unable to locate VirtualMachine.")
 
-print "Found: {0}".format(VM.name)
-print "The current powerState is: {0}".format(VM.runtime.powerState)
+print("Found: {0}".format(VM.name))
+print("The current powerState is: {0}".format(VM.runtime.powerState))
 TASK = VM.ResetVM_Task()
 tasks.wait_for_tasks(SI, [TASK])
-print "its done."
+print("its done.")
