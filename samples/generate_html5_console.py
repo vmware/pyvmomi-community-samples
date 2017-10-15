@@ -55,9 +55,7 @@ def get_args():
     parser.add_argument('-n', '--name',
                         required=True,
                         help='Name of Virtual Machine.')
-
     args = parser.parse_args()
-
     return cli.prompt_for_password(args)
 
 
@@ -68,27 +66,27 @@ def main():
     """
 
     args = get_args()
-
     try:
         si = SmartConnect(host=args.host,
                           user=args.user,
                           pwd=args.password,
                           port=int(args.port))
     except Exception as e:
-        print 'Could not connect to vCenter host'
-        print repr(e)
+        print('Could not connect to vCenter host')
+        print(repr(e))
         sys.exit(1)
 
     atexit.register(Disconnect, si)
 
     content = si.RetrieveContent()
-
+    # get virtual machine
     vm = get_vm(content, args.name)
     vm_moid = vm._moId
-
+    # get vCenter server data
     vcenter_data = content.setting
     vcenter_settings = vcenter_data.setting
-    console_port = '7331'
+    vcenter_about = content.about
+    vcenter_version = vcenter_about.version
 
     for item in vcenter_settings:
         key = getattr(item, 'key')
@@ -102,15 +100,33 @@ def main():
     vc_pem = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM,
                                              vc_cert)
     vc_fingerprint = vc_pem.digest('sha1')
+    # validating version
+    if '5' in vcenter_version[:1]:
+        console_port = '7331'
+        console_path = '/console/'
+    elif '6' in vcenter_version[:1]:
+        console_port = '9443'
+        console_path = '/vsphere-client/webconsole.html'
+    else:
+        print('vCenter version not supported')
+        sys.exit(1)
+    # formatting console link
+    console_url = "http://{host}:{port}{console_path}?vmId={moid}" \
+                  "&vmName={name}&host={vcenter_fqdn}" \
+                  "&sessionTicket={session}" \
+                  "&thumbprint={vc_fingerprint}".format(
+                    host=args.host,
+                    port=console_port, console_path=console_path,
+                    moid=vm_moid,
+                    name=args.name, vcenter_fqdn=vcenter_fqdn,
+                    session=session, vc_fingerprint=vc_fingerprint)
 
-    print "Open the following URL in your browser to access the " \
-          "Remote Console.\n" \
-          "You have 60 seconds to open the URL, or the session" \
-          "will be terminated.\n"
-    print "http://" + args.host + ":" + console_port + "/console/?vmId=" \
-          + str(vm_moid) + "&vmName=" + args.name + "&host=" + vcenter_fqdn \
-          + "&sessionTicket=" + session + "&thumbprint=" + vc_fingerprint
-    print "Waiting for 60 seconds, then exit"
+    print("Open the following URL in your browser to access the "
+          "Remote Console.\n"
+          "You have 60 seconds to open the URL, or the session"
+          "will be terminated.\n")
+    print(console_url)
+    print("Waiting for 60 seconds, then exit")
     time.sleep(60)
 
 # Start program
