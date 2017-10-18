@@ -18,7 +18,7 @@ import atexit
 
 import requests
 
-from pyVim.connect import SmartConnect, Disconnect
+from pyVim.connect import SmartConnect, SmartConnectNoSSL, Disconnect
 
 from tools import cli
 
@@ -45,10 +45,17 @@ args = setup_args()
 si = None
 instance_search = False
 try:
-    si = SmartConnect(host=args.host,
-                      user=args.user,
-                      pwd=args.password,
-                      port=int(args.port))
+    if args.disable_ssl_verification:
+        si = SmartConnectNoSSL(host=args.host,
+                               user=args.user,
+                               pwd=args.password,
+                               port=int(args.port))
+    else:
+        si = SmartConnect(host=args.host,
+                          user=args.user,
+                          pwd=args.password,
+                          port=int(args.port))
+
     atexit.register(Disconnect, si)
 except IOError:
     pass
@@ -70,8 +77,6 @@ task = vm.CreateSnapshot_Task(name=args.name,
                               description=desc,
                               memory=True,
                               quiesce=False)
-
-
 print("Snapshot Completed.")
 del vm
 vm = si.content.searchIndex.FindByUuid(None, args.uuid, True, instance_search)
