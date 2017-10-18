@@ -16,6 +16,7 @@ from tools import cli
 from tools import tasks
 from pyVim import connect
 from pyVmomi import vim, vmodl
+import re
 
 
 def get_args():
@@ -91,6 +92,12 @@ def main():
                 InitiateFileTransferToGuest(vm, creds, vm_path,
                                             file_attribute,
                                             len(args), True)
+            # When : host argument becomes https://*:443/guestFile?
+            # Ref: https://github.com/vmware/pyvmomi/blob/master/docs/ \
+            #            vim/vm/guest/FileManager.rst
+            # Script fails in that case, saying URL has an invalid label.
+            # By having hostname in place will take take care of this.
+            url = re.sub(r"^https://\*:", "https://"+str(args.host)+":", url)
             resp = requests.put(url, data=args, verify=False)
             if not resp.status_code == 200:
                 print "Error while uploading file"
