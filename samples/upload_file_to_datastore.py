@@ -3,6 +3,7 @@
 from __future__ import print_function  # This import is for python2.*
 import atexit
 import requests
+import ssl
 
 from pyVim import connect
 from pyVmomi import vim
@@ -36,11 +37,23 @@ def main():
 
     try:
         service_instance = None
+        sslContext = None
+        verify_cert = None
+
+        if args.disable_ssl_verification:
+            sslContext = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+            sslContext.verify_mode = ssl.CERT_NONE
+            verify_cert = False
+            # disable urllib3 warnings
+            if hasattr(requests.packages.urllib3, 'disable_warnings'):
+                requests.packages.urllib3.disable_warnings()
+
         try:
             service_instance = connect.SmartConnect(host=args.host,
                                                     user=args.user,
                                                     pwd=args.password,
-                                                    port=int(args.port))
+                                                    port=int(args.port),
+                                                    sslContext=sslContext)
         except IOError as e:
             pass
         if not service_instance:
@@ -115,7 +128,7 @@ def main():
                                    data=f,
                                    headers=headers,
                                    cookies=cookie,
-                                   verify=args.disable_ssl_verification)
+                                   verify=verify_cert)
 
     except vmodl.MethodFault as e:
         print("Caught vmodl fault : " + e.msg)
