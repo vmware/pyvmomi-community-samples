@@ -37,23 +37,23 @@ from pyVim.task import WaitForTask
 from pyVim import connect
 from pyVim.connect import Disconnect, SmartConnect, GetSi
 
-parser = argparse.ArgumentParser(description="VMware vCenter Snapshot Operations")
-parser.add_argument("user", help="Type the vCenter server user.")
-parser.add_argument("password", help="Type the vCenter server password.")
-parser.add_argument("server", help="Type the vCenter server FQDN. Ex lab-vcenter.ais.anoneng.com")
-parser.add_argument("vm", help="Type the virtual machine name. Ex. ci-mapper-driver-a-1")
-parser.add_argument("operation", help="Specify type of operation to perform - create|remove|list_all|list_current|remove_all.")
-parser.add_argument("-name", help="Type a name for the snapshot.")
-parser.add_argument("-description", default="None", help="Type a description for the snapshot.")
+parser = argparse.ArgumentParser(description="vCenter Snapshot Operations")
+parser.add_argument("user", help="Type the vCenter server user")
+parser.add_argument("password", help="Type the vCenter server password")
+parser.add_argument("server", help="vCenter server FQDN")
+parser.add_argument("vm", help="Virtual machine name")
+parser.add_argument("operation", help="create|remove|list_current|remove_all")
+parser.add_argument("-name", help="Name of the snapshot")
+parser.add_argument("-description", help="Description for the snapshot.")
 args = parser.parse_args()
 
 if args.operation == 'create' and args.name is None:
     print("The '%s' argument requires a snapshot name." % args.operation)
-    sys.exit() 
+    sys.exit()
 
 if args.operation in ['remove', 'revert'] and args.name is None:
     print("The '%s' argument requires a snapshot name." % args.operation)
-    sys.exit() 
+    sys.exit()
 
 inputs = {'vcenter_ip': args.server,
           'vcenter_password': args.password,
@@ -148,9 +148,9 @@ def main():
         print("Virtual Machine %s doesn't have any snapshots" % vm.name)
         sys.exit()
 
-    if operation == 'create': 
+    if operation == 'create':
         snapshot_name = inputs['snapshot_name']
-        snapshot_description = inputs['snapshot_description'] 
+        snapshot_description = inputs['snapshot_description']
         dumpMemory = False
         quiesce = False
 
