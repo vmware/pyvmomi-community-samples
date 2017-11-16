@@ -128,7 +128,7 @@ def wait_for_task(task):
 
         if task.info.state == 'error':
             print "there was an error"
-            print "Error message from VC",task.info.error.msg
+            print "Error message from VC", task.info.error.msg
             task_done = True
 
 
