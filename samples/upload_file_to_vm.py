@@ -30,6 +30,11 @@ def get_args():
                         action='store',
                         help='Virtual machine uuid')
 
+    parser.add_argument('-n','--vm_name',
+                        required=False,
+                        action='store',
+                        help='Virtual machine Name')
+
     parser.add_argument('-r', '--vm_user',
                         required=False,
                         action='store',
@@ -55,6 +60,20 @@ def get_args():
     cli.prompt_for_password(args)
     return args
 
+def get_obj(content, vimtype, name):
+    """
+    This function takes three parameters (ie) content , type of the object and the name &
+    searches for the object in the content and returns it.
+    In this program,we are using it to get VM by its name.
+    """
+    obj = None
+    container = content.viewManager.CreateContainerView(
+        content.rootFolder, vimtype, True)
+    for c in container.view:
+        if c.name == name:
+            obj = c
+            break
+    return obj
 
 def main():
     """
@@ -72,9 +91,13 @@ def main():
         atexit.register(connect.Disconnect, service_instance)
         content = service_instance.RetrieveContent()
 
-        vm = content.searchIndex.FindByUuid(None, args.vm_uuid, True)
+        if args.vm_uuid:
+            vm = content.searchIndex.FindByUuid(None, args.vm_uuid, True)
+        elif args.vm_name:
+            vm = get_obj(content, [vim.VirtualMachine], args.vm_name)
+
         if vm is None:
-            raise SystemExit("VM not found,verify the UUID of the VM")
+            raise SystemExit("VM not found,verify the UUID or the name of the VM provided")
         tools_status = vm.guest.toolsStatus
         if (tools_status == 'toolsNotInstalled' or
                 tools_status == 'toolsNotRunning'):
