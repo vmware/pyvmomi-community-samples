@@ -63,7 +63,7 @@ def get_args():
 
 def get_obj(content, vimtype, name):
     """
-    This function takes three parameters (ie) content , type of the 
+    This function takes three parameters (ie) content , type of the
     object and the name &searches for the object in the content and
     returns it.In this program,we are using it to get VM by its name.
     """
