@@ -74,6 +74,25 @@ def get_obj(content, vimtype, name):
             obj = c
             break
     return obj
+<<<<<<< Updated upstream
+=======
+
+def get_obj(content, vimtype, name):
+    """
+    This function takes three parameters (ie) content , type of the 
+    object and the name & searches for the object in the content and returns it.
+    In this program,we are using it to get VM by its name.
+    """
+    obj = None
+    container = content.viewManager.CreateContainerView(
+        content.rootFolder, vimtype, True)
+    for c in container.view:
+        if c.name == name:
+            obj = c
+            break
+    return obj
+
+>>>>>>> Stashed changes
 
 def main():
     """
@@ -97,7 +116,16 @@ def main():
             vm = get_obj(content, [vim.VirtualMachine], args.vm_name)
 
         if vm is None:
+<<<<<<< Updated upstream
             raise SystemExit("VM not found,verify the UUID or the name of the VM provided")
+=======
+<<<<<<< HEAD
+            raise SystemExit("VM not found,verify the UUID or the \
+                name of the VM provided")
+=======
+            raise SystemExit("VM not found,verify the UUID or the name of the VM provided")
+>>>>>>> origin/upload_file_to_vm_fix
+>>>>>>> Stashed changes
         tools_status = vm.guest.toolsStatus
         if (tools_status == 'toolsNotInstalled' or
                 tools_status == 'toolsNotRunning'):
