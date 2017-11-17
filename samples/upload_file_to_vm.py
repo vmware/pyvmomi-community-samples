@@ -17,6 +17,7 @@ from tools import tasks
 from pyVim import connect
 from pyVmomi import vim, vmodl
 import re
+import sys
 
 
 def get_args():
@@ -73,6 +74,9 @@ def main():
         content = service_instance.RetrieveContent()
 
         vm = content.searchIndex.FindByUuid(None, args.vm_uuid, True)
+        if vm is None:
+            print("VM not found,verify the UUID of the VM")
+            sys.exit()
         tools_status = vm.guest.toolsStatus
         if (tools_status == 'toolsNotInstalled' or
                 tools_status == 'toolsNotRunning'):
