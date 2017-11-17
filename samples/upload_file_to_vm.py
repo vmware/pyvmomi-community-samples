@@ -30,7 +30,7 @@ def get_args():
                         action='store',
                         help='Virtual machine uuid')
 
-    parser.add_argument('-n','--vm_name',
+    parser.add_argument('-n', '--vm_name',
                         required=False,
                         action='store',
                         help='Virtual machine Name')
@@ -60,27 +60,12 @@ def get_args():
     cli.prompt_for_password(args)
     return args
 
-def get_obj(content, vimtype, name):
-    """
-    This function takes three parameters (ie) content , type of the object and the name &
-    searches for the object in the content and returns it.
-    In this program,we are using it to get VM by its name.
-    """
-    obj = None
-    container = content.viewManager.CreateContainerView(
-        content.rootFolder, vimtype, True)
-    for c in container.view:
-        if c.name == name:
-            obj = c
-            break
-    return obj
-
 
 def get_obj(content, vimtype, name):
     """
     This function takes three parameters (ie) content , type of the 
-    object and the name & searches for the object in the content and returns it.
-    In this program,we are using it to get VM by its name.
+    object and the name &searches for the object in the content and
+    returns it.In this program,we are using it to get VM by its name.
     """
     obj = None
     container = content.viewManager.CreateContainerView(
