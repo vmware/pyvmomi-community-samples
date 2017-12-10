@@ -62,7 +62,7 @@ def get_args():
                         default='thin',
                         choices=['thick', 'thin'],
                         help='thick or thin')
-    
+
     parser.add_argument('--disk-mode',
                         required=False,
                         action='store',
@@ -138,7 +138,7 @@ def main():
     args = get_args()
     # Default disk_mode is persistent unless specified
     disk_mode = 'persistent'
-    
+
     if args.disk_mode:
         disk_mode = args.disk_mode
 
