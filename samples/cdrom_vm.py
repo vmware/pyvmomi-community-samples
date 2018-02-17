@@ -91,7 +91,7 @@ def main():
     vm = si.content.searchIndex.FindChild(dc.vmFolder, args.name)
     if vm is None:
         raise Exception('Failed to find VM %s in datacenter %s' %
-                        (dc.name, args.name))
+                        (args.name, dc.name))
 
     controller = find_free_ide_controller(vm)
     if controller is None:
