@@ -80,9 +80,8 @@ def get_user_input():
     if ssl_enabled is False and hasattr(ssl, "_create_unverified_context"):
         context = ssl._create_unverified_context()
 
-    service_instance = connect.Connect(host, 443,
-                         user, password,
-                         sslContext=context)
+    service_instance = connect.Connect(host, 443, user,
+                                       password, sslContext=context)
 
     # The 'name' of a VM is the one that appears in vSphere. Ex: 'Ubuntu_Ty_1'
     print(
@@ -96,7 +95,8 @@ def get_user_input():
         % subnet
     )
 
-    # Append each VM name to a list. List is complete after user RETURNs an empty line.
+    # Append each VM name to a list.
+    # List is complete after user RETURNs an empty line.
     lines = []
     full_list = False
 
@@ -109,7 +109,9 @@ def get_user_input():
             full_list = True
         else:
             print """
-            Something went wrong. Each line should be a name of the VM as it appears in vSphere. For example:
+            Something went wrong.
+            Each line should be a name of the VM as it appears in vSphere.
+            For example:
 
             Ubuntu_Ty_1
             Ubuntu_Ty_2
@@ -123,10 +125,12 @@ def get_user_input():
     vm_names_list = map(str, multi_line_list.split())
 
     # Get name of snapshot. All VMs in group must have same snapshot
-    snapshot_name_from_user = raw_input("What is the name of the snapshot name that you want to revert the above VMs to? ")
+    snapshot_name_from_user = raw_input(
+        "Name of the snapshot name that you want to revert the above VMs to: ")
     snapshot_name = snapshot_name_from_user
 
-    confirm = raw_input("Are you sure you want to revert the above VMs to their %s snapshot? [y/n]: " % snapshot_name_from_user)
+    confirm = raw_input(
+        "Revert VM(s) to their %s snapshot? [y/n]: " % snapshot_name_from_user)
 
     if confirm == "y" in confirm or "yes" in confirm:
         print "\n Cool beans! \n"
@@ -137,12 +141,14 @@ def get_user_input():
         print "\n Must enter 'y' or 'n'\n"
         get_user_input()
 
-    # Now that you have all required info from the user, call function to start reverting to snapshot
+    # Now that you have all required info from the user,
+    # call function to start reverting to snapshot
     revert_to_snapshot(vm_names_list, snapshot_name, service_instance)
 
 
 """
-Use the user-provided info to connect to vSphere and revert the given VM to their BaseInstall snapshot.
+Use the user-provided info to connect to vSphere and
+revert the given VM to their BaseInstall snapshot.
 """
 
 
@@ -158,20 +164,30 @@ def revert_to_snapshot(vm_names_list, snapshot_name, service_instance):
 
         # Notify user if vm_object wasn't found
         if not vm:
-            print("%s was not found. \n This error could occur if 1) the VM doesn't exists, 2) you're using the wrong subnet, or 3) something is wrong with this script" % vm_name)
+            print "%s was not found" % vm_name
+            print """ This error could occur if
+            1) the VM doesn't exists,
+            2) you're using the wrong subnet, or
+            3) something is wrong with this script
+            """
+
             sys.exit()
 
-        # Call the function that retrieves the object of the snapshot, providing the official snapshot name & user-friendly snapshot name as arguments
-        snap_object = get_snapshot_object_from_name(vm.snapshot.rootSnapshotList, snapshot_name)
+        # Call the function that retrieves the object of the snapshot,
+        # providing the official snapshot name and
+        # user-friendly snapshot name as arguments
+        snap_object = get_snapshot_object_from_name(
+            vm.snapshot.rootSnapshotList, snapshot_name)
 
-        # Once you have the official snapshot object, revert to it for the given VM
+        # Once you have the official snapshot object,
+        # revert to it for the given VM
         if len(snap_object) == 1:
             snap_object = snap_object[0].snapshot
             print("Reverting %s to snapshot %s ..." % (vm_name, snapshot_name))
             WaitForTask(snap_object.RevertToSnapshot_Task())
             print("\t Success \n")
         else:
-            print("No snapshots found with name: %s on VM: %s" % (snapshot_name, vm.name))
+            print("No %s snapshot found on: %s" % (snapshot_name, vm.name))
 
     # Log out of vSphere after reverting all VMs to their snapshots
     atexit.register(Disconnect, service_instance)
@@ -209,7 +225,8 @@ def get_snapshot_object_from_name(snapshot_list, official_snapshot):
         if snapshot.name == official_snapshot:
             snap_obj.append(snapshot)
         else:
-            snap_obj = snap_obj + get_snapshot_object_from_name(snapshot.childSnapshotList, official_snapshot)
+            snap_obj = snap_obj + get_snapshot_object_from_name(
+                snapshot.childSnapshotList, official_snapshot)
     return snap_obj
 
 
