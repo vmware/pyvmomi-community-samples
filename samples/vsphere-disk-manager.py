@@ -4,7 +4,7 @@
 Written by Miquel Adrover
 https://github.com/madrover
 
-Forked and extended from https://github.com/vmware/pyvmomi-community-samples/blob/master/samples/add_disk_to_vm.py
+Forked and extended from https://github.com/vmware/pyvmomi-community-samples/blob/master/samples/add_disk_to_vm.py # nopep8
 
 Script to manage independent disks on vSphere.
 
