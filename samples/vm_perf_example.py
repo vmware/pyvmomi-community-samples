@@ -96,7 +96,6 @@ def main():
                 else:
                     counterinfo_k_to_v = counterInfo.keys()[
                         counterInfo.values().index(val.id.counterId)]
-                print(val)
                 if val.id.instance == '':
                     output += "%s: %s\n" % (
                         counterinfo_k_to_v, str(val.value[0]))
