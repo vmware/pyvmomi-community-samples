@@ -17,7 +17,6 @@ from pyVmomi import vim
 from tools import cli
 from pyVim.connect import SmartConnectNoSSL, Disconnect
 import atexit
-import getpass
 import sys
 
 
@@ -49,7 +48,6 @@ def main():
     # counterId example: 6
     counterInfo = {}
     for c in perfManager.perfCounter:
-        prefix = c.groupInfo.key
         fullName = c.groupInfo.key + "." + c.nameInfo.key + "." + c.rollupType
         counterInfo[fullName] = c.key
 
@@ -107,6 +105,7 @@ def main():
                         counterinfo_k_to_v, val.id.instance, str(val.value[0]))
 
         print(output)
+
 
 if __name__ == "__main__":
     main()
