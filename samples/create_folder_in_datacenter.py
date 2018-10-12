@@ -11,6 +11,7 @@ from pyVmomi import vim
 
 from pyVim.connect import SmartConnect, Disconnect
 
+import ssl
 import argparse
 import atexit
 import getpass
@@ -26,12 +27,15 @@ def GetArgs():
                         help='Remote host to connect to')
     parser.add_argument('-o', '--port', type=int, default=443, action='store',
                         help='Port to connect on')
+    parser.add_argument('-S', '--disable_ssl_verification', required=False,
+                        action='store_true', dest='nocert',
+                        help='Skip the certificate check')
     parser.add_argument('-u', '--user', required=True, action='store',
                         help='User name to use when connecting to host')
     parser.add_argument('-p', '--password', required=False, action='store',
                         help='Password to use when connecting to host')
     parser.add_argument('-d', '--datacenter', required=True,
-                        help='name of the datacenter'),
+                        help='name of the datacenter')
     parser.add_argument('-f', '--folder', required=True,
                         help='name of the folder')
     args = parser.parse_args()
@@ -49,8 +53,30 @@ def get_obj(content, vimtype, name):
     return obj
 
 
-def create_folder(content, host_folder, folder_name):
-    host_folder.CreateFolder(folder_name)
+def mkdir_task(base_obj, dir_name):
+    try:
+        return base_obj.CreateFolder(dir_name)
+    except (vim.fault.InvalidName) as e:
+        print(e)
+        import sys
+        sys.exit()
+
+
+def create_folder(content, base_obj, folder_path):
+
+    folder_path_parts = folder_path.strip('/').split('/')
+
+    for path_part in folder_path_parts:
+        if base_obj.childEntity:
+            for y, child_obj in enumerate(base_obj.childEntity):
+                if child_obj.name == path_part:
+                    base_obj = child_obj
+                    break
+                elif y >= len(base_obj.childEntity)-1:
+                    base_obj = mkdir_task(base_obj, path_part)
+                    break
+        else:
+            base_obj = mkdir_task(base_obj, path_part)
 
 
 def main():
@@ -65,10 +91,21 @@ def main():
         password = getpass.getpass(prompt='Enter password for host %s and '
                                    'user %s: ' % (args.host, args.user))
 
+    if args.nocert:
+        print("WARNING: SSL certificate check is skipped!")
+        # s_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+        # s_context.verify_mode = ssl.CERT_NONE
+        s_context = ssl._create_unverified_context()
+    else:
+        s_context = None
+
     si = SmartConnect(host=args.host,
                       user=args.user,
                       pwd=password,
-                      port=int(args.port))
+                      port=int(args.port),
+                      sslContext=s_context,
+                      )
+
     if not si:
         print("Could not connect to the specified host using specified "
               "username and password")
@@ -86,6 +123,7 @@ def main():
     create_folder(content, dc.vmFolder, args.folder)
     print("Successfully created the VM folder '%s'" % args.folder)
     return 0
+
 
 # Start program
 if __name__ == "__main__":
