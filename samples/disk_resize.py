@@ -56,7 +56,7 @@ def get_args():
     # Parse through the arguments. Style and format taken from the other
     # samples in the samples directory
     parser = cli.build_arg_parser()
-    
+
     parser.add_argument(
         '-v',
         '--vmname',
@@ -108,8 +108,8 @@ def main():
     if vm_obj:
         print("Found a VM succesfully, configuring the size now.")
         modify_disk(si, vm_obj, args.disk_number, args.size)
-        print('VM Hard Disk {} successfully ' \
-            'changed to a size of {} Gb.'.format(args.disk_number, args.size))
+        print('VM Hard Disk {} successfully '
+              'changed to a size {} Gb.'.format(args.disk_number, args.size))
     else:
         print("VM with the specified name not found.")
 
