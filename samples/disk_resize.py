@@ -49,36 +49,14 @@ def modify_disk(si, vm_obj, disk_number, size):
     spec.deviceChange = dev_changes
     task = vm_obj.ReconfigVM_Task(spec=spec)
     tasks.wait_for_tasks(si, [task])
-    return True
 
 
 def get_args():
 
     # Parse through the arguments. Style and format taken from the other
     # samples in the samples directory
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument('-s', '--host',
-                        required=True,
-                        action='store',
-                        help='Remote host to connect to')
-
-    parser.add_argument('-u', '--user',
-                        required=True,
-                        action='store',
-                        help='User name to use when connecting to host')
-
-    parser.add_argument('-p', '--password',
-                        required=False,
-                        action='store',
-                        help='Password to use when connecting to host')
-
-    parser.add_argument('-o', '--port',
-                        required=False,
-                        action='store',
-                        help="Port to use, default is 443",
-                        default=443)
-
+    parser = cli.build_arg_parser()
+    
     parser.add_argument(
         '-v',
         '--vmname',
@@ -124,16 +102,16 @@ def main():
     atexit.register(Disconnect, si)
 
     content = si.RetrieveContent()
-    print 'Searching for VM {}'.format(args.vmname)
+    print("Searching for VM {}".format(args.vmname))
     vm_obj = get_vm(content, [vim.VirtualMachine], args.vmname)
 
     if vm_obj:
-        print "Found a VM succesfully, configuring the size now."
+        print("Found a VM succesfully, configuring the size now.")
         modify_disk(si, vm_obj, args.disk_number, args.size)
-        print 'VM Hard Disk {} successfully ' \
-            'changed to a size of {} Gb.'.format(args.disk_number, args.size)
+        print('VM Hard Disk {} successfully ' \
+            'changed to a size of {} Gb.'.format(args.disk_number, args.size))
     else:
-        print "VM with the specified name not found."
+        print("VM with the specified name not found.")
 
 
 # start
