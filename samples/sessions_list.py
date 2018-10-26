@@ -66,22 +66,24 @@ else:
         prompt='Enter password for host %s and user %s: ' %
                (args.host, args.user))
 
-si = connect.SmartConnect(host=args.host,
+si = connect.SmartConnectNoSSL(host=args.host,
                           user=args.user,
                           pwd=password,
                           port=int(args.port))
 
-print "logged in to %s" % args.host
+print("logged in to %s" % args.host)
 session_id = si.content.sessionManager.currentSession.key
-print "current pyVmomi session id: %s" % session_id
+print("current pyVmomi session id: %s" % session_id)
 
-print "Listing all sessions I can see:"
+print("Listing all sessions I can see:")
+# More attributes can be found here 
+# https://github.com/vmware/pyvmomi/blob/master/docs/vim/UserSession.rst
 for session in si.content.sessionManager.sessionList:
-    print "session %s" % session.key
+    print("session key={0.key}, username={0.userName}, ip={0.ipAddress}".format(session))
 
-print "logout"
+print("logout")
 si.content.sessionManager.Logout()
 
 # The current session will be None after logout
 session = si.content.sessionManager.currentSession
-print "current pyVmomi session: %s" % session
+print("current pyVmomi session: %s" % session)
