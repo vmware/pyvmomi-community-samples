@@ -15,55 +15,34 @@
 # limitations under the License.
 
 import atexit
-import argparse
-import getpass
+import ssl
 
 from pyVim import connect
 
+from tools import cli
+
 
 def get_args():
-    parser = argparse.ArgumentParser()
+    parser = cli.build_arg_parser()
 
-    parser.add_argument('-s', '--host',
-                        required=True,
-                        action='store',
-                        help='Remote host to connect to')
-
-    parser.add_argument('-o', '--port',
-                        required=False,
-                        action='store',
-                        help="port to use, default 443", default=443)
-
-    parser.add_argument('-u', '--user',
-                        required=True,
-                        action='store',
-                        help='User name to use when connecting to host')
-
-    parser.add_argument('-p', '--password',
-                        required=False,
-                        action='store',
-                        help='Password to use when connecting to host')
-
-    parser.add_argument('-d', '--uuid',
+    parser.add_argument('--uuid',
                         required=True,
                         action='store',
                         help='Instance UUID of the VM to look for.')
 
     args = parser.parse_args()
-    if args.password is None:
-        args.password = getpass.getpass(
-            prompt='Enter password for host %s and user %s: ' %
-                   (args.host, args.user))
-
-    args = parser.parse_args()
-
-    return args
+    return cli.prompt_for_password(args)
 
 args = get_args()
 
+sslContext = None
+if args.disable_ssl_verification:
+    sslContext = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+    sslContext.verify_mode = ssl.CERT_NONE
+
 # form a connection...
 si = connect.SmartConnect(host=args.host, user=args.user, pwd=args.password,
-                          port=args.port)
+                          port=args.port, sslContext=sslContext)
 
 # doing this means you don't need to remember to disconnect your script/objects
 atexit.register(connect.Disconnect, si)
