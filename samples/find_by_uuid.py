@@ -59,6 +59,8 @@ if vm is None:
 
 print("Found Virtual Machine")
 details = {'name': vm.summary.config.name,
+           'domain name': vm.guest.hostName,
+           'ip address': vm.guest.ipAddress,
            'instance UUID': vm.summary.config.instanceUuid,
            'bios UUID': vm.summary.config.uuid,
            'path to VM': vm.summary.config.vmPathName,
