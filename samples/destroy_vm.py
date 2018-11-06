@@ -16,6 +16,7 @@
 from __future__ import print_function
 
 import atexit
+import ssl
 
 from pyVim import connect
 
@@ -69,12 +70,19 @@ def get_obj(content, vimtype, name):
     return obj
 
 ARGS = setup_args()
+sslContext = None
+
+if ARGS.disable_ssl_verification:
+    sslContext = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+    sslContext.verify_mode = ssl.CERT_NONE
+
 SI = None
 try:
-    SI = connect.SmartConnectNoSSL(host=ARGS.host,
-                                   user=ARGS.user,
-                                   pwd=ARGS.password,
-                                   port=ARGS.port)
+    SI = connect.SmartConnect(host=ARGS.host,
+                              user=ARGS.user,
+                              pwd=ARGS.password,
+                              port=ARGS.port,
+                              sslContext=sslContext)
     atexit.register(connect.Disconnect, SI)
 except (IOError, vim.fault.InvalidLogin):
     pass
@@ -88,7 +96,7 @@ if ARGS.vm:
 elif ARGS.uuid:
     VM = SI.content.searchIndex.FindByUuid(None, ARGS.uuid,
                                            True,
-                                           False)
+                                           True)
 elif ARGS.name:
     VM = SI.content.searchIndex.FindByDnsName(None, ARGS.name,
                                               True)
