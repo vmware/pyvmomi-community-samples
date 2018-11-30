@@ -50,7 +50,7 @@ def get_args():
     parser.add_argument('-n', '--network_name',
                         required=True,
                         action='store',
-                        help='Name of the network/portgroup or NSX-T Logical Switch')
+                        help='Name of the portgroup or NSX-T Logical Switch')
 
     args = parser.parse_args()
 
@@ -86,8 +86,10 @@ def main():
                 nicspec.device = device
                 nicspec.device.wakeOnLanEnabled = True
 
-		# vSphere Distributed Virtual Switch
-		if hasattr(get_obj(content, [vim.Network], args.network_name), 'portKeys'):
+                # vSphere Distributed Virtual Switch
+                if hasattr(get_obj(content,
+                                   [vim.Network],
+                                   args.network_name), 'portKeys'):
                     network = get_obj(content,
                                       [vim.dvs.DistributedVirtualPortgroup],
                                       args.network_name)
@@ -100,15 +102,21 @@ def main():
                         DistributedVirtualPortBackingInfo()
                     nicspec.device.backing.port = dvs_port_connection
 
-		# NSX-T Logical Switch
-		elif isinstance(get_obj(content, [vim.Network], args.network_name), vim.OpaqueNetwork):
-		    nicspec.device.backing = vim.vm.device.VirtualEthernetCard.OpaqueNetworkBackingInfo()
-		    network_id = get_obj(content, [vim.Network], args.network_name).summary.opaqueNetworkId
-		    network_type = get_obj(content, [vim.Network], args.network_name).summary.opaqueNetworkType
-		    nicspec.device.backing.opaqueNetworkType = network_type
-		    nicspec.device.backing.opaqueNetworkId = network_id
+                # NSX-T Logical Switch
+                elif isinstance(get_obj(content,
+                                        [vim.Network],
+                                        args.network_name), vim.OpaqueNetwork):
+                    network = \
+                        get_obj(content, [vim.Network], args.network_name)
+                    nicspec.device.backing = \
+                        vim.vm.device.VirtualEthernetCard. \
+                        OpaqueNetworkBackingInfo()
+                    network_id = network.summary.opaqueNetworkId
+                    network_type = network.summary.opaqueNetworkType
+                    nicspec.device.backing.opaqueNetworkType = network_type
+                    nicspec.device.backing.opaqueNetworkId = network_id
 
-		# vSphere Standard Switch
+                # vSphere Standard Switch
                 else:
                     nicspec.device.backing = \
                         vim.vm.device.VirtualEthernetCard.NetworkBackingInfo()
@@ -134,6 +142,7 @@ def main():
         return -1
 
     return 0
+
 
 # Start program
 if __name__ == "__main__":
