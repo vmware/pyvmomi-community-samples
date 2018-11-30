@@ -3,6 +3,9 @@
 Written by Reubenur Rahman
 Github: https://github.com/rreubenur/
 
+Added NSX-T support by Yasen Simeonov
+Github: https://github.com/yasensim
+
 This code is released under the terms of the Apache 2
 http://www.apache.org/licenses/LICENSE-2.0.html
 
@@ -11,6 +14,7 @@ Example script to change the network of the Virtual Machine NIC
 """
 
 import atexit
+import ssl
 
 from tools import cli
 from tools import tasks
@@ -38,20 +42,15 @@ def get_args():
 
     parser = cli.build_arg_parser()
 
-    parser.add_argument('-v', '--vm_uuid',
-                        required=False,
+    parser.add_argument('-v', '--vm_name',
+                        required=True,
                         action='store',
-                        help='Virtual machine uuid')
+                        help='Virtual machine name')
 
     parser.add_argument('-n', '--network_name',
-                        required=False,
+                        required=True,
                         action='store',
-                        help='Name of the network/portgroup')
-
-    parser.add_argument('-d', '--is_VDS',
-                        action="store_true",
-                        default=False,
-                        help='The provided network is in VSS or VDS')
+                        help='Name of the network/portgroup or NSX-T Logical Switch')
 
     args = parser.parse_args()
 
@@ -65,6 +64,7 @@ def main():
     """
 
     args = get_args()
+    ssl._create_default_https_context = ssl._create_unverified_context
 
     try:
         service_instance = connect.SmartConnect(host=args.host,
@@ -74,7 +74,7 @@ def main():
 
         atexit.register(connect.Disconnect, service_instance)
         content = service_instance.RetrieveContent()
-        vm = content.searchIndex.FindByUuid(None, args.vm_uuid, True)
+        vm = get_obj(content, [vim.VirtualMachine], args.vm_name)
         # This code is for changing only one Interface. For multiple Interface
         # Iterate through a loop of network names.
         device_change = []
@@ -86,13 +86,8 @@ def main():
                 nicspec.device = device
                 nicspec.device.wakeOnLanEnabled = True
 
-                if not args.is_VDS:
-                    nicspec.device.backing = \
-                        vim.vm.device.VirtualEthernetCard.NetworkBackingInfo()
-                    nicspec.device.backing.network = \
-                        get_obj(content, [vim.Network], args.network_name)
-                    nicspec.device.backing.deviceName = args.network_name
-                else:
+		# vSphere Distributed Virtual Switch
+		if hasattr(get_obj(content, [vim.Network], args.network_name), 'portKeys'):
                     network = get_obj(content,
                                       [vim.dvs.DistributedVirtualPortgroup],
                                       args.network_name)
@@ -105,10 +100,27 @@ def main():
                         DistributedVirtualPortBackingInfo()
                     nicspec.device.backing.port = dvs_port_connection
 
+		# NSX-T Logical Switch
+		elif isinstance(get_obj(content, [vim.Network], args.network_name), vim.OpaqueNetwork):
+		    nicspec.device.backing = vim.vm.device.VirtualEthernetCard.OpaqueNetworkBackingInfo()
+		    network_id = get_obj(content, [vim.Network], args.network_name).summary.opaqueNetworkId
+		    network_type = get_obj(content, [vim.Network], args.network_name).summary.opaqueNetworkType
+		    nicspec.device.backing.opaqueNetworkType = network_type
+		    nicspec.device.backing.opaqueNetworkId = network_id
+
+		# vSphere Standard Switch
+                else:
+                    nicspec.device.backing = \
+                        vim.vm.device.VirtualEthernetCard.NetworkBackingInfo()
+                    nicspec.device.backing.network = \
+                        get_obj(content, [vim.Network], args.network_name)
+                    nicspec.device.backing.deviceName = args.network_name
+
                 nicspec.device.connectable = \
                     vim.vm.device.VirtualDevice.ConnectInfo()
                 nicspec.device.connectable.startConnected = True
                 nicspec.device.connectable.allowGuestControl = True
+                nicspec.device.connectable.connected = True
                 device_change.append(nicspec)
                 break
 
