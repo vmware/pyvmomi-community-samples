@@ -224,7 +224,7 @@ elif args.ip:
     vm = search_index.FindByIp(None, args.ip, True)
 
 if not vm:
-    print(u"Could not a virtual machine to examine.")
+    print(u"Could not find a virtual machine to examine.")
     exit(1)
 
 print(u"Found Virtual Machine")
