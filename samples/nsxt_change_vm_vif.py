@@ -20,24 +20,9 @@ from pyVim import connect
 from pyVmomi import vim, vmodl
 
 
-def get_obj(content, vimtype, name):
-    """
-     Get the vsphere object associated with a given text name
-    """
-    obj = None
-    container = content.viewManager.CreateContainerView(content.rootFolder,
-                                                        vimtype, True)
-    for view in container.view:
-        if view.name == name:
-            obj = view
-            break
-    return obj
-
-
 def get_args():
     """Get command line args from the user.
     """
-
     parser = cli.build_arg_parser()
 
     parser.add_argument('-v', '--vm_name',
@@ -56,6 +41,20 @@ def get_args():
     return args
 
 
+def get_obj(content, vimtype, name):
+    """
+     Get the vsphere object associated with a given text name
+    """
+    obj = None
+    container = content.viewManager.CreateContainerView(content.rootFolder,
+                                                        vimtype, True)
+    for view in container.view:
+        if view.name == name:
+            obj = view
+            break
+    return obj
+
+
 def main():
     """
     Simple command-line program for changing network virtual machines NIC
@@ -63,13 +62,22 @@ def main():
     """
 
     args = get_args()
-    ssl._create_default_https_context = ssl._create_unverified_context
+    sslContext = None
+
+    if args.disable_ssl_verification:
+        sslContext = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+        sslContext.verify_mode = ssl.CERT_NONE
 
     try:
         service_instance = connect.SmartConnect(host=args.host,
                                                 user=args.user,
                                                 pwd=args.password,
-                                                port=int(args.port))
+                                                port=int(args.port),
+                                                sslContext=sslContext)
+        if not service_instance:
+            print("Could not connect to the specified host using specified "
+                  "username and password")
+            return -1
 
         atexit.register(connect.Disconnect, service_instance)
         content = service_instance.RetrieveContent()
