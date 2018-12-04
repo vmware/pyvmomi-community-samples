@@ -41,12 +41,13 @@ def setup_args():
 args = setup_args()
 si = None
 try:
-    si = connect.SmartConnect(host=args.host,
-                              user=args.user,
-                              pwd=args.password,
-                              port=int(args.port))
+    si = connect.SmartConnectNoSSL(host=args.host,
+                                   user=args.user,
+                                   pwd=args.password,
+                                   port=int(args.port))
     atexit.register(connect.Disconnect, si)
-except IOError, e:
+except IOError as e:
+    print(e)
     pass
 
 if not si:
@@ -55,9 +56,9 @@ vm = si.content.searchIndex.FindByUuid(None, args.uuid, True)
 if not vm:
     raise SystemExit("Unable to locate VirtualMachine.")
 
-print "Found: {0}".format(vm.name)
+print("Found: {0}".format(vm.name))
 spec = vim.vm.ConfigSpec()
 spec.annotation = args.message
 task = vm.ReconfigVM_Task(spec)
 tasks.wait_for_tasks(si, [task])
-print "Done."
+print("Done.")
