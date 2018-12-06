@@ -1,4 +1,13 @@
-from __future__ import print_function
+# Written by Mahesh kumar and Pavan Bidkar
+# GitHub: https://github.com/vmware/pyvmomi
+# Email: kumahesh@vmware.com, pbidkar@vmware.com
+#
+# This code has been released under the terms of the Apache-2.0 license
+# http://opensource.org/licenses/Apache-2.0
+#
+# Description: This sample relocates vm to the target esx host across clusters,
+# datastore and datacenter
+#
 
 import atexit
 
@@ -18,9 +27,9 @@ def get_args():
                         required=False,
                         help=' Datastore of the destination')
 
-    parser.add_argument('-t', '--target-host',
-                        required=True,
-                        help="name of the destination host")
+    parser.add_argument('-t', '--target-esx-host',
+                        required=False,
+                        help="name of the destination esx host")
 
     parser.add_argument('-v', '--vm-name',
                         required=True,
@@ -97,11 +106,11 @@ def construct_locator(template_disks, datastore_dest_id):
 
 def relocate_vm(vm_name, content, host_dest, datastore_dest=None, **kwargs):
     """
-    This method relocates all vm's in the vm_list to the host_dest across
+    This method relocates vm to the host_dest across
     datacenters, clusters, datastores managed by a Vcenter
 
     Args:
-        vm_list:
+        vm_name:
         vcenter:
         host_dest:
         datastore_src
@@ -111,32 +120,33 @@ def relocate_vm(vm_name, content, host_dest, datastore_dest=None, **kwargs):
     Returns:
 
     """
-    rstatus = False
-    wvm_name = ""
+    relocation_status = False
     message = "relocate_vm passed"
     try:
         vm = get_object(content, [vim.VirtualMachine], vm_name)
         current_host = vm.runtime.host.name
         print("vmotion_vm current_host:" + current_host)
 
-        if current_host == host_dest:
-            raise Exception("WARNING:: destination_host can not equal "
-                            "current_host")
-
         # Create Relocate Spec
         spec = vim.VirtualMachineRelocateSpec()
 
-        # Find destination host
-        destination_host = get_object(content, [vim.HostSystem], host_dest)
-        print("vmotion_vm destination_host:" + str(destination_host))
-        spec.host = destination_host
+        # Check whether compute vmotion required and construct spec accordingly
+        if host_dest is not None:
+            if current_host == host_dest:
+                raise Exception("WARNING:: destination_host can not equal "
+                                "current_host")
 
-        # Find destination Resource pool
-        resource_pool = destination_host.parent.resourcePool
-        print("vmotion_vm resource_pool:" + str(resource_pool))
-        spec.pool = resource_pool
+            # Find destination host
+            destination_host = get_object(content, [vim.HostSystem], host_dest)
+            print("vmotion_vm destination_host:" + str(destination_host))
+            spec.host = destination_host
 
-        # Check whether Storage vmotion required and construct spec accordingly
+            # Find destination Resource pool
+            resource_pool = destination_host.parent.resourcePool
+            print("vmotion_vm resource_pool:" + str(resource_pool))
+            spec.pool = resource_pool
+
+        # Check whether storage vmotion required and construct spec accordingly
         if datastore_dest is not None:
             # collect disks belong to the VM
             template_disks = collect_template_disks(vm)
@@ -150,13 +160,12 @@ def relocate_vm(vm_name, content, host_dest, datastore_dest=None, **kwargs):
         task = vm.RelocateVM_Task(spec)
         while task.info.state == vim.TaskInfo.State.running:
             continue
-        rstatus = True
+        relocation_status = True
     except Exception as e:
-        rstatus = False
-        message = "relocate_vm failed for vm:" + wvm_name \
+        message = "relocate_vm failed for vm:" + vm_name \
                   + " with error:" + str(e)
-        print(message)
-    return rstatus, message
+    print(message)
+    return relocation_status, message
 
 
 def main():
@@ -183,8 +192,8 @@ def main():
         datastore_dest = args.datastore_dest
 
         # Target compute resource
-        host_dest = args.target_host
-        # pass the batch of virtual machines
+        host_dest = args.target_esx_host
+
         relocate_vm(args.vm_name,
                     content=content,
                     host_dest=host_dest,
