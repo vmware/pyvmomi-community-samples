@@ -53,14 +53,14 @@ def getNICs(summary, guest):
                 nics[nic.macAddress] = {}  # Use mac as uniq ID for nic
                 nics[nic.macAddress]['netlabel'] = nic.network
                 ipconf = nic.ipConfig.ipAddress
-		i=0
-		nics[nic.macAddress]['ipv4'] = {}
+                i=0
+                nics[nic.macAddress]['ipv4'] = {}
                 for ip in ipconf:
                     if ":" not in ip.ipAddress:  # Only grab ipv4 addresses
-			nics[nic.macAddress]['ipv4'][i] = ip.ipAddress
+                        nics[nic.macAddress]['ipv4'][i] = ip.ipAddress
                         nics[nic.macAddress]['prefix'] = ip.prefixLength
                         nics[nic.macAddress]['connected'] = nic.connected
-		    i=i+1
+                i=i+1
     return nics
 
 
