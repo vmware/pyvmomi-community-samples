@@ -21,7 +21,7 @@ def get_args():
     parser.add_argument('-s', '--host',
                         required=True,
                         action='store',
-                        help='vSpehre service to connect to')
+                        help='vSphere service to connect to')
 
     parser.add_argument('-o', '--port',
                         type=int,
@@ -128,6 +128,7 @@ def wait_for_task(task):
 
         if task.info.state == 'error':
             print "there was an error"
+            print "Error message from VC", task.info.error.msg
             task_done = True
 
 
