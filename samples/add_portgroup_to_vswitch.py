@@ -107,8 +107,10 @@ def AddHostPortgroup(host, vswitchName, portgroupName, vlanId):
     network_policy.security.forgedTransmits = False
     portgroup_spec.policy = network_policy
 
-    host.configManager.networkSystem.AddPortGroup(portgroup_spec)
-
+    try:
+        host.configManager.networkSystem.AddPortGroup(portgroup_spec)
+    except vim.fault.AlreadyExists:
+        print ("Portgroup already exist on host "+str(host.name))
 
 def main():
     args = get_args()
