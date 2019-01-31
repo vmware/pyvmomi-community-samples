@@ -8,7 +8,7 @@ This code has been released under the terms of the Apache-2.0 license
 http://opensource.org/licenses/Apache-2.0
 """
 from __future__ import print_function
-from pyVim.connect import SmartConnect, Disconnect
+from pyVim.connect import SmartConnect, SmartConnectNoSSL, Disconnect
 from pyVmomi import vim
 import atexit
 import sys
@@ -45,6 +45,11 @@ def get_args():
                         action='store',
                         help='Portgroup to delete')
 
+    parser.add_argument('-c', '--skip_verification',
+                        required=False,
+                        action='store_true',
+                        help='Skip SSL verification')
+
     args = parser.parse_args()
     return args
 
@@ -60,8 +65,10 @@ def GetVMHosts(content):
 
 def DelHostsPortgroup(hosts, portgroupName):
     for host in hosts:
-        host.configManager.networkSystem.RemovePortGroup(portgroupName)
-
+        try:
+            host.configManager.networkSystem.RemovePortGroup(portgroupName)
+        except vim.fault.NotFound:
+            print ("Portgroup not found in "+host.name)
 
 def DelHostPortgroup(host, portgroupName):
     host.configManager.networkSystem.RemovePortGroup(portgroupName)
@@ -69,10 +76,17 @@ def DelHostPortgroup(host, portgroupName):
 
 def main():
     args = get_args()
-    serviceInstance = SmartConnect(host=args.host,
-                                   user=args.user,
-                                   pwd=args.password,
-                                   port=443)
+    if args.skip_verification:
+        serviceInstance = SmartConnectNoSSL(host=args.host,
+                                            user=args.user,
+                                            pwd=args.password,
+                                            port=443)
+    else:
+        serviceInstance = SmartConnect(host=args.host,
+                                       user=args.user,
+                                       pwd=args.password,
+                                       port=443)
+
     atexit.register(Disconnect, serviceInstance)
     content = serviceInstance.RetrieveContent()
 
