@@ -7,10 +7,12 @@ Email: dannbohn@gmail.com
 Clone a VM from template example
 """
 from pyVmomi import vim
-from pyVim.connect import SmartConnect, Disconnect
+from pyVim.connect import SmartConnect, SmartConnectNoSSL, Disconnect
 import atexit
 import argparse
 import getpass
+
+from add_nic_to_vm import add_nic
 
 
 def get_args():
@@ -43,6 +45,10 @@ def get_args():
                         required=True,
                         action='store',
                         help='Name of the VM you wish to make')
+
+    parser.add_argument('--no-ssl',
+                        action='store_true',
+                        help='Skip SSL verification')
 
     parser.add_argument('--template',
                         required=True,
@@ -98,17 +104,12 @@ def get_args():
 
     parser.add_argument('--power-on',
                         dest='power_on',
-                        required=False,
                         action='store_true',
                         help='power on the VM after creation')
 
-    parser.add_argument('--no-power-on',
-                        dest='power_on',
+    parser.add_argument('--opaque-network',
                         required=False,
-                        action='store_false',
-                        help='do not power on the VM after creation')
-
-    parser.set_defaults(power_on=True)
+                        help='Name of the opaque network to add to the VM')
 
     args = parser.parse_args()
 
@@ -127,7 +128,7 @@ def wait_for_task(task):
             return task.info.result
 
         if task.info.state == 'error':
-            print "there was an error"
+            print("there was an error")
             task_done = True
 
 
@@ -215,7 +216,7 @@ def clone_vm(
     clonespec.location = relospec
     clonespec.powerOn = power_on
 
-    print "cloning VM..."
+    print("cloning VM...")
     task = template.Clone(folder=destfolder, name=vm_name, spec=clonespec)
     wait_for_task(task)
 
@@ -227,11 +228,19 @@ def main():
     args = get_args()
 
     # connect this thing
-    si = SmartConnect(
-        host=args.host,
-        user=args.user,
-        pwd=args.password,
-        port=args.port)
+    si = None
+    if args.no_ssl:
+        si = SmartConnectNoSSL(
+            host=args.host,
+            user=args.user,
+            pwd=args.password,
+            port=args.port)
+    else:
+        si = SmartConnect(
+            host=args.host,
+            user=args.user,
+            pwd=args.password,
+            port=args.port)
     # disconnect this thing
     atexit.register(Disconnect, si)
 
@@ -246,8 +255,11 @@ def main():
             args.datacenter_name, args.vm_folder,
             args.datastore_name, args.cluster_name,
             args.resource_pool, args.power_on, args.datastorecluster_name)
+        if args.opaque_network:
+            vm = get_obj(content, [vim.VirtualMachine], args.vm_name)
+            add_nic(si, vm, args.opaque_network)
     else:
-        print "template not found"
+        print("template not found")
 
 
 # start this thing

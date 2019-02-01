@@ -142,10 +142,10 @@ def main():
         config_spec = vim.vm.ConfigSpec(deviceChange=device_change)
         task = vm.ReconfigVM_Task(config_spec)
         tasks.wait_for_tasks(service_instance, [task])
-        print "Successfully changed network"
+        print("Successfully changed network")
 
     except vmodl.MethodFault as error:
-        print "Caught vmodl fault : " + error.msg
+        print("Caught vmodl fault : " + error.msg)
         return -1
 
     return 0
