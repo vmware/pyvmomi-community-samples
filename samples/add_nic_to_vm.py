@@ -12,7 +12,7 @@ http://opensource.org/licenses/Apache-2.0
 from pyVmomi import vim
 from pyVmomi import vmodl
 from tools import tasks
-from pyVim.connect import SmartConnect, Disconnect
+from pyVim.connect import SmartConnect, SmartConnectNoSSL, Disconnect
 import atexit
 import argparse
 import getpass
@@ -42,6 +42,10 @@ def get_args():
                         required=False,
                         action='store',
                         help='Password to use')
+
+    parser.add_argument('--no-ssl',
+                        action='store_true',
+                        help='Skip client SSL verification')
 
     parser.add_argument('-v', '--vm-name',
                         required=False,
@@ -78,11 +82,11 @@ def get_obj(content, vimtype, name):
     return obj
 
 
-def add_nic(si, vm, network):
+def add_nic(si, vm, network_name):
     """
     :param si: Service Instance
     :param vm: Virtual Machine Object
-    :param network: Virtual Network
+    :param network_name: Name of the Virtual Network
     """
     spec = vim.vm.ConfigSpec()
     nic_changes = []
@@ -95,15 +99,22 @@ def add_nic(si, vm, network):
     nic_spec.device.deviceInfo = vim.Description()
     nic_spec.device.deviceInfo.summary = 'vCenter API test'
 
-    nic_spec.device.backing = \
-        vim.vm.device.VirtualEthernetCard.NetworkBackingInfo()
-    nic_spec.device.backing.useAutoDetect = False
     content = si.RetrieveContent()
-    nic_spec.device.backing.network = get_obj(content, [vim.Network], network)
-    nic_spec.device.backing.deviceName = network
+    network = get_obj(content, [vim.Network], network_name)
+    if isinstance(network, vim.OpaqueNetwork):
+        nic_spec.device.backing = \
+            vim.vm.device.VirtualEthernetCard.OpaqueNetworkBackingInfo()
+        nic_spec.device.backing.opaqueNetworkType = \
+            network.summary.opaqueNetworkType
+        nic_spec.device.backing.opaqueNetworkId = \
+            network.summary.opaqueNetworkId
+    else:
+        nic_spec.device.backing = \
+            vim.vm.device.VirtualEthernetCard.NetworkBackingInfo()
+        nic_spec.device.backing.useAutoDetect = False
+        nic_spec.device.backing.deviceName = network
 
     nic_spec.device.connectable = vim.vm.device.VirtualDevice.ConnectInfo()
-    nic_spec.device.connectable.startConnected = True
     nic_spec.device.connectable.startConnected = True
     nic_spec.device.connectable.allowGuestControl = True
     nic_spec.device.connectable.connected = False
@@ -114,14 +125,22 @@ def add_nic(si, vm, network):
     nic_changes.append(nic_spec)
     spec.deviceChange = nic_changes
     e = vm.ReconfigVM_Task(spec=spec)
-    print "NIC CARD ADDED"
+    print("NIC CARD ADDED")
 
 
 def main():
     args = get_args()
 
     # connect this thing
-    serviceInstance = SmartConnect(
+    serviceInstance = None
+    if args.no_ssl:
+        serviceInstance = SmartConnectNoSSL(
+            host=args.host,
+            user=args.user,
+            pwd=args.password,
+            port=args.port)
+    else:
+        serviceInstance = SmartConnect(
             host=args.host,
             user=args.user,
             pwd=args.password,
@@ -140,7 +159,8 @@ def main():
     if vm:
         add_nic(serviceInstance, vm, args.port_group)
     else:
-        print "VM not found"
+        print("VM not found")
+
 
 # start this thing
 if __name__ == "__main__":
