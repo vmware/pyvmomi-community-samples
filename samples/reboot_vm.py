@@ -41,10 +41,16 @@ def setup_args():
 ARGS = setup_args()
 SI = None
 try:
-    SI = connect.SmartConnect(host=ARGS.host,
-                              user=ARGS.user,
-                              pwd=ARGS.password,
-                              port=ARGS.port)
+    if ARGS.disable_ssl_verification:
+        SI = connect.SmartConnectNoSSL(host=ARGS.host,
+                                       user=ARGS.user,
+                                       pwd=ARGS.password,
+                                       port=ARGS.port)
+    else:
+        SI = connect.SmartConnect(host=ARGS.host,
+                                  user=ARGS.user,
+                                  pwd=ARGS.password,
+                                  port=ARGS.port)
     atexit.register(connect.Disconnect, SI)
 except IOError as ex:
     pass
