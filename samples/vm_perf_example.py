@@ -48,7 +48,7 @@ def main():
     # counterId example: 6
     counterInfo = {}
     for c in perfManager.perfCounter:
-        fullName = c.groupInfo.key + "." + c.nameInfo.key + "." + c.rollupType
+        fullName = c.groupInfo.key + "." + c.nameInfo.key + "." + c.rollupType + "(" + c.unitInfo.key + ")"
         counterInfo[fullName] = c.key
 
     # create a list of vim.VirtualMachine objects so
