@@ -174,23 +174,28 @@ def GetArgs():
     parser.add_argument('-s', '--host',
                         required=True,
                         action='store',
+                        metavar='string',
                         help='Remote host to connect to')
     parser.add_argument('-o', '--port',
                         type=int,
                         default=443,
                         action='store',
+                        metavar='int',
                         help='Port to connect on')
     parser.add_argument('-u', '--user',
                         required=True,
                         action='store',
+                        metavar='string',
                         help='User name to use when connecting to host')
     parser.add_argument('-p', '--password',
                         required=False,
                         action='store',
+                        metavar='string',
                         help='Password to use when connecting to host')
     parser.add_argument('-v', '--vm-name',
                         required=True,
                         action='store',
+                        metavar='string',
                         help='Get virtual machine by name')
     parser.add_argument('--strict',
                         required=False,
