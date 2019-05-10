@@ -21,6 +21,7 @@ from tools import cli, tasks
 from pyVim import connect
 from pyVmomi import vmodl, vim, pbm, VmomiSupport
 
+
 def get_args():
     """
     Adds additional args for creating a fcd
@@ -52,26 +53,32 @@ def get_args():
     # because -s is reserved for 'service' and -p is reserved for 'password'
     parser.add_argument('-e', '--policy',
                         action='store',
-                        help='Storage Policy name. If unset, the default policy of the datastore specified will apply.')
+                        help='Storage Policy name. If unset, the default '
+                        'policy of the datastore specified will apply.')
 
     parser.add_argument('-k', '--keepAfterDeleteVm',
                         action='store_true',
-                        help='Keep after VM deletion. Choice of the deletion behavior of this virtual storage object. If not set, the default value is false.')
+                        help='Keep after VM deletion. Choice of the '
+                        'deletion behavior of this virtual storage object. '
+                        'If not set, the default value is false.')
 
     my_args = parser.parse_args()
     return cli.prompt_for_password(my_args)
+
 
 def get_obj(content, vimtype, name):
     """
     Retrieves the vmware object for the name and type specified
     """
     obj = None
-    container = content.viewManager.CreateContainerView(content.rootFolder, vimtype, True)
+    container = content.viewManager.CreateContainerView(
+        content.rootFolder, vimtype, True)
     for c in container.view:
         if c.name == name:
             obj = c
             break
     return obj
+
 
 def get_pbm_connection(stub):
     import pyVmomi
@@ -104,7 +111,8 @@ def get_pbm_connection(stub):
 
     return pbmContent
 
-def retrieve_storage_policy(pbmContent,policy):
+
+def retrieve_storage_policy(pbmContent, policy):
     """
     Retrieves the vmware object for the storage policy specified
     """
@@ -128,8 +136,9 @@ def retrieve_storage_policy(pbmContent,policy):
             break
     if not profile:
         raise RuntimeError("Storage Policy specified not found.")
-    
+
     return profile
+
 
 def main():
     """
@@ -159,7 +168,7 @@ def main():
 
         # Retrieving Storage Policy
         if args.policy:
-            policy = retrieve_storage_policy(pbmContent,args.policy)
+            policy = retrieve_storage_policy(pbmContent, args.policy)
         else:
             policy = None
 
@@ -176,7 +185,8 @@ def main():
         spec.backingSpec.provisioningType = "thin"
         spec.backingSpec.datastore = datastore
         if policy:
-            spec.profile = [vim.vm.DefinedProfileSpec( profileId=policy.profileId.uniqueId )]
+            spec.profile = [vim.vm.DefinedProfileSpec(
+                profileId=policy.profileId.uniqueId)]
 
         # Create FCD
         storage = content.vStorageObjectManager
@@ -188,6 +198,7 @@ def main():
         return -1
 
     return 0
+
 
 # Start program
 if __name__ == "__main__":

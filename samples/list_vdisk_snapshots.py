@@ -22,6 +22,7 @@ from pyVim import connect
 from pyVmomi import vmodl
 from pyVmomi import vim
 
+
 def get_args():
     """
     Adds additional args for listing all snapshots of a fcd
@@ -44,29 +45,32 @@ def get_args():
     my_args = parser.parse_args()
     return cli.prompt_for_password(my_args)
 
+
 def get_obj(content, vimtype, name):
     """
     Retrieves the vmware object for the name and type specified
     """
     obj = None
-    container = content.viewManager.CreateContainerView(content.rootFolder, vimtype, True)
+    container = content.viewManager.CreateContainerView(
+        content.rootFolder, vimtype, True)
     for c in container.view:
         if c.name == name:
             obj = c
             break
     return obj
 
-def retrieve_fcd(content,datastore,vdisk):
+
+def retrieve_fcd(content, datastore, vdisk):
     """
     Retrieves the vmware object for the first class disk specified
     """
     # Set vStorageObjectManager
     storage = content.vStorageObjectManager
 
-    # Retrieve First Class Disks    
+    # Retrieve First Class Disks
     disk = None
-    for d in storage.ListVStorageObject(datastore):        
-        disk_info = storage.RetrieveVStorageObject(d,datastore)
+    for d in storage.ListVStorageObject(datastore):
+        disk_info = storage.RetrieveVStorageObject(d, datastore)
         if disk_info.config.name == vdisk:
             disk = disk_info
             break
@@ -74,7 +78,8 @@ def retrieve_fcd(content,datastore,vdisk):
         raise RuntimeError("First Class Disk not found.")
     return disk
 
-def retrieve_snapshots(content,vdisk):
+
+def retrieve_snapshots(content, vdisk):
     """
     Retrieves the vmware object for the snapshot specified
     """
@@ -82,7 +87,8 @@ def retrieve_snapshots(content,vdisk):
     storage = content.vStorageObjectManager
 
     # Retrieve all Snapshots
-    snapshots = storage.RetrieveSnapshotInfo(vdisk.config.id,vdisk.config.backing.datastore).snapshots
+    snapshots = storage.RetrieveSnapshotInfo(
+        vdisk.config.id, vdisk.config.backing.datastore).snapshots
     if len(snapshots) > 0:
         # Print snapshot information
         print("")
@@ -93,6 +99,7 @@ def retrieve_snapshots(content,vdisk):
             print("")
     else:
         print("No snapshots found for this vdisk.")
+
 
 def main():
     """
@@ -121,16 +128,17 @@ def main():
         datastore = get_obj(content, [vim.Datastore], args.datastore)
 
         # Retrieve FCD Object
-        vdisk = retrieve_fcd(content,datastore,args.vdisk)
+        vdisk = retrieve_fcd(content, datastore, args.vdisk)
 
         # Retrieve all Snapshots
-        retrieve_snapshots(content,vdisk)
+        retrieve_snapshots(content, vdisk)
 
     except vmodl.MethodFault as error:
         print("Caught vmodl fault : " + error.msg)
         return -1
 
     return 0
+
 
 # Start program
 if __name__ == "__main__":

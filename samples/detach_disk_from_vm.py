@@ -12,7 +12,7 @@
 # http://opensource.org/licenses/Apache-2.0
 
 """
-Python program for detaching a disk from a virtual machine without deleting the VMDK
+Python program for detaching a disk from a VM without deleting the VMDK
 """
 
 import atexit
@@ -21,6 +21,7 @@ from tools import cli, tasks
 from pyVim import connect
 from pyVmomi import vmodl
 from pyVmomi import vim
+
 
 def get_args():
     """
@@ -35,12 +36,12 @@ def get_args():
 
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('-n', '--vm_name',
-                        action='store',
-                        help='Virtual Machine name where disk is attached')
+                       action='store',
+                       help='Virtual Machine name where disk is attached')
 
     group.add_argument('-i', '--uuid',
-                        action='store',
-                        help='Virtual Machine UUID where disk is attached')
+                       action='store',
+                       help='Virtual Machine UUID where disk is attached')
 
     parser.add_argument('-d', '--disknumber',
                         required=True,
@@ -54,17 +55,20 @@ def get_args():
     my_args = parser.parse_args()
     return cli.prompt_for_password(my_args)
 
+
 def get_obj(content, vimtype, name):
     """
     Retrieves the vmware object for the name and type specified
     """
     obj = None
-    container = content.viewManager.CreateContainerView(content.rootFolder, vimtype, True)
+    container = content.viewManager.CreateContainerView(
+        content.rootFolder, vimtype, True)
     for c in container.view:
         if c.name == name:
             obj = c
             break
     return obj
+
 
 def get_hdd_prefix_label(language):
     language_prefix_label_mapper = {
@@ -72,6 +76,7 @@ def get_hdd_prefix_label(language):
         'Chinese': u'硬盘 '
     }
     return language_prefix_label_mapper.get(language)
+
 
 def detach_disk_from_vm(vm, disk_number, language):
     """
@@ -100,6 +105,7 @@ def detach_disk_from_vm(vm, disk_number, language):
     spec.deviceChange = [virtual_hdd_spec]
     task = vm.ReconfigVM_Task(spec=spec)
     return task
+
 
 def main():
     """
@@ -133,7 +139,7 @@ def main():
             vm = get_obj(content, [vim.VirtualMachine], args.vm_name)
 
         # Detaching Disk from VM
-        if vm:                
+        if vm:
             task = detach_disk_from_vm(vm, args.disknumber, args.language)
             tasks.wait_for_tasks(service_instance, [task])
         else:
@@ -144,6 +150,7 @@ def main():
         return -1
 
     return 0
+
 
 # Start program
 if __name__ == "__main__":

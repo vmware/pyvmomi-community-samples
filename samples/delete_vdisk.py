@@ -22,6 +22,7 @@ from pyVim import connect
 from pyVmomi import vmodl
 from pyVmomi import vim
 
+
 def get_args():
     """
     Adds additional args for deleting a fcd
@@ -49,35 +50,39 @@ def get_args():
     my_args = parser.parse_args()
     return cli.prompt_for_password(my_args)
 
+
 def get_obj(content, vimtype, name):
     """
     Retrieves the vmware object for the name and type specified
     """
     obj = None
-    container = content.viewManager.CreateContainerView(content.rootFolder, vimtype, True)
+    container = content.viewManager.CreateContainerView(
+        content.rootFolder, vimtype, True)
     for c in container.view:
         if c.name == name:
             obj = c
             break
     return obj
 
-def retrieve_fcd(content,datastore,vdisk):
+
+def retrieve_fcd(content, datastore, vdisk):
     """
     Retrieves the vmware object for the first class disk specified
     """
     # Set vStorageObjectManager
     storage = content.vStorageObjectManager
 
-    # Retrieve First Class Disks    
+    # Retrieve First Class Disks
     disk = None
-    for d in storage.ListVStorageObject(datastore):        
-        disk_info = storage.RetrieveVStorageObject(d,datastore)
+    for d in storage.ListVStorageObject(datastore):
+        disk_info = storage.RetrieveVStorageObject(d, datastore)
         if disk_info.config.name == vdisk:
             disk = disk_info
             break
     if not disk:
         raise RuntimeError("First Class Disk not found.")
     return disk
+
 
 def main():
     """
@@ -106,20 +111,21 @@ def main():
         datastore = get_obj(content, [vim.Datastore], args.datastore)
 
         # Retrieve FCD Object
-        vdisk = retrieve_fcd(content,datastore,args.vdisk)
+        vdisk = retrieve_fcd(content, datastore, args.vdisk)
 
         # Confirming FCD deletion
         if not args.yes:
-            response = cli.prompt_y_n_question("Are you sure you want to delete "
-                                                "vdisk '" + args.vdisk + "'?",
-                                                default='no')
+            response = cli.prompt_y_n_question("Are you sure you want to "
+                                               "delete vdisk '" + args.vdisk +
+                                               "'?",
+                                               default='no')
             if not response:
                 print("Exiting script. User chose not to delete HDD.")
                 exit()
 
         # Delete FCD
         storage = content.vStorageObjectManager
-        task = storage.DeleteVStorageObject_Task(vdisk.config.id,datastore)
+        task = storage.DeleteVStorageObject_Task(vdisk.config.id, datastore)
         tasks.wait_for_tasks(service_instance, [task])
 
     except vmodl.MethodFault as error:
@@ -127,6 +133,7 @@ def main():
         return -1
 
     return 0
+
 
 # Start program
 if __name__ == "__main__":

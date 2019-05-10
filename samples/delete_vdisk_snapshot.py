@@ -22,6 +22,7 @@ from pyVim import connect
 from pyVmomi import vmodl
 from pyVmomi import vim
 
+
 def get_args():
     """
     Adds additional args for deleting a snapshot of a fcd
@@ -56,29 +57,32 @@ def get_args():
     my_args = parser.parse_args()
     return cli.prompt_for_password(my_args)
 
+
 def get_obj(content, vimtype, name):
     """
     Retrieves the vmware object for the name and type specified
     """
     obj = None
-    container = content.viewManager.CreateContainerView(content.rootFolder, vimtype, True)
+    container = content.viewManager.CreateContainerView(
+        content.rootFolder, vimtype, True)
     for c in container.view:
         if c.name == name:
             obj = c
             break
     return obj
 
-def retrieve_fcd(content,datastore,vdisk):
+
+def retrieve_fcd(content, datastore, vdisk):
     """
     Retrieves the vmware object for the first class disk specified
     """
     # Set vStorageObjectManager
     storage = content.vStorageObjectManager
 
-    # Retrieve First Class Disks    
+    # Retrieve First Class Disks
     disk = None
-    for d in storage.ListVStorageObject(datastore):        
-        disk_info = storage.RetrieveVStorageObject(d,datastore)
+    for d in storage.ListVStorageObject(datastore):
+        disk_info = storage.RetrieveVStorageObject(d, datastore)
         if disk_info.config.name == vdisk:
             disk = disk_info
             break
@@ -86,22 +90,25 @@ def retrieve_fcd(content,datastore,vdisk):
         raise RuntimeError("First Class Disk not found.")
     return disk
 
-def retrieve_snapshot(content,datastore,vdisk,snapshot):
+
+def retrieve_snapshot(content, datastore, vdisk, snapshot):
     """
     Retrieves the vmware object for the snapshot specified
     """
     # Set vStorageObjectManager
     storage = content.vStorageObjectManager
 
-    # Retrieve Snapshot    
+    # Retrieve Snapshot
     snap = None
-    for s in storage.RetrieveSnapshotInfo(vdisk.config.id,datastore).snapshots:
+    snaps = storage.RetrieveSnapshotInfo(vdisk.config.id, datastore)
+    for s in snaps.snapshots:
         if s.description == snapshot:
             snap = s.id
             break
     if not snap:
         raise RuntimeError("Snapshot not found.")
     return snap
+
 
 def main():
     """
@@ -130,23 +137,25 @@ def main():
         datastore = get_obj(content, [vim.Datastore], args.datastore)
 
         # Retrieve FCD Object
-        vdisk = retrieve_fcd(content,datastore,args.vdisk)
+        vdisk = retrieve_fcd(content, datastore, args.vdisk)
 
         # Retrieve Snapshot Object
-        snapshot = retrieve_snapshot(content,datastore,vdisk,args.snapshot)
+        snapshot = retrieve_snapshot(content, datastore, vdisk, args.snapshot)
 
         # Confirming Snapshot deletion
         if not args.yes:
-            response = cli.prompt_y_n_question("Are you sure you want to delete "
-                                                "snapshot '" + args.snapshot + "'?",
-                                                default='no')
+            response = cli.prompt_y_n_question("Are you sure you want to "
+                                               "delete snapshot '" +
+                                               args.snapshot + "'?",
+                                               default='no')
             if not response:
                 print("Exiting script. User chose not to delete snapshot.")
                 exit()
 
         # Delete FCD Snapshot
         storage = content.vStorageObjectManager
-        task = storage.DeleteSnapshot_Task(vdisk.config.id,datastore,snapshot)
+        task = storage.DeleteSnapshot_Task(
+            vdisk.config.id, datastore, snapshot)
         tasks.wait_for_tasks(service_instance, [task])
 
     except vmodl.MethodFault as error:
@@ -154,6 +163,7 @@ def main():
         return -1
 
     return 0
+
 
 # Start program
 if __name__ == "__main__":
