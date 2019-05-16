@@ -48,7 +48,7 @@ def get_args():
 
 def get_obj(content, vimtype, name):
     """
-    Retrieves the vmware object for the name and type specified
+    Retrieves the managed object for the name and type specified
     """
     obj = None
     container = content.viewManager.CreateContainerView(
@@ -62,7 +62,7 @@ def get_obj(content, vimtype, name):
 
 def retrieve_fcd(content, datastore, vdisk):
     """
-    Retrieves the vmware object for the first class disk specified
+    Retrieves the managed object for the first class disk specified
     """
     # Set vStorageObjectManager
     storage = content.vStorageObjectManager

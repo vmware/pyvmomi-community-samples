@@ -73,7 +73,7 @@ def get_args():
 
 def get_obj(content, vimtype, name):
     """
-    Retrieves the vmware object for the name and type specified
+    Retrieves the managed object for the name and type specified
     """
     obj = None
     container = content.viewManager.CreateContainerView(
@@ -119,7 +119,7 @@ def get_pbm_connection(stub):
 
 def retrieve_storage_policy(pbmContent, policy):
     """
-    Retrieves the vmware object for the storage policy specified
+    Retrieves the managed object for the storage policy specified
     """
     # Set PbmQueryProfile
     pm = pbmContent.profileManager
@@ -147,7 +147,7 @@ def retrieve_storage_policy(pbmContent, policy):
 
 def retrieve_fcd(content, datastore, vdisk):
     """
-    Retrieves the vmware object for the first class disk specified
+    Retrieves the managed object for the first class disk specified
     """
     # Set vStorageObjectManager
     storage = content.vStorageObjectManager
@@ -166,7 +166,7 @@ def retrieve_fcd(content, datastore, vdisk):
 
 def retrieve_snapshot(content, datastore, vdisk, snapshot):
     """
-    Retrieves the vmware object for the snapshot specified
+    Retrieves the managed object for the snapshot specified
     """
     # Set vStorageObjectManager
     storage = content.vStorageObjectManager

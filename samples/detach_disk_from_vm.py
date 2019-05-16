@@ -58,7 +58,7 @@ def get_args():
 
 def get_obj(content, vimtype, name):
     """
-    Retrieves the vmware object for the name and type specified
+    Retrieves the managed object for the name and type specified
     """
     obj = None
     container = content.viewManager.CreateContainerView(
