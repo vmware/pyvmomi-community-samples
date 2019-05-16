@@ -17,7 +17,7 @@ Python program for creating a first class disk (fcd) from a snapshot
 
 import atexit
 
-from tools import cli, tasks
+from tools import cli, tasks, disk, pbmhelper
 from pyVim import connect
 from pyVmomi import vmodl, vim, pbm, VmomiSupport
 
@@ -71,121 +71,9 @@ def get_args():
     return cli.prompt_for_password(my_args)
 
 
-def get_obj(content, vimtype, name):
-    """
-    Retrieves the managed object for the name and type specified
-    """
-    obj = None
-    container = content.viewManager.CreateContainerView(
-        content.rootFolder, vimtype, True)
-    for c in container.view:
-        if c.name == name:
-            obj = c
-            break
-    return obj
-
-
-def get_pbm_connection(stub):
-    import pyVmomi
-    import ssl
-    # Make compatible with both Python2/3
-    try:
-        from http import cookies
-    except ImportError:
-        import Cookie as cookies
-
-    sessionCookie = stub.cookie.split('"')[1]
-    httpContext = VmomiSupport.GetHttpContext()
-    cookie = cookies.SimpleCookie()
-    cookie["vmware_soap_session"] = sessionCookie
-    httpContext["cookies"] = cookie
-    VmomiSupport.GetRequestContext()["vcSessionCookie"] = sessionCookie
-    hostname = stub.host.split(":")[0]
-
-    context = None
-    if hasattr(ssl, "_create_unverified_context"):
-        context = ssl._create_unverified_context()
-    pbmStub = pyVmomi.SoapStubAdapter(
-        host=hostname,
-        version="pbm.version.version1",
-        path="/pbm/sdk",
-        poolSize=0,
-        sslContext=context)
-    pbmSi = pbm.ServiceInstance("ServiceInstance", pbmStub)
-    pbmContent = pbmSi.RetrieveContent()
-
-    return pbmContent
-
-
-def retrieve_storage_policy(pbmContent, policy):
-    """
-    Retrieves the managed object for the storage policy specified
-    """
-    # Set PbmQueryProfile
-    pm = pbmContent.profileManager
-
-    # Retrieving Storage Policies
-    profileIds = pm.PbmQueryProfile(resourceType=pbm.profile.ResourceType(
-        resourceType="STORAGE"), profileCategory="REQUIREMENT"
-    )
-    if len(profileIds) > 0:
-        profiles = pm.PbmRetrieveContent(profileIds=profileIds)
-    else:
-        raise RuntimeError("No Storage Policies found.")
-
-    # Searching for Storage Policy
-    profile = None
-    for p in profiles:
-        if p.name == policy:
-            profile = p
-            break
-    if not profile:
-        raise RuntimeError("Storage Policy specified not found.")
-
-    return profile
-
-
-def retrieve_fcd(content, datastore, vdisk):
-    """
-    Retrieves the managed object for the first class disk specified
-    """
-    # Set vStorageObjectManager
-    storage = content.vStorageObjectManager
-
-    # Retrieve First Class Disks
-    disk = None
-    for d in storage.ListVStorageObject(datastore):
-        disk_info = storage.RetrieveVStorageObject(d, datastore)
-        if disk_info.config.name == vdisk:
-            disk = disk_info
-            break
-    if not disk:
-        raise RuntimeError("First Class Disk not found.")
-    return disk
-
-
-def retrieve_snapshot(content, datastore, vdisk, snapshot):
-    """
-    Retrieves the managed object for the snapshot specified
-    """
-    # Set vStorageObjectManager
-    storage = content.vStorageObjectManager
-
-    # Retrieve Snapshot
-    snap = None
-    snaps = storage.RetrieveSnapshotInfo(vdisk.config.id, datastore)
-    for s in snaps.snapshots:
-        if s.description == snapshot:
-            snap = s.id
-            break
-    if not snap:
-        raise RuntimeError("Snapshot not found.")
-    return snap
-
-
 def main():
     """
-    Simple command-line program for deleting a snapshot of a first class disk.
+    Simple command-line program for creating a new vdisk from a snapshot
     """
 
     args = get_args()
@@ -207,30 +95,31 @@ def main():
         content = service_instance.RetrieveContent()
 
         # Connect to SPBM Endpoint
-        pbmContent = get_pbm_connection(service_instance._stub)
+        pbmContent = pbmhelper.create_pbm_session(service_instance._stub)
 
         # Retrieving Storage Policy
         if args.policy:
-            p = retrieve_storage_policy(pbmContent, args.policy)
+            p = pbmhelper.retrieve_storage_policy(pbmContent, args.policy)
             policy = [vim.vm.DefinedProfileSpec(
                 profileId=p.profileId.uniqueId)]
         else:
             policy = None
 
         # Retrieve Source Datastore Object
-        source_datastore = get_obj(
+        source_datastore = disk.get_obj(
             content, [vim.Datastore], args.source_datastore)
 
         # Retrieve Source FCD Object
-        source_vdisk = retrieve_fcd(
+        source_vdisk = disk.retrieve_fcd(
             content, source_datastore, args.source_vdisk)
 
         # Retrieve Snapshot Object
-        snapshot = retrieve_snapshot(
+        snapshot = disk.retrieve_fcd_snapshot(
             content, source_datastore, source_vdisk, args.snapshot)
 
         # Retrieve Destination Datastore Object
-        dest_datastore = get_obj(content, [vim.Datastore], args.dest_datastore)
+        dest_datastore = disk.get_obj(
+            content, [vim.Datastore], args.dest_datastore)
 
         # Create FCD from Snapshot
         storage = content.vStorageObjectManager

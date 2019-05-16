@@ -17,7 +17,7 @@ Python program for detaching a disk from a VM without deleting the VMDK
 
 import atexit
 
-from tools import cli, tasks
+from tools import cli, tasks, disk
 from pyVim import connect
 from pyVmomi import vmodl
 from pyVmomi import vim
@@ -54,20 +54,6 @@ def get_args():
 
     my_args = parser.parse_args()
     return cli.prompt_for_password(my_args)
-
-
-def get_obj(content, vimtype, name):
-    """
-    Retrieves the managed object for the name and type specified
-    """
-    obj = None
-    container = content.viewManager.CreateContainerView(
-        content.rootFolder, vimtype, True)
-    for c in container.view:
-        if c.name == name:
-            obj = c
-            break
-    return obj
 
 
 def get_hdd_prefix_label(language):
@@ -136,7 +122,7 @@ def main():
             search_index = content.searchIndex
             vm = search_index.FindByUuid(None, args.uuid, True)
         elif args.vm_name:
-            vm = get_obj(content, [vim.VirtualMachine], args.vm_name)
+            vm = disk.get_obj(content, [vim.VirtualMachine], args.vm_name)
 
         # Detaching Disk from VM
         if vm:
