@@ -17,7 +17,7 @@ Python program for deleting a snapshot of a first class disk (fcd)
 
 import atexit
 
-from tools import cli, tasks
+from tools import cli, tasks, disk
 from pyVim import connect
 from pyVmomi import vmodl
 from pyVmomi import vim
@@ -58,58 +58,6 @@ def get_args():
     return cli.prompt_for_password(my_args)
 
 
-def get_obj(content, vimtype, name):
-    """
-    Retrieves the vmware object for the name and type specified
-    """
-    obj = None
-    container = content.viewManager.CreateContainerView(
-        content.rootFolder, vimtype, True)
-    for c in container.view:
-        if c.name == name:
-            obj = c
-            break
-    return obj
-
-
-def retrieve_fcd(content, datastore, vdisk):
-    """
-    Retrieves the vmware object for the first class disk specified
-    """
-    # Set vStorageObjectManager
-    storage = content.vStorageObjectManager
-
-    # Retrieve First Class Disks
-    disk = None
-    for d in storage.ListVStorageObject(datastore):
-        disk_info = storage.RetrieveVStorageObject(d, datastore)
-        if disk_info.config.name == vdisk:
-            disk = disk_info
-            break
-    if not disk:
-        raise RuntimeError("First Class Disk not found.")
-    return disk
-
-
-def retrieve_snapshot(content, datastore, vdisk, snapshot):
-    """
-    Retrieves the vmware object for the snapshot specified
-    """
-    # Set vStorageObjectManager
-    storage = content.vStorageObjectManager
-
-    # Retrieve Snapshot
-    snap = None
-    snaps = storage.RetrieveSnapshotInfo(vdisk.config.id, datastore)
-    for s in snaps.snapshots:
-        if s.description == snapshot:
-            snap = s.id
-            break
-    if not snap:
-        raise RuntimeError("Snapshot not found.")
-    return snap
-
-
 def main():
     """
     Simple command-line program for deleting a snapshot of a first class disk.
@@ -134,13 +82,14 @@ def main():
         content = service_instance.RetrieveContent()
 
         # Retrieve Datastore Object
-        datastore = get_obj(content, [vim.Datastore], args.datastore)
+        datastore = disk.get_obj(content, [vim.Datastore], args.datastore)
 
         # Retrieve FCD Object
-        vdisk = retrieve_fcd(content, datastore, args.vdisk)
+        vdisk = disk.retrieve_fcd(content, datastore, args.vdisk)
 
         # Retrieve Snapshot Object
-        snapshot = retrieve_snapshot(content, datastore, vdisk, args.snapshot)
+        snapshot = disk.retrieve_fcd_snapshot(
+            content, datastore, vdisk, args.snapshot)
 
         # Confirming Snapshot deletion
         if not args.yes:
