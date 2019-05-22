@@ -48,9 +48,8 @@ def create_pbm_session(stub):
         poolSize=0,
         sslContext=context)
     pbmSi = pbm.ServiceInstance("ServiceInstance", pbmStub)
-    pbmContent = pbmSi.RetrieveContent()
 
-    return pbmContent
+    return pbmSi
 
 
 def retrieve_storage_policy(pbmContent, policy):
@@ -59,6 +58,7 @@ def retrieve_storage_policy(pbmContent, policy):
 
     Sample Usage:
 
+    pbmContent = pbmSi.RetrieveContent()
     retrieve_storage_policy(pbmContent, "Policy Name")
     """
     # Set PbmQueryProfile

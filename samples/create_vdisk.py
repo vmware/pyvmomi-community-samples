@@ -90,7 +90,8 @@ def main():
         content = service_instance.RetrieveContent()
 
         # Connect to SPBM Endpoint
-        pbmContent = pbmhelper.create_pbm_session(service_instance._stub)
+        pbmSi = pbmhelper.create_pbm_session(service_instance._stub)
+        pbmContent = pbmSi.RetrieveContent()
 
         # Retrieving Storage Policy
         if args.policy:
