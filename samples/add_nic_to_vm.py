@@ -25,7 +25,7 @@ def get_args():
     parser.add_argument('-s', '--host',
                         required=True,
                         action='store',
-                        help='vSpehre service to connect to')
+                        help='vSphere service to connect to')
 
     parser.add_argument('-o', '--port',
                         type=int,
