@@ -21,7 +21,8 @@ import getpass
 
 
 def get_args():
-    parser = argparse.ArgumentParser(description='Arguments for talking to vCenter')
+    parser = argparse.ArgumentParser(
+        description='Arguments for talking to vCenter')
 
     parser.add_argument('-s', '--host',
                         required=True,
@@ -62,8 +63,10 @@ def get_args():
     parser.add_argument('--device-name',
                         required=True,
                         action='store',
-                        help=('The device name. Might look like "/vmfs/devices/disks/naa.*". '
-                              'See vim.vm.device.VirtualDisk.RawDiskMappingVer1BackingInfo documentation.'))
+                        help=('The device name. Might look like '
+                              '"/vmfs/devices/disks/naa.*". '
+                              'See vim.vm.device.VirtualDisk.'
+                              'RawDiskMappingVer1BackingInfo documentation.'))
 
     parser.add_argument('--disk-mode',
                         required=False,
@@ -75,14 +78,16 @@ def get_args():
                                  'nonpersistent',
                                  'persistent',
                                  'undoable'],
-                        help='See vim.vm.device.VirtualDiskOption.DiskMode documentation.')
+                        help=('See vim.vm.device.VirtualDiskOption.DiskMode '
+                              'documentation.'))
 
     parser.add_argument('--compatibility-mode',
                         required=False,
                         default='virtualMode',
                         choices=['physicalMode', 'virtualMode'],
                         action='store',
-                        help='See vim.vm.device.VirtualDiskOption.CompatibilityMode documentation.')
+                        help=('See vim.vm.device.VirtualDiskOption.'
+                              'CompatibilityMode documentation.'))
 
     args = parser.parse_args()
 
@@ -123,13 +128,12 @@ def add_raw_disk(vm, si, device_name, disk_mode, compatibility_mode):
         disk_spec.fileOperation = "create"
         disk_spec.operation = vim.vm.device.VirtualDeviceSpec.Operation.add
         disk_spec.device = vim.vm.device.VirtualDisk()
-        disk_spec.device.backing = vim.vm.device.VirtualDisk.RawDiskMappingVer1BackingInfo()
-        # https://pubs.vmware.com/vsphere-6-5/index.jsp?topic=%2Fcom.vmware.wssdk.apiref.doc%2Fvim.vm.device.VirtualDiskOption.CompatibilityMode.html
+        rdm_info = vim.vm.device.VirtualDisk.RawDiskMappingVer1BackingInfo()
+        disk_spec.device.backing = rdm_info
         disk_spec.device.backing.compatibilityMode = compatibility_mode
-        # https://pubs.vmware.com/vsphere-6-5/index.jsp?topic=%2Fcom.vmware.wssdk.apiref.doc%2Fvim.vm.device.VirtualDiskOption.DiskMode.html
         disk_spec.device.backing.diskMode = disk_mode
-        # https://pubs.vmware.com/vsphere-6-5/index.jsp?topic=%2Fcom.vmware.wssdk.apiref.doc%2Fvim.vm.device.VirtualDisk.RawDiskMappingVer1BackingInfo.html
-        # The device_name will look something like /vmfs/devices/disks/naa.41412340757396001d7710df0fdd22a9
+        # The device_name will look something like:
+        #     /vmfs/devices/disks/naa.41412340757396001d7710df0fdd22a9
         disk_spec.device.backing.deviceName = device_name
         disk_spec.device.unitNumber = unit_number
         disk_spec.device.controllerKey = controller.key
@@ -166,7 +170,8 @@ def main():
         vm = get_obj(content, [vim.VirtualMachine], args.vm_name)
 
     if vm:
-        add_raw_disk(vm, si, args.device_name, args.disk_mode, args.compatibility_mode)
+        add_raw_disk(vm, si, args.device_name,
+                     args.disk_mode, args.compatibility_mode)
     else:
         print "VM not found"
 

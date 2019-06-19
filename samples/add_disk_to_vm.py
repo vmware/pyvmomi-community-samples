@@ -15,10 +15,13 @@ and I have not yet worked through that
 """
 from pyVmomi import vim
 from pyVmomi import vmodl
-from pyVim.connect import SmartConnect, Disconnect
+from pyVim.connect import SmartConnectNoSSL, Disconnect
+from pyVim.task import WaitForTasks
 import atexit
 import argparse
 import getpass
+import pdb
+from pprint import pprint
 
 
 def get_args():
@@ -64,7 +67,7 @@ def get_args():
                         help='thick or thin')
 
     parser.add_argument('--disk-size',
-                        required=True,
+                        required=False,
                         action='store',
                         help='disk size, in GB, to add to the VM')
 
@@ -72,7 +75,7 @@ def get_args():
 
     if not args.password:
         args.password = getpass.getpass(
-            prompt='Enter password')
+            prompt='Enter password: ')
 
     return args
 
@@ -94,6 +97,7 @@ def add_disk(vm, si, disk_size, disk_type):
         unit_number = 0
         for dev in vm.config.hardware.device:
             if hasattr(dev.backing, 'fileName'):
+                pprint(dev)
                 unit_number = int(dev.unitNumber) + 1
                 # unit_number 7 reserved for scsi controller
                 if unit_number == 7:
@@ -123,12 +127,68 @@ def add_disk(vm, si, disk_size, disk_type):
         vm.ReconfigVM_Task(spec=spec)
         print "%sGB disk added to %s" % (disk_size, vm.config.name)
 
+def add_raw_disk(vm, si):
+        spec = vim.vm.ConfigSpec()
+        # get all disks on a VM, set unit_number to the next available
+        unit_number = 0
+        for dev in vm.config.hardware.device:
+            if hasattr(dev.backing, 'fileName'):
+                print("disk %s already exists" % unit_number)
+                unit_number = int(dev.unitNumber) + 1
+                # unit_number 7 reserved for scsi controller
+                if unit_number == 7:
+                    unit_number += 1
+                if unit_number >= 16:
+                    print "we don't support this many disks"
+                    return
+            if isinstance(dev, vim.vm.device.VirtualSCSIController):
+                controller = dev
+        # add disk here
+        dev_changes = []
+
+        disk_spec = vim.vm.device.VirtualDeviceSpec()
+        disk_spec.fileOperation = "create"
+        disk_spec.operation = vim.vm.device.VirtualDeviceSpec.Operation.add
+        disk_spec.device = vim.vm.device.VirtualDisk()
+
+        disk_spec.device.backing = vim.vm.device.VirtualDisk.RawDiskMappingVer1BackingInfo()
+
+        # https://pubs.vmware.com/vsphere-6-5/index.jsp?topic=%2Fcom.vmware.wssdk.apiref.doc%2Fvim.vm.device.VirtualDisk.RawDiskVer2BackingInfo.html
+        disk_spec.device.backing.compatibilityMode = 'virtualMode'
+        # https://pubs.vmware.com/vsphere-6-5/index.jsp?topic=%2Fcom.vmware.wssdk.apiref.doc%2Fvim.vm.device.VirtualDisk.RawDiskVer2BackingInfo.html
+        disk_spec.device.backing.diskMode = 'independent_persistent'
+        # https://pubs.vmware.com/vsphere-6-5/index.jsp?topic=%2Fcom.vmware.wssdk.apiref.doc%2Fvim.vm.device.VirtualDisk.RawDiskVer2BackingInfo.html
+        disk_spec.device.backing.deviceName = '/vmfs/devices/disks/naa.61418770265306001d7756cc0fdd42a0'
+
+
+        #disk_spec.device.key = 5555555
+        #disk_spec.device.shares = vim.SharesInfo()
+        #disk_spec.device.shares.level = 'normal'
+        #disk_spec.device.shares.shares = 100
+
+        #disk_spec.device.backing = vim.vm.device.VirtualDisk.RawDiskVer2BackingInfo()
+        # disk_spec.device.backing.descriptorFileName = '[RX730-2] bro01.rhel-dory_2.vmdk'
+        #disk_spec.device.backing.deviceName = 'vml.61418770265306001d7756cc0fdd42a0'
+        # disk_spec.device.backing.useAutoDetect = False
+
+        disk_spec.device.unitNumber = unit_number
+        disk_spec.device.controllerKey = controller.key
+        dev_changes.append(disk_spec)
+        spec.deviceChange = dev_changes
+        pprint(disk_spec)
+
+        #disk_spec.device.capacityInKB = 292421632
+        #disk_spec.device.capacityInBytes = disk_spec.device.capacityInKB * 1024
+
+        WaitForTasks([vm.ReconfigVM_Task(spec=spec)], si=si)
+        print "GB disk added to %s" % (vm.config.name)
+
 
 def main():
     args = get_args()
 
     # connect this thing
-    si = SmartConnect(
+    si = SmartConnectNoSSL(
         host=args.host,
         user=args.user,
         pwd=args.password,
@@ -145,7 +205,9 @@ def main():
         vm = get_obj(content, [vim.VirtualMachine], args.vm_name)
 
     if vm:
-        add_disk(vm, si, args.disk_size, args.disk_type)
+        #pdb.set_trace()
+        add_raw_disk(vm, si) # /vmfs/devices/disks/naa.___
+
     else:
         print "VM not found"
 

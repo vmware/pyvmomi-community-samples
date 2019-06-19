@@ -9,11 +9,12 @@ from __future__ import print_function
 
 from pyVmomi import vim
 
-from pyVim.connect import SmartConnect, Disconnect
+from pyVim.connect import SmartConnectNoSSL, Disconnect
 
 import argparse
 import atexit
 import getpass
+import pdb
 
 
 def GetArgs():
@@ -65,7 +66,7 @@ def main():
         password = getpass.getpass(prompt='Enter password for host %s and '
                                    'user %s: ' % (args.host, args.user))
 
-    si = SmartConnect(host=args.host,
+    si = SmartConnectNoSSL(host=args.host,
                       user=args.user,
                       pwd=password,
                       port=int(args.port))
@@ -81,6 +82,7 @@ def main():
     if (get_obj(content, [vim.Folder], args.folder)):
         print("Folder '%s' already exists" % args.folder)
         return 0
+    pdb.set_trace()
     create_folder(content, dc.hostFolder, args.folder)
     print("Successfully created the host folder '%s'" % args.folder)
     create_folder(content, dc.vmFolder, args.folder)
