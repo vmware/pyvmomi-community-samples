@@ -47,31 +47,34 @@ def get_args():
                         action='store',
                         help='Password to use')
 
-    parser.add_argument('-d', '--datacenter', 
+    parser.add_argument('-d', '--datacenter',
                         required=True,
                         help='name of the datacenter')
 
-    parser.add_argument('-dvs', '--dvswitch', 
+    parser.add_argument('-dvs', '--dvswitch',
                         required=False,
                         help='name of the dvswitch',
                         default='all')
-    
-    parser.add_argument('-c', '--cert_check_skip', 
-                        required=False, 
-                        action='store_true', 
+
+    parser.add_argument('-c', '--cert_check_skip',
+                        required=False,
+                        action='store_true',
                         help='skip ssl certificate check')
 
     args = parser.parse_args()
     return args
 
+
 def get_obj(content, vimtype, name):
     obj = None
-    container = content.viewManager.CreateContainerView(content.rootFolder, vimtype, True)
+    container = content.viewManager.CreateContainerView(content.rootFolder,
+                                                        vimtype, True)
     for c in container.view:
         if c.name == name:
             obj = c
             break
     return obj
+
 
 def get_all_objs(content, vimtype, folder=None, recurse=True):
     if not folder:
@@ -114,20 +117,21 @@ def main():
     content = si.RetrieveContent()
 
     dc = get_obj(content, [vim.Datacenter], args.datacenter)
-        
+
     if dc is None:
         print("Failed to find the datacenter %s" % args.datacenter)
         return 0
                     
     if args.dvswitch == 'all':
-        dvs_lists = get_all_objs(content, [vim.DistributedVirtualSwitch], folder=dc.networkFolder)
+        dvs_lists = get_all_objs(content, [vim.DistributedVirtualSwitch], 
+                                           folder=dc.networkFolder)
     else:
         dvsn = get_obj(content, [vim.DistributedVirtualSwitch], args.dvswitch)
         if dvsn is None:
             print("Failed to find the dvswitch %s" % args.dvswitch)
             return 0
         else:
-            dvs_lists=[dvsn]
+            dvs_lists = [dvsn]
 
     print('Datacenter Name'.ljust(40)+' :', args.datacenter)
     for dvs in dvs_lists:
@@ -143,7 +147,7 @@ def main():
                         vlanlist.append(str(item.start)
                     else:
                         vlanlist.append(str(item.start)+'-'+str(item.end))
-                print(dvs_pg.name.ljust(40) + " | Trunk | vlan id: " + ','.join(vlanlist) )
+                print(dvs_pg.name.ljust(40) + " | Trunk | vlan id: " + ','.join(vlanlist))
             else:
                 print(dvs_pg.name + " | vlan id: " + str(vlanInfo.vlanId))
 
