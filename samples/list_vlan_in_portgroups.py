@@ -20,6 +20,7 @@ from pyVmomi import vim
 import atexit
 import argparse
 import getpass
+import ssl
 
 
 def get_args():
@@ -81,7 +82,8 @@ def get_all_objs(content, vimtype, folder=None, recurse=True):
         folder = content.rootFolder
 
     obj = {}
-    container = content.viewManager.CreateContainerView(folder, vimtype, recurse)
+    container = content.viewManager.CreateContainerView(folder,
+                                                        vimtype, recurse)
     for managed_object_ref in container.view:
         obj.update({managed_object_ref: managed_object_ref.name})
     return obj
@@ -121,10 +123,10 @@ def main():
     if dc is None:
         print("Failed to find the datacenter %s" % args.datacenter)
         return 0
-                    
+
     if args.dvswitch == 'all':
-        dvs_lists = get_all_objs(content, [vim.DistributedVirtualSwitch], 
-                                           folder=dc.networkFolder)
+        dvs_lists = get_all_objs(content, [vim.DistributedVirtualSwitch],
+                                 folder=dc.networkFolder)
     else:
         dvsn = get_obj(content, [vim.DistributedVirtualSwitch], args.dvswitch)
         if dvsn is None:
@@ -139,17 +141,19 @@ def main():
         print('Dvswitch Name'.ljust(40)+' :', dvs.name)
         print(40*'#')
         for dvs_pg in dvs.portgroup:
-            vlanInfo=dvs_pg.config.defaultPortConfig.vlan
-            if isinstance(vlanInfo,vim.dvs.VmwareDistributedVirtualSwitch.TrunkVlanSpec):
+            vlanInfo = dvs_pg.config.defaultPortConfig.vlan
+            cl = vim.dvs.VmwareDistributedVirtualSwitch.TrunkVlanSpec
+            if isinstance(vlanInfo, cl):
                 vlanlist = []
                 for item in vlanInfo.vlanId:
                     if item.start == item.end:
-                        vlanlist.append(str(item.start)
+                        vlanlist.append(str(item.start))
                     else:
                         vlanlist.append(str(item.start)+'-'+str(item.end))
-                print(dvs_pg.name.ljust(40) + " | Trunk | vlan id: " + ','.join(vlanlist))
+                wd = " | Trunk | vlan id: " + ','.join(vlanlist)
             else:
-                print(dvs_pg.name + " | vlan id: " + str(vlanInfo.vlanId))
+                wd = " | vlan id: " + str(vlanInfo.vlanId)
+            print(dvs_pg.name.ljust(40) + wd)
 
 
 if __name__ == "__main__":
