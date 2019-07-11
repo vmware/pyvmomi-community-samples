@@ -15,12 +15,11 @@ Error handling
 
 
 from __future__ import print_function
-from pyVim.connect import SmartConnect, Disconnect
+from pyVim.connect import SmartConnect, SmartConnectNoSSL, Disconnect
 from pyVmomi import vim
 import atexit
 import argparse
 import getpass
-import ssl
 
 
 def get_args():
@@ -95,12 +94,10 @@ def main():
         password = getpass.getpass(prompt='Enter password for host %s and '
                                    'user %s: ' % (args.host, args.user))
     if args.disable_ssl_verification:
-        context = ssl._create_unverified_context()
-        si = SmartConnect(host=args.host,
-                          user=args.user,
-                          pwd=password,
-                          port=int(args.port),
-                          sslContext=context)
+        si = SmartConnectNoSSL(host=args.host,
+                               user=args.user,
+                               pwd=password,
+                               port=int(args.port))
     else:
         si = SmartConnect(host=args.host,
                           user=args.user,
