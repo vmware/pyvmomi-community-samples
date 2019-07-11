@@ -57,35 +57,33 @@ def get_args():
                         help='name of the dvswitch',
                         default='all')
 
-    parser.add_argument('-c', '--cert_check_skip',
+    parser.add_argument('-S', '--disable_ssl_verification',
                         required=False,
                         action='store_true',
-                        help='skip ssl certificate check')
+                        help='Disable ssl host certificate verification')
 
     args = parser.parse_args()
     return args
 
 
-def get_obj(content, vimtype, name):
-    obj = None
-    container = content.viewManager.CreateContainerView(content.rootFolder,
-                                                        vimtype, True)
-    for c in container.view:
-        if c.name == name:
-            obj = c
-            break
-    return obj
-
-
-def get_all_objs(content, vimtype, folder=None, recurse=True):
+def get_obj(content, vimtype, name=None, folder=None, recurse=True):
     if not folder:
         folder = content.rootFolder
 
-    obj = {}
-    container = content.viewManager.CreateContainerView(folder,
+    obj = None
+    container = content.viewManager.CreateContainerView(content.rootFolder,
                                                         vimtype, recurse)
-    for managed_object_ref in container.view:
-        obj.update({managed_object_ref: managed_object_ref.name})
+    if not name:
+        obj = {}
+        for managed_object_ref in container.view:
+            obj.update({managed_object_ref: managed_object_ref.name})
+    else:
+        obj = None
+        for c in container.view:
+            if c.name == name:
+                obj = c
+                break
+
     return obj
 
 
@@ -96,7 +94,7 @@ def main():
     else:
         password = getpass.getpass(prompt='Enter password for host %s and '
                                    'user %s: ' % (args.host, args.user))
-    if args.cert_check_skip:
+    if args.disable_ssl_verification:
         context = ssl._create_unverified_context()
         si = SmartConnect(host=args.host,
                           user=args.user,
@@ -125,8 +123,8 @@ def main():
         return 0
 
     if args.dvswitch == 'all':
-        dvs_lists = get_all_objs(content, [vim.DistributedVirtualSwitch],
-                                 folder=dc.networkFolder)
+        dvs_lists = get_obj(content, [vim.DistributedVirtualSwitch],
+                            folder=dc.networkFolder)
     else:
         dvsn = get_obj(content, [vim.DistributedVirtualSwitch], args.dvswitch)
         if dvsn is None:
