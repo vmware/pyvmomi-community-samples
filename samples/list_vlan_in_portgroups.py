@@ -70,7 +70,7 @@ def get_obj(content, vimtype, name=None, folder=None, recurse=True):
         folder = content.rootFolder
 
     obj = None
-    container = content.viewManager.CreateContainerView(content.rootFolder,
+    container = content.viewManager.CreateContainerView(folder,
                                                         vimtype, recurse)
     if not name:
         obj = {}
