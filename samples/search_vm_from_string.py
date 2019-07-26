@@ -15,7 +15,8 @@
 # limitations under the License.
 
 """
-Python program for search VMs names that  match a string (modified version of getallvms.py sample)
+Python program for search VMs names that match
+a string (modified version of getallvms.py sample)
 """
 
 import re
@@ -27,6 +28,7 @@ from pyVmomi import vim
 
 import tools.cli as cli
 
+
 def get_args():
     parser = cli.build_arg_parser()
     parser.add_argument('-f', '--find',
@@ -36,7 +38,6 @@ def get_args():
     args = parser.parse_args()
 
     return cli.prompt_for_password(args)
-
 
 
 def print_vm_info(virtual_machine):
@@ -102,7 +103,8 @@ def main():
 
         children = containerView.view
         for child in children:
-            if re.search(args.find, child.summary.config.name, re.IGNORECASE) != None:
+            pat = re.compile(args.find, re.IGNORECASE)
+            if pat.search(child.summary.config.name) is not None:
                 print_vm_info(child)
 
     except vmodl.MethodFault as error:
@@ -110,6 +112,7 @@ def main():
         return -1
 
     return 0
+
 
 # Start program
 if __name__ == "__main__":
