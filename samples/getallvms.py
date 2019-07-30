@@ -18,6 +18,7 @@
 Python program for listing the vms on an ESX / vCenter host
 """
 
+import re
 import atexit
 
 from pyVim import connect
@@ -25,6 +26,17 @@ from pyVmomi import vmodl
 from pyVmomi import vim
 
 import tools.cli as cli
+
+
+def get_args():
+    parser = cli.build_arg_parser()
+    parser.add_argument('-f', '--find',
+                        required=False,
+                        action='store',
+                        help='String to match VM names')
+    args = parser.parse_args()
+
+    return cli.prompt_for_password(args)
 
 
 def print_vm_info(virtual_machine):
@@ -64,7 +76,7 @@ def main():
     Simple command-line program for listing the virtual machines on a system.
     """
 
-    args = cli.get_args()
+    args = get_args()
 
     try:
         if args.disable_ssl_verification:
@@ -89,14 +101,21 @@ def main():
             container, viewType, recursive)
 
         children = containerView.view
+        if args.find is not None:
+            pat = re.compile(args.find, re.IGNORECASE)
         for child in children:
-            print_vm_info(child)
+            if args.find is None:
+                print_vm_info(child)
+            else:
+                if pat.search(child.summary.config.name) is not None:
+                    print_vm_info(child)
 
     except vmodl.MethodFault as error:
         print("Caught vmodl fault : " + error.msg)
         return -1
 
     return 0
+
 
 # Start program
 if __name__ == "__main__":
