@@ -84,21 +84,21 @@ def main():
         creds = vim.vm.guest.NamePasswordAuthentication(
             username=args.vm_user, password=args.vm_pwd)
         with open(args.upload_file, 'rb') as myfile:
-            args = myfile.read()
+            fileinmemory = myfile.read()
 
         try:
             file_attribute = vim.vm.guest.FileManager.FileAttributes()
             url = content.guestOperationsManager.fileManager. \
                 InitiateFileTransferToGuest(vm, creds, vm_path,
                                             file_attribute,
-                                            len(args), True)
+                                            len(fileinmemory), True)
             # When : host argument becomes https://*:443/guestFile?
             # Ref: https://github.com/vmware/pyvmomi/blob/master/docs/ \
             #            vim/vm/guest/FileManager.rst
             # Script fails in that case, saying URL has an invalid label.
             # By having hostname in place will take take care of this.
             url = re.sub(r"^https://\*:", "https://"+str(args.host)+":", url)
-            resp = requests.put(url, data=args, verify=False)
+            resp = requests.put(url, data=fileinmemory, verify=False)
             if not resp.status_code == 200:
                 print "Error while uploading file"
             else:
