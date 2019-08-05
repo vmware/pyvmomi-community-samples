@@ -37,6 +37,10 @@ def get_args():
                         required=False,
                         action='store_true',
                         help='Search strict virtual machine name matches')
+    parser.add_argument('--set_vm_home',
+                        required=False,
+                        action='store_true',
+                        help='Set the specified policy for vm home.')
     parser.add_argument('--virtual_disk_number',
                         required=False,
                         nargs='+',
@@ -281,23 +285,24 @@ def main():
 
         # The implementation of idempotency for the operation of the storage
         # policy assignment for VM Home
-        if not CheckStorageProfileAssociated(pm,
-                                             pmRef,
-                                             policyName):
-            print('Set VM Home policy: '
-                  '{}{}{}'.format(bcolors.OKGREEN,
-                                  policyName,
-                                  bcolors.ENDC))
-
-            try:
-                SetVMStorageProfile(vm, storageProfile)
-            except Exception as exc:
-                print('VM reconfiguration task error: '
-                      '{}{}{}'.format(bcolors.FAIL,
-                                      exc,
+        if args.set_vm_home:
+            if not CheckStorageProfileAssociated(pm,
+                                                 pmRef,
+                                                 policyName):
+                print('Set VM Home policy: '
+                      '{}{}{}'.format(bcolors.OKGREEN,
+                                      policyName,
                                       bcolors.ENDC))
-        else:
-            print('Set VM Home policy: Nothing to do')
+
+                try:
+                    SetVMStorageProfile(vm, storageProfile)
+                except Exception as exc:
+                    print('VM reconfiguration task error: '
+                          '{}{}{}'.format(bcolors.FAIL,
+                                          exc,
+                                          bcolors.ENDC))
+            else:
+                print('Set VM Home policy: Nothing to do')
 
         if vdNumber:
             for device in vm.config.hardware.device:
