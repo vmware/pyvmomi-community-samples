@@ -16,12 +16,42 @@ the script list_vm_storage_policy.py
 """
 
 import atexit
-import argparse
-import getpass
 import re
+import tools.cli as cli
 
 from pyVmomi import pbm, vim, VmomiSupport, SoapStubAdapter
 from pyVim.connect import SmartConnect, SmartConnectNoSSL, Disconnect
+
+
+def get_args():
+    """Supports the command-line arguments listed below.
+    """
+    parser = cli.build_arg_parser()
+    parser.description = 'Set VM Home or Virtual Disk Storage Policies'
+    parser.add_argument('-v', '--vm_name',
+                        required=True,
+                        action='store',
+                        metavar='string',
+                        help='Get virtual machine by name')
+    parser.add_argument('--strict',
+                        required=False,
+                        action='store_true',
+                        help='Search strict virtual machine name matches')
+    parser.add_argument('--virtual_disk_number',
+                        required=False,
+                        nargs='+',
+                        metavar='int',
+                        help='The sequence numbers of the virtual disks for which \
+                              the specified policy should be set. \
+                              Space as delimiter.')
+    parser.add_argument('--storage_policy_name',
+                        required=True,
+                        action='store',
+                        metavar='string',
+                        help='The name of the storage policy to be set for VM \
+                              Home or Virtual Disk')
+    args = parser.parse_args()
+    return cli.prompt_for_password(args)
 
 
 class bcolors(object):
@@ -202,84 +232,22 @@ def SearchVMByName(serviceInstance, name, strict=False):
     return obj
 
 
-def GetArgs():
-    """Supports the command-line arguments listed below.
-    """
-    parser = argparse.ArgumentParser(
-        description='Set VM Home or Virtual Disk Storage Policies')
-    parser.add_argument('-s', '--host',
-                        required=True,
-                        action='store',
-                        metavar='string',
-                        help='Remote host to connect to')
-    parser.add_argument('-o', '--port',
-                        type=int,
-                        default=443,
-                        action='store',
-                        metavar='int',
-                        help='Port to connect on')
-    parser.add_argument('-u', '--user',
-                        required=True,
-                        action='store',
-                        metavar='string',
-                        help='User name to use when connecting to host')
-    parser.add_argument('-p', '--password',
-                        required=False,
-                        action='store',
-                        metavar='string',
-                        help='Password to use when connecting to host')
-    parser.add_argument('-v', '--vm-name',
-                        required=True,
-                        action='store',
-                        metavar='string',
-                        help='Get virtual machine by name')
-    parser.add_argument('--strict',
-                        required=False,
-                        action='store_true',
-                        help='Search strict virtual machine name matches')
-    parser.add_argument('--virtual-disk-number',
-                        required=False,
-                        nargs='+',
-                        metavar='int',
-                        help='The sequence numbers of the virtual disks for which \
-                              the specified policy should be set. \
-                              Space as delimiter.')
-    parser.add_argument('--storage-policy-name',
-                        required=True,
-                        action='store',
-                        metavar='string',
-                        help='The name of the storage policy to be set for VM \
-                              Home or Virtual Disk')
-    parser.add_argument('--disable-ssl-verification',
-                        required=False,
-                        action='store_true',
-                        help='Skip SSL certificate verification')
-    args = parser.parse_args()
-    return args
-
-
 def main():
     """Main program.
     """
 
-    args = GetArgs()
-    if args.password:
-        password = args.password
-    else:
-        password = getpass.getpass(
-            prompt='Enter password for host {} and '
-                   'user {}: '.format(args.host, args.user))
+    args = get_args()
     serviceInstance = None
     try:
         if args.disable_ssl_verification:
             serviceInstance = SmartConnectNoSSL(host=args.host,
                                                 user=args.user,
-                                                pwd=password,
+                                                pwd=args.password,
                                                 port=int(args.port))
         else:
             serviceInstance = SmartConnect(host=args.host,
                                            user=args.user,
-                                           pwd=password,
+                                           pwd=args.password,
                                            port=int(args.port))
         atexit.register(Disconnect, serviceInstance)
     except IOError as e:
