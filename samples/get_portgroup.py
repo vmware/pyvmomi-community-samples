@@ -27,12 +27,12 @@ def get_args():
     """
     Adds additional args for retrieving a port group
 
-    -pg portgroup
+    -pg portgroupname
     """
     parser = cli.build_arg_parser()
 
-    # because -p is reserved for 'password', we use -pg for port group name
-    parser.add_argument('-pg', '--portgroup',
+    # because -p is reserved for 'password'
+    parser.add_argument('-pg', '--portgroupname',
                         required=True,
                         help="Name of the port group")
     my_args = parser.parse_args()
@@ -84,7 +84,7 @@ def main():
         content = service_instance.RetrieveContent()
 
         # searching for port group
-        pg = get_obj(content, [vim.Network], args.portgroup)
+        pg = get_obj(content, [vim.Network], args.portgroupname)
         print(pg)
 
     except vmodl.MethodFault as error:
