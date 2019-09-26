@@ -1,0 +1,5 @@
+{
+    "python.linting.pylintEnabled": true,
+    "python.linting.pep8Enabled": true,
+    "python.linting.enabled": true
+}
