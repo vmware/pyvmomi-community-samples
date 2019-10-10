@@ -31,6 +31,16 @@ def get_args():
     return cli.prompt_for_password(args)
 
 
+def read_in_chunks(file_object, chunk_size=1024):
+    """Lazy function (generator) to read a file piece by piece.
+    Default chunk size: 1k."""
+    while True:
+        data = file_object.read(chunk_size)
+        if not data:
+            break
+        yield data
+
+
 def main():
 
     args = get_args()
@@ -101,7 +111,6 @@ def main():
         params = {"dsName": datastore.info.name,
                   "dcPath": datacenter.name}
         http_url = "https://" + args.host + ":443" + resource
-
         # Get the cookie built from the current session
         client_cookie = service_instance._stub.cookie
         # Break apart the cookie into it's component parts - This is more than
@@ -117,19 +126,18 @@ def main():
         cookie[cookie_name] = cookie_text
 
         # Get the request headers set up
-        headers = {'Content-Type': 'application/octet-stream'}
+        headers = {'Content-Type': 'application/octet-stream',
+                   'Transfer-Encoding': 'chunked'}
 
-        # Get the file to upload ready, extra protection by using with against
-        # leaving open threads
+        # For uploading massive body of data
         with open(args.local_file, "rb") as f:
-            # Connect and upload the file
             request = requests.put(http_url,
                                    params=params,
-                                   data=f,
+                                   data=read_in_chunks(f),
                                    headers=headers,
                                    cookies=cookie,
                                    verify=verify_cert)
-
+        print("Done Uploading file " + args.local_file)
     except vmodl.MethodFault as e:
         print("Caught vmodl fault : " + e.msg)
         raise SystemExit(-1)
