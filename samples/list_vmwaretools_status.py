@@ -15,7 +15,7 @@ import atexit
 import requests
 from tools import cli
 from pyVmomi import vim
-from pyVim.connect import SmartConnect, Disconnect
+from pyVim.connect import SmartConnect, Disconnect, SmartConnectNoSSL
 
 _columns_four = "{0:<20} {1:<30} {2:<30} {3:<20}"
 
@@ -53,17 +53,21 @@ def get_vms(content):
 
 
 def print_vmwareware_tools_status(vm):
-    print _columns_four.format(vm.name,
-                               vm.guest.toolsRunningStatus,
-                               vm.guest.toolsVersion,
-                               vm.guest.toolsVersionStatus2)
+    print(
+        _columns_four.format(
+            vm.name,
+            vm.guest.toolsRunningStatus,
+            vm.guest.toolsVersion,
+            vm.guest.toolsVersionStatus2
+            )
+        )
 
 
 def main():
     args = get_args()
 
     # connect to vc
-    si = SmartConnect(
+    si = SmartConnectNoSSL(
         host=args.host,
         user=args.user,
         pwd=args.password,
@@ -74,19 +78,28 @@ def main():
     content = si.RetrieveContent()
 
     if args.vmname:
-        print 'Searching for VM {}'.format(args.vmname)
+        print("Searching for VM {}".format(args.vmname))
         vm_obj = get_obj(content, [vim.VirtualMachine], args.vmname)
         if vm_obj:
-            print _columns_four.format('Name', 'Status',
-                                       'Version', 'Version Status')
+            print(
+                _columns_four.format(
+                    'Name', 'Status',
+                    'Version', 'Version Status'
+                    )
+                )
             print_vmwareware_tools_status(vm_obj)
         else:
-            print "VM not found"
+            print("VM not found")
     else:
-        print _columns_four.format('Name', 'Status',
-                                   'Version', 'Version Status')
+        print(
+            _columns_four.format(
+                'Name', 'Status',
+                'Version', 'Version Status'
+                )
+            )
         for vm_obj in get_vms(content):
             print_vmwareware_tools_status(vm_obj)
+
 
 # start
 if __name__ == "__main__":
