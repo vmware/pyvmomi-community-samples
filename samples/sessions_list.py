@@ -17,7 +17,7 @@
 import argparse
 import getpass
 
-import pyVim.connect as connect
+from pyVim.connect import SmartConnectNoSSL
 
 # Demonstrates some simple working with sessions actions. By common sense
 # you should expect that the session is None when you've logged out and
@@ -63,25 +63,33 @@ if args.password:
     password = args.password
 else:
     password = getpass.getpass(
-        prompt='Enter password for host %s and user %s: ' %
-               (args.host, args.user))
+        prompt='Enter password for host {0} and user {1}: '.format(
+                args.host, args.user
+            )
+        )
 
-si = connect.SmartConnect(host=args.host,
-                          user=args.user,
-                          pwd=password,
-                          port=int(args.port))
+si = SmartConnectNoSSL(
+        host=args.host,
+        user=args.user,
+        pwd=password,
+        port=int(args.port)
+    )
 
-print "logged in to %s" % args.host
+print("logged in to {0}".format(args.host))
 session_id = si.content.sessionManager.currentSession.key
-print "current pyVmomi session id: %s" % session_id
+print("current pyVmomi session id: {0}".format(session_id))
 
-print "Listing all sessions I can see:"
+print("Listing all sessions I can see:")
 for session in si.content.sessionManager.sessionList:
-    print "session %s" % session.key
+    print(
+        "session key={0.key}, "
+        "username={0.userName}, "
+        "ip={0.ipAddress}".format(session)
+        )
 
-print "logout"
+print("logout")
 si.content.sessionManager.Logout()
 
 # The current session will be None after logout
 session = si.content.sessionManager.currentSession
-print "current pyVmomi session: %s" % session
+print("current pyVmomi session: {0}".format(session))
