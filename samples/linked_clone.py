@@ -12,7 +12,7 @@ import requests.packages.urllib3 as urllib3
 import ssl
 
 from pyVmomi import vim
-from pyVim.connect import SmartConnect, Disconnect
+from pyVim.connect import SmartConnectNoSSL, Disconnect
 
 from tools import cli
 from tools import tasks
@@ -96,24 +96,10 @@ def main():
     args = get_args()
 
     urllib3.disable_warnings()
-    si = None
-    context = None
-    if hasattr(ssl, 'SSLContext'):
-        context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
-        context.verify_mode = ssl.CERT_NONE
-    if context:
-        # Python >= 2.7.9
-        si = SmartConnect(host=args.host,
-                          port=int(args.port),
-                          user=args.user,
-                          pwd=args.password,
-                          sslContext=context)
-    else:
-        # Python >= 2.7.7
-        si = SmartConnect(host=args.host,
-                          port=int(args.port),
-                          user=args.user,
-                          pwd=args.password)
+    si = SmartConnectNoSSL(host=args.host,
+                           port=int(args.port),
+                           user=args.user,
+                           pwd=args.password)
     atexit.register(Disconnect, si)
     print "Connected to vCenter Server"
 

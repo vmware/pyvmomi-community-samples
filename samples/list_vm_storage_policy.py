@@ -6,7 +6,7 @@ import getpass
 import ssl
 
 from pyVmomi import pbm, VmomiSupport
-from pyVim.connect import SmartConnect, Disconnect
+from pyVim.connect import SmartConnectNoSSL, Disconnect
 
 """
 Example of using Storage Policy Based Management (SPBM) API
@@ -82,14 +82,10 @@ def main():
             prompt='Enter password for host %s and '
                    'user %s: ' % (args.host, args.user))
 
-    context = None
-    if hasattr(ssl, "_create_unverified_context"):
-        context = ssl._create_unverified_context()
-    si = SmartConnect(host=args.host,
-                      user=args.user,
-                      pwd=password,
-                      port=int(args.port),
-                      sslContext=context)
+    si = SmartConnectNoSSL(host=args.host,
+                           user=args.user,
+                           pwd=password,
+                           port=int(args.port))
 
     atexit.register(Disconnect, si)
 

@@ -7,7 +7,7 @@ Email: laujunbupt0913@163.com
 # Note: Example code For testing purposes only
 """
 
-from pyVim.connect import SmartConnect, Disconnect
+from pyVim.connect import SmartConnectNoSSL, Disconnect
 import atexit
 from pyVmomi import vim
 import sys
@@ -134,14 +134,10 @@ def port_find(dvs, key):
 
 def main():
     args = get_args()
-    context = None
-    if hasattr(ssl, "_create_unverified_context"):
-        context = ssl._create_unverified_context()
-    serviceInstance = SmartConnect(host=args.host,
-                                   user=args.user,
-                                   pwd=args.password,
-                                   port=args.port,
-                                   sslContext=context)
+    serviceInstance = SmartConnectNoSSL(host=args.host,
+                                        user=args.user,
+                                        pwd=args.password,
+                                        port=args.port)
     atexit.register(Disconnect, serviceInstance)
 
     content = serviceInstance.RetrieveContent()

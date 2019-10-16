@@ -35,7 +35,7 @@ import ssl
 from pyVmomi import vim, vmodl
 from pyVim.task import WaitForTask
 from pyVim import connect
-from pyVim.connect import Disconnect, SmartConnect, GetSi
+from pyVim.connect import Disconnect, SmartConnectNoSSL, GetSi
 
 inputs = {'vcenter_ip': '192.168.1.10',
           'vcenter_password': 'my_password',
@@ -103,14 +103,10 @@ def main():
 
     print("Trying to connect to VCENTER SERVER . . .")
 
-    context = None
-    if inputs['ignore_ssl'] and hasattr(ssl, "_create_unverified_context"):
-        context = ssl._create_unverified_context()
-
-    si = connect.Connect(inputs['vcenter_ip'], 443,
-                         inputs['vcenter_user'], inputs[
-                             'vcenter_password'],
-                         sslContext=context)
+    si = connect.SmartConnectNoSSL(host=inputs['vcenter_ip'],
+                                   port=443,
+                                   user=inputs['vcenter_user'],
+                                   pwd=inputs['vcenter_password'])
 
     atexit.register(Disconnect, si)
 
