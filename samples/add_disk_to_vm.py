@@ -99,7 +99,7 @@ def add_disk(vm, si, disk_size, disk_type):
                 if unit_number == 7:
                     unit_number += 1
                 if unit_number >= 16:
-                    print "we don't support this many disks"
+                    print("we don't support this many disks")
                     return
             if isinstance(dev, vim.vm.device.VirtualSCSIController):
                 controller = dev
@@ -121,7 +121,7 @@ def add_disk(vm, si, disk_size, disk_type):
         dev_changes.append(disk_spec)
         spec.deviceChange = dev_changes
         vm.ReconfigVM_Task(spec=spec)
-        print "%sGB disk added to %s" % (disk_size, vm.config.name)
+        print("%sGB disk added to %s" % (disk_size, vm.config.name))
 
 
 def main():
@@ -147,7 +147,7 @@ def main():
     if vm:
         add_disk(vm, si, args.disk_size, args.disk_type)
     else:
-        print "VM not found"
+        print("VM not found")
 
 
 # start this thing

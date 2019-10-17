@@ -88,7 +88,7 @@ def add_raw_disk(vm, si, device_name, disk_mode, compatibility_mode):
                 if unit_number == 7:
                     unit_number += 1
                 if unit_number >= 16:
-                    print "we don't support this many disks"
+                    print("we don't support this many disks")
                     return
             if isinstance(dev, vim.vm.device.VirtualSCSIController):
                 controller = dev
@@ -107,7 +107,7 @@ def add_raw_disk(vm, si, device_name, disk_mode, compatibility_mode):
         disk_spec.device.controllerKey = controller.key
         spec.deviceChange = [disk_spec]
         WaitForTasks([vm.ReconfigVM_Task(spec=spec)], si=si)
-        print "Raw disk added to %s" % (vm.config.name)
+        print("Raw disk added to %s" % (vm.config.name))
 
 
 def main():
@@ -141,7 +141,7 @@ def main():
         add_raw_disk(vm, si, args.device_name,
                      args.disk_mode, args.compatibility_mode)
     else:
-        print "VM not found"
+        print("VM not found")
 
 
 # start this thing

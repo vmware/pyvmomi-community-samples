@@ -94,16 +94,16 @@ def main():
     atexit.register(Disconnect, si)
 
     content = si.RetrieveContent()
-    print 'Searching for VM {}'.format(args.vmname)
+    print('Searching for VM {}'.format(args.vmname))
     vm_obj = get_obj(content, [vim.VirtualMachine], args.vmname)
 
     if vm_obj:
         change_disk_mode(si, vm_obj, args.disk_number, args.mode)
-        print 'VM Disk {} successfully ' \
+        print('VM Disk {} successfully ' \
               'changed to mode {}.'.format(args.disk_number,
-                                           args.mode)
+                                           args.mode))
     else:
-        print "VM not found."
+        print("VM not found.")
 
 # start
 if __name__ == "__main__":
