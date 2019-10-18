@@ -99,11 +99,11 @@ def main():
 
     if vm_obj:
         change_disk_mode(si, vm_obj, args.disk_number, args.mode)
-        print('VM Disk {} successfully ' \
-              'changed to mode {}.'.format(args.disk_number,
-                                           args.mode))
+        print('VM Disk {} successfully changed to mode {}.'.format(
+            args.disk_number, args.mode))
     else:
         print("VM not found.")
+
 
 # start
 if __name__ == "__main__":
