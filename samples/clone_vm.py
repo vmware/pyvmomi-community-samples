@@ -15,6 +15,10 @@ import getpass
 from add_nic_to_vm import add_nic
 
 
+SUCCESS = True
+FAILURE = False
+
+
 def get_args():
     """ Get arguments from CLI """
     parser = argparse.ArgumentParser(
@@ -84,8 +88,9 @@ def get_args():
                         required=False,
                         action='store',
                         default=None,
-                        help='Datastorecluster (DRS Storagepod) you wish the VM to end up on \
-                            Will override the datastore-name parameter.')
+                        help='Datastorecluster (DRS Storagepod) you wish '
+                             'the VM to end up on Will override the '
+                             'datastore-name parameter.')
 
     parser.add_argument('--cluster-name',
                         required=False,
@@ -122,24 +127,27 @@ def get_args():
 
 def wait_for_task(task):
     """ wait for a vCenter task to finish """
-    task_done = False
-    while not task_done:
+    while True:
         if task.info.state == 'success':
             return task.info.result
 
         if task.info.state == 'error':
             print("there was an error")
-            task_done = True
+            return FAILURE
 
 
-def get_obj(content, vimtype, name):
+def get_obj(content, vimtype, name, datacenter=None):
     """
     Return an object by name, if name is None the
     first found object is returned
     """
     obj = None
-    container = content.viewManager.CreateContainerView(
-        content.rootFolder, vimtype, True)
+    if datacenter is None:
+        container = content.viewManager.CreateContainerView(
+            content.rootFolder, vimtype, True)
+    else:
+        container = content.viewManager.CreateContainerView(
+            datacenter, vimtype, True)
     for c in container.view:
         if name:
             if c.name == name:
@@ -153,9 +161,9 @@ def get_obj(content, vimtype, name):
 
 
 def clone_vm(
-        content, template, vm_name, si,
-        datacenter_name, vm_folder, datastore_name,
-        cluster_name, resource_pool, power_on, datastorecluster_name):
+        content, template, vm_name,
+        datacenter_name, vm_folder_name, datastore_name,
+        cluster_name, resource_pool_name, power_on, datastorecluster_name):
     """
     Clone a VM from a template/VM, datacenter_name, vm_folder, datastore_name
     cluster_name, resource_pool, and power_on are all optional.
@@ -164,30 +172,34 @@ def clone_vm(
     # if none git the first one
     datacenter = get_obj(content, [vim.Datacenter], datacenter_name)
 
-    if vm_folder:
-        destfolder = get_obj(content, [vim.Folder], vm_folder)
+    if vm_folder_name:
+        destfolder = get_obj(content, [vim.Folder], vm_folder_name,
+                             datacenter=datacenter)
     else:
         destfolder = datacenter.vmFolder
 
-    if datastore_name:
-        datastore = get_obj(content, [vim.Datastore], datastore_name)
-    else:
-        datastore = get_obj(
-            content, [vim.Datastore], template.datastore[0].info.name)
-
     # if None, get the first one
-    cluster = get_obj(content, [vim.ClusterComputeResource], cluster_name)
+    cluster = get_obj(content, [vim.ClusterComputeResource], cluster_name,
+                      datacenter=datacenter)
 
-    if resource_pool:
-        resource_pool = get_obj(content, [vim.ResourcePool], resource_pool)
-    else:
+    resource_pool = None
+    if resource_pool_name:
+        resource_pool = get_obj(content, [vim.ResourcePool],
+                                resource_pool_name,
+                                datacenter=datacenter)
+    elif cluster:  # if cluster is not none, take it from there
         resource_pool = cluster.resourcePool
+
+    if resource_pool is None:
+        print("Not able to find resource pool for cloning VM")
+        return FAILURE
 
     vmconf = vim.vm.ConfigSpec()
 
     if datastorecluster_name:
         podsel = vim.storageDrs.PodSelectionSpec()
-        pod = get_obj(content, [vim.StoragePod], datastorecluster_name)
+        pod = get_obj(content, [vim.StoragePod], datastorecluster_name,
+                      datacenter=datacenter)
         podsel.storagePod = pod
 
         storagespec = vim.storageDrs.StoragePlacementSpec()
@@ -202,10 +214,19 @@ def clone_vm(
                 storageSpec=storagespec)
             rec_action = rec.recommendations[0].action[0]
             real_datastore_name = rec_action.destination.name
-        except:
+        except Exception:
             real_datastore_name = template.datastore[0].info.name
 
-        datastore = get_obj(content, [vim.Datastore], real_datastore_name)
+    elif datastore_name:
+        real_datastore_name = datastore_name
+    else:
+        real_datastore_name = template.datastore[0].info.name
+
+    datastore = get_obj(content, [vim.Datastore], real_datastore_name,
+                        datacenter=datacenter)
+    if datastore is None:
+        print("Not able to find datastore for cloning vm")
+        return FAILURE
 
     # set relospec
     relospec = vim.vm.RelocateSpec()
@@ -218,7 +239,7 @@ def clone_vm(
 
     print("cloning VM...")
     task = template.Clone(folder=destfolder, name=vm_name, spec=clonespec)
-    wait_for_task(task)
+    return wait_for_task(task)
 
 
 def main():
@@ -228,7 +249,6 @@ def main():
     args = get_args()
 
     # connect this thing
-    si = None
     if args.no_ssl:
         si = SmartConnectNoSSL(
             host=args.host,
@@ -245,17 +265,16 @@ def main():
     atexit.register(Disconnect, si)
 
     content = si.RetrieveContent()
-    template = None
 
     template = get_obj(content, [vim.VirtualMachine], args.template)
 
     if template:
-        clone_vm(
-            content, template, args.vm_name, si,
+        status = clone_vm(
+            content, template, args.vm_name,
             args.datacenter_name, args.vm_folder,
             args.datastore_name, args.cluster_name,
             args.resource_pool, args.power_on, args.datastorecluster_name)
-        if args.opaque_network:
+        if status and args.opaque_network:
             vm = get_obj(content, [vim.VirtualMachine], args.vm_name)
             add_nic(si, vm, args.opaque_network)
     else:
