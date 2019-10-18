@@ -40,6 +40,7 @@ def setup_args():
     my_args = parser.parse_args()
     return cli.prompt_for_password(my_args)
 
+
 args = setup_args()
 si = None
 try:

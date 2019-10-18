@@ -87,6 +87,7 @@ def main():
     print("Successfully created the VM folder '%s'" % args.folder)
     return 0
 
+
 # Start program
 if __name__ == "__main__":
     main()

@@ -145,5 +145,6 @@ def main():
         configSpec = vim.vm.ConfigSpec(deviceChange=[deviceSpec])
         WaitForTask(vm.Reconfigure(configSpec))
 
+
 if __name__ == '__main__':
     main()

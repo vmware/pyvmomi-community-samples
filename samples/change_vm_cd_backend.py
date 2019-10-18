@@ -112,16 +112,17 @@ def main():
     atexit.register(Disconnect, si)
 
     content = si.RetrieveContent()
-    print 'Searching for VM {}'.format(args.vmname)
+    print('Searching for VM {}'.format(args.vmname))
     vm_obj = get_obj(content, [vim.VirtualMachine], args.vmname)
 
     if vm_obj:
         update_virtual_cd_backend_by_obj(si, vm_obj, args.unitnumber, args.iso)
         device_change = args.iso if args.iso else 'Client Device'
-        print 'VM CD/DVD {} successfully' \
-              ' state changed to {}'.format(args.unitnumber, device_change)
+        print('VM CD/DVD {} successfully state changed to {}'.format(
+            args.unitnumber, device_change))
     else:
-        print "VM not found"
+        print("VM not found")
+
 
 # start
 if __name__ == "__main__":
