@@ -25,7 +25,7 @@ import sys
 from pyVmomi import vim, vmodl
 from pyVim.connect import SmartConnectNoSSL, Disconnect
 from pyVim.task import WaitForTask
-from tools import cli
+from .tools import cli
 
 __author__ = 'prziborowski'
 
@@ -84,9 +84,9 @@ def main():
     options = vmodl.query.PropertyCollector.RetrieveOptions()
     result = pc.RetrievePropertiesEx([filter_spec], options)
     vms = filter_results(result, args.value)
-    print("VMs with %s = %s" % (args.property, args.value))
+    print(("VMs with %s = %s" % (args.property, args.value)))
     for vm in vms:
-        print(vm.name)
+        print((vm.name))
 
     Disconnect(si)
 

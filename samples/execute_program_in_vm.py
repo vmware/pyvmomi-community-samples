@@ -24,9 +24,9 @@ python execute_program_in_vm.py
     the content of the network configuration to /tmp/plop
 
 """
-from __future__ import with_statement
+
 import atexit
-from tools import cli
+from .tools import cli
 from pyVim import connect
 from pyVmomi import vim, vmodl
 
@@ -121,32 +121,32 @@ def main():
             res = pm.StartProgramInGuest(vm, creds, ps)
 
             if res > 0:
-                print "Program submitted, PID is %d" % res
+                print(("Program submitted, PID is %d" % res))
                 pid_exitcode = pm.ListProcessesInGuest(vm, creds,
                                                        [res]).pop().exitCode
                 # If its not a numeric result code, it says None on submit
                 while (re.match('[^0-9]+', str(pid_exitcode))):
-                    print "Program running, PID is %d" % res
+                    print(("Program running, PID is %d" % res))
                     time.sleep(5)
                     pid_exitcode = pm.ListProcessesInGuest(vm, creds,
                                                            [res]).pop().\
                         exitCode
                     if (pid_exitcode == 0):
-                        print "Program %d completed with success" % res
+                        print(("Program %d completed with success" % res))
                         break
                     # Look for non-zero code to fail
                     elif (re.match('[1-9]+', str(pid_exitcode))):
-                        print "ERROR: Program %d completed with Failute" % res
-                        print "  tip: Try running this on guest %r to debug" \
-                            % summary.guest.ipAddress
-                        print "ERROR: More info on process"
-                        print pm.ListProcessesInGuest(vm, creds, [res])
+                        print(("ERROR: Program %d completed with Failute" % res))
+                        print(("  tip: Try running this on guest %r to debug" \
+                            % summary.guest.ipAddress))
+                        print("ERROR: More info on process")
+                        print((pm.ListProcessesInGuest(vm, creds, [res])))
                         break
 
-        except IOError, e:
-            print e
+        except IOError as e:
+            print(e)
     except vmodl.MethodFault as error:
-        print "Caught vmodl fault : " + error.msg
+        print(("Caught vmodl fault : " + error.msg))
         return -1
 
     return 0

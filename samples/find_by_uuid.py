@@ -75,7 +75,7 @@ search_index = si.content.searchIndex
 vm = search_index.FindByUuid(None, args.uuid, True, True)
 
 if vm is None:
-    print("Could not find virtual machine '{0}'".format(args.uuid))
+    print(("Could not find virtual machine '{0}'".format(args.uuid)))
     exit(1)
 
 print("Found Virtual Machine")
@@ -89,5 +89,5 @@ details = {'name': vm.summary.config.name,
            'last booted timestamp': vm.runtime.bootTime,
            }
 
-for name, value in details.items():
-    print("{0:{width}{base}}: {1}".format(name, value, width=25, base='s'))
+for name, value in list(details.items()):
+    print(("{0:{width}{base}}: {1}".format(name, value, width=25, base='s')))

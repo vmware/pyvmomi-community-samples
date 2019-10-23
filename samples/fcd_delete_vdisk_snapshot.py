@@ -17,7 +17,7 @@ Python program for deleting a snapshot of a first class disk (fcd)
 
 import atexit
 
-from tools import cli, tasks, disk
+from .tools import cli, tasks, disk
 from pyVim import connect
 from pyVmomi import vmodl
 from pyVmomi import vim
@@ -108,7 +108,7 @@ def main():
         tasks.wait_for_tasks(service_instance, [task])
 
     except vmodl.MethodFault as error:
-        print("Caught vmodl fault : " + error.msg)
+        print(("Caught vmodl fault : " + error.msg))
         return -1
 
     return 0

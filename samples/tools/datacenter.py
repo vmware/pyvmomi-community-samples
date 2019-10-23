@@ -55,7 +55,7 @@ def create_datacenter(dcname=None, service_instance=None, folder=None):
 if __name__ == "__main__":
     import atexit
     from pyVim import connect
-    import cli
+    from . import cli
     PARSER = cli.build_arg_parser()
     PARSER.add_argument("-n", "--name",
                         required=True,

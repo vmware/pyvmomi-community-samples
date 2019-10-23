@@ -10,14 +10,14 @@
  Script to quickly get all the VMs with a set of common properties.
 
 """
-from __future__ import print_function
+
 import atexit
 from time import clock
 
 from pyVim import connect
 from pyVmomi import vim
-from tools import cli
-from tools import pchelper
+from .tools import cli
+from .tools import pchelper
 
 START = clock()
 
@@ -30,7 +30,7 @@ def endit():
     """
     end = clock()
     total = end - START
-    print("Completion time: {0} seconds.".format(total))
+    print(("Completion time: {0} seconds.".format(total)))
 
 # List of properties.
 # See: http://goo.gl/fjTEpW
@@ -63,17 +63,17 @@ vm_data = pchelper.collect_properties(service_instance, view_ref=view,
                                       path_set=vm_properties,
                                       include_mors=True)
 for vm in vm_data:
-    print("-" * 70)
-    print("Name:                    {0}".format(vm["name"]))
-    print("BIOS UUID:               {0}".format(vm["config.uuid"]))
-    print("CPUs:                    {0}".format(vm["config.hardware.numCPU"]))
-    print("MemoryMB:                {0}".format(
-        vm["config.hardware.memoryMB"]))
-    print("Guest PowerState:        {0}".format(vm["guest.guestState"]))
-    print("Guest Full Name:         {0}".format(vm["config.guestFullName"]))
-    print("Guest Container Type:    {0}".format(vm["config.guestId"]))
-    print("Container Version:       {0}".format(vm["config.version"]))
+    print(("-" * 70))
+    print(("Name:                    {0}".format(vm["name"])))
+    print(("BIOS UUID:               {0}".format(vm["config.uuid"])))
+    print(("CPUs:                    {0}".format(vm["config.hardware.numCPU"])))
+    print(("MemoryMB:                {0}".format(
+        vm["config.hardware.memoryMB"])))
+    print(("Guest PowerState:        {0}".format(vm["guest.guestState"])))
+    print(("Guest Full Name:         {0}".format(vm["config.guestFullName"])))
+    print(("Guest Container Type:    {0}".format(vm["config.guestId"])))
+    print(("Container Version:       {0}".format(vm["config.version"])))
 
 
 print("")
-print("Found {0} VirtualMachines.".format(len(vm_data)))
+print(("Found {0} VirtualMachines.".format(len(vm_data))))

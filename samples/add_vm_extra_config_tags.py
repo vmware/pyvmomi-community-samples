@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from __future__ import print_function
+
 
 import atexit
 
@@ -20,8 +20,8 @@ import requests
 
 from pyVim import connect
 from pyVmomi import vim
-from tools import cli
-from tools import tasks
+from .tools import cli
+from .tools import tasks
 
 requests.packages.urllib3.disable_warnings()
 
@@ -58,7 +58,7 @@ vm = si.content.searchIndex.FindByUuid(None, args.uuid, True)
 if not vm:
     raise SystemExit("Unable to locate VirtualMachine.")
 
-print("Found: {0}".format(vm.name))
+print(("Found: {0}".format(vm.name)))
 
 spec = vim.vm.ConfigSpec()
 opt = vim.option.OptionValue()
@@ -75,7 +75,7 @@ options_values = {
                    " and they work"
 }
 
-for k, v in options_values.iteritems():
+for k, v in list(options_values.items()):
     opt.key = k
     opt.value = v
     spec.extraConfig.append(opt)
@@ -87,5 +87,5 @@ print("Done setting values.")
 print("time to get them")
 keys_and_vals = vm.config.extraConfig
 for opts in keys_and_vals:
-    print("key: {0} => {1}".format(opts.key, opts.value))
+    print(("key: {0} => {1}".format(opts.key, opts.value)))
 print("done.")

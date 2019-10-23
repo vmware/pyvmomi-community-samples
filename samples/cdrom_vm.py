@@ -14,7 +14,7 @@ import sys
 from pyVmomi import vim
 from pyVim.connect import SmartConnect
 from pyVim.task import WaitForTask
-from tools import cli
+from .tools import cli
 
 __author__ = 'prziborowski'
 
@@ -110,9 +110,8 @@ def main():
         WaitForTask(vm.Reconfigure(configSpec))
 
         cdroms = find_device(vm, vim.vm.device.VirtualCdrom)
-        cdrom = filter(lambda x: type(x.backing) == type(backing) and
-                       x.backing.deviceName == cdrom_lun.deviceName,
-                       cdroms)[0]
+        cdrom = [x for x in cdroms if type(x.backing) == type(backing) and
+                       x.backing.deviceName == cdrom_lun.deviceName][0]
     else:
         print('Skipping physical CD-Rom test as no device present.')
 
@@ -133,8 +132,8 @@ def main():
         WaitForTask(vm.Reconfigure(configSpec))
 
         cdroms = find_device(vm, vim.vm.device.VirtualCdrom)
-        cdrom = filter(lambda x: type(x.backing) == type(backing) and
-                       x.backing.fileName == iso, cdroms)[0]
+        cdrom = [x for x in cdroms if type(x.backing) == type(backing) and
+                       x.backing.fileName == iso][0]
     else:
         print('Skipping ISO test as no iso provided.')
 

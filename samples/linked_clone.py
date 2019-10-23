@@ -14,8 +14,8 @@ import ssl
 from pyVmomi import vim
 from pyVim.connect import SmartConnect, Disconnect
 
-from tools import cli
-from tools import tasks
+from .tools import cli
+from .tools import tasks
 
 
 def get_args():
@@ -72,7 +72,7 @@ def _clone_vm(si, template, vm_name, vm_folder, location):
         snapshot=template.snapshot.rootSnapshotList[0].snapshot)
     task = template.Clone(name=vm_name, folder=vm_folder, spec=clone_spec)
     tasks.wait_for_tasks(si, [task])
-    print "Successfully cloned and created the VM '{}'".format(vm_name)
+    print(("Successfully cloned and created the VM '{}'".format(vm_name)))
 
 
 def _get_relocation_spec(host, resource_pool):
@@ -89,7 +89,7 @@ def _take_template_snapshot(si, vm):
                                       memory=False,
                                       quiesce=False)
         tasks.wait_for_tasks(si, [task])
-        print "Successfully taken snapshot of '{}'".format(vm.name)
+        print(("Successfully taken snapshot of '{}'".format(vm.name)))
 
 
 def main():
@@ -115,7 +115,7 @@ def main():
                           user=args.user,
                           pwd=args.password)
     atexit.register(Disconnect, si)
-    print "Connected to vCenter Server"
+    print("Connected to vCenter Server")
 
     content = si.RetrieveContent()
 

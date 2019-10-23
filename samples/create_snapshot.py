@@ -12,7 +12,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-from __future__ import print_function
+
 
 import atexit
 
@@ -20,7 +20,7 @@ import requests
 
 from pyVim.connect import SmartConnect, SmartConnectNoSSL, Disconnect
 
-from tools import cli
+from .tools import cli
 
 requests.packages.urllib3.disable_warnings()
 
@@ -84,7 +84,7 @@ snap_info = vm.snapshot
 
 tree = snap_info.rootSnapshotList
 while tree[0].childSnapshotList is not None:
-    print("Snap: {0} => {1}".format(tree[0].name, tree[0].description))
+    print(("Snap: {0} => {1}".format(tree[0].name, tree[0].description)))
     if len(tree[0].childSnapshotList) < 1:
         break
     tree = tree[0].childSnapshotList

@@ -14,7 +14,7 @@
 """
 
 from pyVmomi import vim
-from tools import cli
+from .tools import cli
 from pyVim.connect import SmartConnectNoSSL, Disconnect
 import atexit
 import sys
@@ -94,8 +94,8 @@ def main():
                         list(counterInfo.values()).index(val.id.counterId)]
                 # python2
                 else:
-                    counterinfo_k_to_v = counterInfo.keys()[
-                        counterInfo.values().index(val.id.counterId)]
+                    counterinfo_k_to_v = list(counterInfo.keys())[
+                        list(counterInfo.values()).index(val.id.counterId)]
                 if val.id.instance == '':
                     output += "%s: %s\n" % (
                         counterinfo_k_to_v, str(val.value[0]))

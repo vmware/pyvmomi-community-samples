@@ -13,10 +13,10 @@
 
 import atexit
 import requests
-from tools import cli
+from .tools import cli
 from pyVmomi import vim
 from pyVim.connect import SmartConnect, Disconnect
-from tools import tasks
+from .tools import tasks
 
 
 # disable  urllib3 warnings
@@ -108,13 +108,13 @@ def main():
     atexit.register(Disconnect, si)
 
     content = si.RetrieveContent()
-    print('Searching for VM {}'.format(args.vmname))
+    print(('Searching for VM {}'.format(args.vmname)))
     vm_obj = get_obj(content, [vim.VirtualMachine], args.vmname)
 
     if vm_obj:
         update_virtual_nic_state(si, vm_obj, args.unitnumber, args.state)
-        print('VM NIC {} successfully state changed to {}'.format(
-            args.unitnumber, args.state))
+        print(('VM NIC {} successfully state changed to {}'.format(
+            args.unitnumber, args.state)))
     else:
         print("VM not found")
 

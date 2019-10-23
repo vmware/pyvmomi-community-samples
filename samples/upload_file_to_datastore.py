@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from __future__ import print_function  # This import is for python2.*
+  # This import is for python2.*
 import atexit
 import requests
 import ssl
@@ -9,7 +9,7 @@ from pyVim import connect
 from pyVmomi import vim
 from pyVmomi import vmodl
 
-from tools import cli
+from .tools import cli
 
 
 def get_args():
@@ -131,7 +131,7 @@ def main():
                                    verify=verify_cert)
 
     except vmodl.MethodFault as e:
-        print("Caught vmodl fault : " + e.msg)
+        print(("Caught vmodl fault : " + e.msg))
         raise SystemExit(-1)
 
     raise SystemExit(0)

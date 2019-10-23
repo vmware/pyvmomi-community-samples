@@ -14,8 +14,8 @@ import atexit
 
 from pyVim import connect
 
-from tools import cli
-from tools import tasks
+from .tools import cli
+from .tools import tasks
 
 
 def setup_args():
@@ -71,8 +71,8 @@ elif ARGS.ip:
 if VM is None:
     raise SystemExit("Unable to locate VirtualMachine.")
 
-print("Found: {0}".format(VM.name))
-print("The current powerState is: {0}".format(VM.runtime.powerState))
+print(("Found: {0}".format(VM.name)))
+print(("The current powerState is: {0}".format(VM.runtime.powerState)))
 TASK = VM.ResetVM_Task()
 tasks.wait_for_tasks(SI, [TASK])
 print("its done.")

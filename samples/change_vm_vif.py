@@ -12,8 +12,8 @@ Example script to change the network of the Virtual Machine NIC
 
 import atexit
 
-from tools import cli
-from tools import tasks
+from .tools import cli
+from .tools import tasks
 from pyVim import connect
 from pyVmomi import vim, vmodl
 
@@ -118,7 +118,7 @@ def main():
         print("Successfully changed network")
 
     except vmodl.MethodFault as error:
-        print("Caught vmodl fault : {}".format(error.msg))
+        print(("Caught vmodl fault : {}".format(error.msg)))
         return -1
 
     return 0

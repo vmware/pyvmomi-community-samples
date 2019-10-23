@@ -26,12 +26,12 @@ import time
 
 from pyVim.connect import SmartConnect, Disconnect
 from pyVmomi import vim
-from tools import cli
+from .tools import cli
 
 
 def get_vm(content, name):
     try:
-        name = unicode(name, 'utf-8')
+        name = str(name, 'utf-8')
     except TypeError:
         pass
 
@@ -75,8 +75,8 @@ def main():
                           pwd=args.password,
                           port=int(args.port))
     except Exception as e:
-        print 'Could not connect to vCenter host'
-        print repr(e)
+        print('Could not connect to vCenter host')
+        print((repr(e)))
         sys.exit(1)
 
     atexit.register(Disconnect, si)
@@ -103,14 +103,14 @@ def main():
                                              vc_cert)
     vc_fingerprint = vc_pem.digest('sha1')
 
-    print "Open the following URL in your browser to access the " \
+    print("Open the following URL in your browser to access the " \
           "Remote Console.\n" \
           "You have 60 seconds to open the URL, or the session" \
-          "will be terminated.\n"
-    print "http://" + args.host + ":" + console_port + "/console/?vmId=" \
+          "will be terminated.\n")
+    print(("http://" + args.host + ":" + console_port + "/console/?vmId=" \
           + str(vm_moid) + "&vmName=" + args.name + "&host=" + vcenter_fqdn \
-          + "&sessionTicket=" + session + "&thumbprint=" + vc_fingerprint
-    print "Waiting for 60 seconds, then exit"
+          + "&sessionTicket=" + session + "&thumbprint=" + vc_fingerprint))
+    print("Waiting for 60 seconds, then exit")
     time.sleep(60)
 
 # Start program

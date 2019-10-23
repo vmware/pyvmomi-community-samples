@@ -77,10 +77,10 @@ si = connect.SmartConnect(host=args.host,
                           pwd=password,
                           port=int(args.port))
 
-print "logged in to %s" % args.host
+print(("logged in to %s" % args.host))
 
-print "Setting vCenter Server MOTD to \"%s\"" % args.message
+print(("Setting vCenter Server MOTD to \"%s\"" % args.message))
 si.content.sessionManager.UpdateServiceMessage(message=args.message)
 
-print "logout"
+print("logout")
 si.content.sessionManager.Logout()

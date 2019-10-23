@@ -21,7 +21,7 @@ import ssl
 
 from pyVmomi import vim
 from pyVim import connect
-from tools import tasks
+from .tools import tasks
 
 
 def get_args():
@@ -89,12 +89,12 @@ def main():
         if host.name == args.esx_host:
             esx = host
 
-    print "Proceeding to execute operation 'Reconfigure for HA' in host %s" % \
-          esx.name
+    print(("Proceeding to execute operation 'Reconfigure for HA' in host %s" % \
+          esx.name))
     reconf_ha = esx.ReconfigureHostForDAS_Task()
     task = reconf_ha
     tasks.wait_for_tasks(service_instance, [task])
-    print "Operation complete"
+    print("Operation complete")
 
     return 0
 

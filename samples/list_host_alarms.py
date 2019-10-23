@@ -7,14 +7,14 @@ Blog: http://www.errr-online.com/
 This code has been released under the terms of the Apache-2.0 license
 http://opensource.org/licenses/Apache-2.0
 """
-from __future__ import print_function
+
 
 import atexit
 
 from pyVim.connect import SmartConnect, Disconnect
 
-from tools import alarm
-from tools import cli
+from .tools import alarm
+from .tools import cli
 
 
 PARSER = cli.build_arg_parser()
@@ -42,8 +42,8 @@ if INDEX:
     # prompt the user for the entity info needed to reset an alarm from red
     # to green
     try:
-        alarm_mor = raw_input("Enter the alarm_moref from above to reset the "
-                              "alarm to green: ")
+        alarm_mor = eval(input("Enter the alarm_moref from above to reset the "
+                              "alarm to green: "))
     except KeyboardInterrupt:
         # this is useful in case the user decides to quit and hits control-c
         print()
@@ -53,6 +53,6 @@ if INDEX:
                              entity_type='HostSystem',
                              alarm_moref=alarm_mor.strip(),
                              service_instance=SI):
-            print("Successfully reset alarm {0} to green.".format(alarm_mor))
+            print(("Successfully reset alarm {0} to green.".format(alarm_mor)))
 else:
     print("Unable to create a SearchIndex.")

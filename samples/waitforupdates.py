@@ -21,7 +21,7 @@ or more types
 """
 
 
-from tools import serviceutil
+from .tools import serviceutil
 from pyVim.connect import SmartConnect, Disconnect
 from pyVmomi import vim, vmodl
 
@@ -75,8 +75,8 @@ or more if specified.
 
     if args.iterations is not None and args.iterations < 1:
         parser.print_help()
-        print >>sys.stderr, '\nInvalid argument: Iteration count must be' \
-                            ' omitted or greater than 0'
+        print('\nInvalid argument: Iteration count must be' \
+                            ' omitted or greater than 0', file=sys.stderr)
         sys.exit(-1)
 
     return args
@@ -162,13 +162,13 @@ def make_property_collector(pc, from_node, props):
         pcFilter = pc.CreateFilter(filterSpec, True)
         atexit.register(pcFilter.Destroy)
         return pcFilter
-    except vmodl.MethodFault, e:
+    except vmodl.MethodFault as e:
         if e._wsdlName == 'InvalidProperty':
-            print >> sys.stderr, "InvalidProperty fault while creating " \
-                                 "PropertyCollector filter : %s" % e.name
+            print("InvalidProperty fault while creating " \
+                                 "PropertyCollector filter : %s" % e.name, file=sys.stderr)
         else:
-            print >> sys.stderr, "Problem creating PropertyCollector " \
-                                 "filter : %s" % str(e.faultMessage)
+            print("Problem creating PropertyCollector " \
+                                 "filter : %s" % str(e.faultMessage), file=sys.stderr)
         raise
 
 
@@ -188,7 +188,7 @@ def monitor_property_changes(si, propspec, iterations=None):
     while True:
         if iterations is not None:
             if iterations <= 0:
-                print 'Iteration limit reached, monitoring stopped'
+                print('Iteration limit reached, monitoring stopped')
                 break
 
         result = pc.WaitForUpdatesEx(version, waitopts)
@@ -227,12 +227,12 @@ def monitor_property_changes(si, propspec, iterations=None):
                         val = getattr(change, 'val', None)
                         changes.append((name, val,))
 
-                    print "== %s ==" % moref
-                    print '\n'.join(['%s: %s' % (n, v,) for n, v in changes])
-                    print '\n'
+                    print("== %s ==" % moref)
+                    print('\n'.join(['%s: %s' % (n, v,) for n, v in changes]))
+                    print('\n')
                 elif kind == 'leave':
-                    print "== %s ==" % moref
-                    print '(removed)\n'
+                    print("== %s ==" % moref)
+                    print('(removed)\n')
 
         version = result.version
 
@@ -263,22 +263,22 @@ def main():
                           port=int(args.port))
 
         if not si:
-            print >>sys.stderr, "Could not connect to the specified host ' \
-                                'using specified username and password"
+            print("Could not connect to the specified host ' \
+                                'using specified username and password", file=sys.stderr)
             raise
 
         atexit.register(Disconnect, si)
 
         propspec = parse_propspec(args.propspec)
 
-        print "Monitoring property changes.  Press ^C to exit"
+        print("Monitoring property changes.  Press ^C to exit")
         monitor_property_changes(si, propspec, args.iterations)
 
-    except vmodl.MethodFault, e:
-        print >>sys.stderr, "Caught vmodl fault :\n%s" % str(e)
+    except vmodl.MethodFault as e:
+        print("Caught vmodl fault :\n%s" % str(e), file=sys.stderr)
         raise
-    except Exception, e:
-        print >>sys.stderr, "Caught exception : " + str(e)
+    except Exception as e:
+        print("Caught exception : " + str(e), file=sys.stderr)
         raise
 
 
@@ -286,11 +286,11 @@ if __name__ == '__main__':
     try:
         main()
         sys.exit(0)
-    except Exception, e:
-        print >>sys.stderr, "Caught exception : " + str(e)
+    except Exception as e:
+        print("Caught exception : " + str(e), file=sys.stderr)
         raise
-    except KeyboardInterrupt, e:
-        print >>sys.stderr, "Exiting"
+    except KeyboardInterrupt as e:
+        print("Exiting", file=sys.stderr)
         sys.exit(0)
 
 

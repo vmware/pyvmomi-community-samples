@@ -121,7 +121,7 @@ def add_disk(vm, si, disk_size, disk_type):
     dev_changes.append(disk_spec)
     spec.deviceChange = dev_changes
     vm.ReconfigVM_Task(spec=spec)
-    print("%sGB disk added to %s" % (disk_size, vm.config.name))
+    print(("%sGB disk added to %s" % (disk_size, vm.config.name)))
 
 
 def main():

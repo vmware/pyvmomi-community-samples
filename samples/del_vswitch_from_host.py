@@ -7,7 +7,7 @@ Note: Example code For testing purposes only
 This code has been released under the terms of the Apache-2.0 license
 http://opensource.org/licenses/Apache-2.0
 """
-from __future__ import print_function
+
 from pyVim.connect import SmartConnect, Disconnect
 from pyVmomi import vim
 import atexit

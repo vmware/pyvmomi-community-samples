@@ -104,7 +104,7 @@ while entity_stack:
         entity_stack.extend(entity.childEntity)
 
 if obj is None:
-    print "A object named %s could not be found" % args.name
+    print(("A object named %s could not be found" % args.name))
     exit()
 
 if args.new_name:
@@ -113,11 +113,11 @@ else:
     # just because we want the script to do *something*
     new_name = args.name + "0"
 
-print
-print "name        : %s" % obj.name
-print
-print "    renaming from %s to %s" % (args.name, new_name)
-print
+print()
+print(("name        : %s" % obj.name))
+print()
+print(("    renaming from %s to %s" % (args.name, new_name)))
+print()
 
 # rename creates a task...
 task = obj.Rename(new_name)
@@ -126,7 +126,7 @@ task = obj.Rename(new_name)
 # Check this out... it's not super efficient but here's how you could
 # have a script that looped waiting on a task but still had the
 # chance to periodically check other things or do other actions...
-print "rename task state:"
+print("rename task state:")
 count = 0
 state = task.info.state
 while task.info.state != vim.TaskInfo.State.success:
@@ -134,6 +134,6 @@ while task.info.state != vim.TaskInfo.State.success:
     sys.stdout.flush()
     count += 1
 
-print
-print "rename finished"
-print
+print()
+print("rename finished")
+print()

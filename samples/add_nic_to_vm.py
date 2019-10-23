@@ -11,7 +11,7 @@ http://opensource.org/licenses/Apache-2.0
 """
 from pyVmomi import vim
 from pyVmomi import vmodl
-from tools import tasks
+from .tools import tasks
 from pyVim.connect import SmartConnect, SmartConnectNoSSL, Disconnect
 import atexit
 import argparse

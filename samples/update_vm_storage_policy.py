@@ -21,11 +21,11 @@ __author__ = 'William Lam'
 
 # retrieve SPBM API endpoint
 def GetPbmConnection(vpxdStub):
-    import Cookie
+    import http.cookies
     import pyVmomi
     sessionCookie = vpxdStub.cookie.split('"')[1]
     httpContext = VmomiSupport.GetHttpContext()
-    cookie = Cookie.SimpleCookie()
+    cookie = http.cookies.SimpleCookie()
     cookie["vmware_soap_session"] = sessionCookie
     httpContext["cookies"] = cookie
     VmomiSupport.GetRequestContext()["vcSessionCookie"] = sessionCookie
@@ -65,7 +65,7 @@ def _dictToCapability(d):
                 )
             ]
         )
-        for k, v in d.iteritems()
+        for k, v in list(d.items())
     ]
 
 
@@ -156,11 +156,11 @@ def main():
         # Convert string to dict
         vmPolicyRules = ast.literal_eval(args.policy_rule)
 
-        print("Updating VM Storage Policy %s with %s ..." % (
-            args.policy_name, args.policy_rule))
+        print(("Updating VM Storage Policy %s with %s ..." % (
+            args.policy_name, args.policy_rule)))
         UpdateProfile(pm, vmProfile, vmPolicyRules)
     else:
-        print("Unable to find VM Storage Policy %s " % args.policy_name)
+        print(("Unable to find VM Storage Policy %s " % args.policy_name))
 
 
 # Start program

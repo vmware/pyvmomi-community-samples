@@ -11,7 +11,7 @@ import atexit
 
 from pyVim import connect
 
-from tools import cli
+from .tools import cli
 
 
 def setup_args():
@@ -44,8 +44,8 @@ vm = si.content.searchIndex.FindByUuid(None, args.uuid, True, True)
 if not vm:
     raise SystemExit("Unable to locate VirtualMachine.")
 
-print("Found: {0}".format(vm.name))
-print("The current powerState is: {0}".format(vm.runtime.powerState))
+print(("Found: {0}".format(vm.name)))
+print(("The current powerState is: {0}".format(vm.runtime.powerState)))
 # This does not guarantee a reboot.
 # It issues a command to the guest
 # operating system asking it to perform a reboot.

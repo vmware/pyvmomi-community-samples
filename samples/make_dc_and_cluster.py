@@ -11,9 +11,9 @@ import atexit
 
 from pyVim.connect import SmartConnect, Disconnect
 
-from tools import cluster
-from tools import datacenter
-from tools import cli
+from .tools import cluster
+from .tools import datacenter
+from .tools import cli
 
 
 PARSER = cli.build_arg_parser()

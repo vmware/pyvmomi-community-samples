@@ -13,7 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from __future__ import print_function
+
 
 import atexit
 import argparse
@@ -224,11 +224,11 @@ elif args.ip:
     vm = search_index.FindByIp(None, args.ip, True)
 
 if not vm:
-    print(u"Could not find a virtual machine to examine.")
+    print("Could not find a virtual machine to examine.")
     exit(1)
 
-print(u"Found Virtual Machine")
-print(u"=====================")
+print("Found Virtual Machine")
+print("=====================")
 details = {'name': vm.summary.config.name,
            'instance UUID': vm.summary.config.instanceUuid,
            'bios UUID': vm.summary.config.uuid,
@@ -238,11 +238,11 @@ details = {'name': vm.summary.config.name,
            'host name': vm.runtime.host.name,
            'last booted timestamp': vm.runtime.bootTime}
 
-for name, value in details.items():
-    print(u"  {0:{width}{base}}: {1}".format(name, value, width=25, base='s'))
+for name, value in list(details.items()):
+    print(("  {0:{width}{base}}: {1}".format(name, value, width=25, base='s')))
 
-print(u"  Devices:")
-print(u"  --------")
+print("  Devices:")
+print("  --------")
 for device in vm.config.hardware.device:
     # diving into each device, we pull out a few interesting bits
     dev_details = {'key': device.key,
@@ -250,11 +250,11 @@ for device in vm.config.hardware.device:
                    'device type': type(device).__name__,
                    'backing type': type(device.backing).__name__}
 
-    print(u"  label: {0}".format(device.deviceInfo.label))
-    print(u"  ------------------")
-    for name, value in dev_details.items():
-        print(u"    {0:{width}{base}}: {1}".format(name, value,
-                                                   width=15, base='s'))
+    print(("  label: {0}".format(device.deviceInfo.label)))
+    print("  ------------------")
+    for name, value in list(dev_details.items()):
+        print(("    {0:{width}{base}}: {1}".format(name, value,
+                                                   width=15, base='s')))
 
     if device.backing is None:
         continue
@@ -266,25 +266,25 @@ for device in vm.config.hardware.device:
     if hasattr(device.backing, 'fileName'):
             datastore = device.backing.datastore
             if datastore:
-                print(u"    datastore")
-                print(u"        name: {0}".format(datastore.name))
+                print("    datastore")
+                print(("        name: {0}".format(datastore.name)))
                 # there may be multiple hosts, the host property
                 # is a host mount info type not a host system type
                 # but we can navigate to the host system from there
                 for host_mount in datastore.host:
                     host_system = host_mount.key
-                    print(u"        host: {0}".format(host_system.name))
-                print(u"        summary")
+                    print(("        host: {0}".format(host_system.name)))
+                print("        summary")
                 summary = {'capacity': datastore.summary.capacity,
                            'freeSpace': datastore.summary.freeSpace,
                            'file system': datastore.summary.type,
                            'url': datastore.summary.url}
-                for key, val in summary.items():
-                    print(u"            {0}: {1}".format(key, val))
-            print(u"    fileName: {0}".format(device.backing.fileName))
-            print(u"    device ID: {0}".format(device.backing.backingObjectId))
+                for key, val in list(summary.items()):
+                    print(("            {0}: {1}".format(key, val)))
+            print(("    fileName: {0}".format(device.backing.fileName)))
+            print(("    device ID: {0}".format(device.backing.backingObjectId)))
 
-    print(u"  ------------------")
+    print("  ------------------")
 
-print(u"=====================")
+print("=====================")
 exit()

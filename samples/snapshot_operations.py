@@ -124,11 +124,11 @@ def main():
     vm = get_obj(content, [vim.VirtualMachine], vm_name)
 
     if not vm:
-        print("Virtual Machine %s doesn't exists" % vm_name)
+        print(("Virtual Machine %s doesn't exists" % vm_name))
         sys.exit()
 
     if operation != 'create' and vm.snapshot is None:
-        print("Virtual Machine %s doesn't have any snapshots" % vm.name)
+        print(("Virtual Machine %s doesn't have any snapshots" % vm.name))
         sys.exit()
 
     if operation == 'create':
@@ -137,8 +137,8 @@ def main():
         dumpMemory = False
         quiesce = False
 
-        print("Creating snapshot %s for virtual machine %s" % (
-                                        snapshot_name, vm.name))
+        print(("Creating snapshot %s for virtual machine %s" % (
+                                        snapshot_name, vm.name)))
         WaitForTask(vm.CreateSnapshot(
             snapshot_name, description, dumpMemory, quiesce))
 
@@ -150,17 +150,17 @@ def main():
         if len(snap_obj) == 1:
             snap_obj = snap_obj[0].snapshot
             if operation == 'remove':
-                print("Removing snapshot %s" % snapshot_name)
+                print(("Removing snapshot %s" % snapshot_name))
                 WaitForTask(snap_obj.RemoveSnapshot_Task(True))
             else:
-                print("Reverting to snapshot %s" % snapshot_name)
+                print(("Reverting to snapshot %s" % snapshot_name))
                 WaitForTask(snap_obj.RevertToSnapshot_Task())
         else:
-            print("No snapshots found with name: %s on VM: %s" % (
-                                                snapshot_name, vm.name))
+            print(("No snapshots found with name: %s on VM: %s" % (
+                                                snapshot_name, vm.name)))
 
     elif operation == 'list_all':
-        print("Display list of snapshots on virtual machine %s" % vm.name)
+        print(("Display list of snapshots on virtual machine %s" % vm.name))
         snapshot_paths = list_snapshots_recursively(
                             vm.snapshot.rootSnapshotList)
         for snapshot in snapshot_paths:
@@ -176,11 +176,11 @@ def main():
                                 current_snap_obj[0].description,
                                 current_snap_obj[0].createTime,
                                 current_snap_obj[0].state)
-        print("Virtual machine %s current snapshot is:" % vm.name)
+        print(("Virtual machine %s current snapshot is:" % vm.name))
         print(current_snapshot)
 
     elif operation == 'remove_all':
-        print("Removing all snapshots for virtual machine %s" % vm.name)
+        print(("Removing all snapshots for virtual machine %s" % vm.name))
         WaitForTask(vm.RemoveAllSnapshots())
 
     else:

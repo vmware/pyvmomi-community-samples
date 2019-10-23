@@ -16,7 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import print_function
+
 from pyVim.connect import SmartConnect, Disconnect
 from pyVmomi import vim
 import atexit
@@ -49,14 +49,14 @@ def GetHostsPortgroups(hosts):
     for host in hosts:
         pgs = host.config.network.portgroup
         hostPgDict[host] = pgs
-        print("\tHost {} done.".format(host.name))
+        print(("\tHost {} done.".format(host.name)))
     print("\tPortgroup collection complete.")
     return hostPgDict
 
 
 def PrintVmInfo(vm):
     vmPowerState = vm.runtime.powerState
-    print("Found VM:", vm.name + "(" + vmPowerState + ")")
+    print(("Found VM:", vm.name + "(" + vmPowerState + ")"))
     GetVMNics(vm)
 
 
@@ -99,16 +99,16 @@ def GetVMNics(vm):
                 vlanId = 'NA'
             if vSwitch is None:
                 vSwitch = 'NA'
-            print('\t' + dev.deviceInfo.label + '->' + dev.macAddress +
+            print(('\t' + dev.deviceInfo.label + '->' + dev.macAddress +
                   ' @ ' + vSwitch + '->' + portGroup +
-                  ' (VLAN ' + vlanId + ')')
+                  ' (VLAN ' + vlanId + ')'))
 
 
 def GetArgs():
     if len(sys.argv) != 4:
-        host = raw_input("vCenter IP: ")
-        user = raw_input("Username: ")
-        password = raw_input("Password: ")
+        host = eval(input("vCenter IP: "))
+        user = eval(input("Username: "))
+        password = eval(input("Password: "))
     else:
         host, user, password = sys.argv[1:]
     return host, user, password

@@ -14,7 +14,7 @@ import atexit
 from pyVim.connect import Disconnect, SmartConnectNoSSL, SmartConnect
 from pyVmomi import vim, vmodl
 
-from tools import cli
+from .tools import cli
 
 
 def get_args():
@@ -52,7 +52,7 @@ def get_object(content, vimtype, name, disp=False):
                                                         True)
     for c in container.view:
         if disp:
-            print("c.name:" + str(c.name))
+            print(("c.name:" + str(c.name)))
         if c.name == name:
             obj = c
             break
@@ -69,14 +69,14 @@ def collect_template_disks(vm):
     for device in vm.config.hardware.device:
         if type(device).__name__ == "vim.vm.device.VirtualDisk":
             datastore = device.backing.datastore
-            print("device.deviceInfo.summary:" + device.deviceInfo.summary)
-            print("datastore.summary.type:" + datastore.summary.type)
+            print(("device.deviceInfo.summary:" + device.deviceInfo.summary))
+            print(("datastore.summary.type:" + datastore.summary.type))
             if hasattr(device.backing, 'fileName'):
                 disk_desc = str(device.backing.fileName)
-                print("Disc Discription -- {}".format(disk_desc))
+                print(("Disc Discription -- {}".format(disk_desc)))
                 drive = disk_desc.split("]")[0].replace("[", "")
-                print("drive:" + drive)
-                print("device.backing.fileName:" + device.backing.fileName)
+                print(("drive:" + drive))
+                print(("device.backing.fileName:" + device.backing.fileName))
                 template_disks.append(device)
     return template_disks
 
@@ -90,12 +90,12 @@ def construct_locator(template_disks, datastore_dest_id):
     """
     ds_disk = []
     for index, wdisk in enumerate(template_disks):
-        print("relocate index:" + str(index))
-        print("disk:" + str(wdisk))
+        print(("relocate index:" + str(index)))
+        print(("disk:" + str(wdisk)))
         disk_desc = str(wdisk.backing.fileName)
         drive = disk_desc.split("]")[0].replace("[", "")
-        print("drive:" + drive)
-        print("wdisk.backing.fileName:" + wdisk.backing.fileName)
+        print(("drive:" + drive))
+        print(("wdisk.backing.fileName:" + wdisk.backing.fileName))
         locator = vim.vm.RelocateSpec.DiskLocator()
         locator.diskBackingInfo = wdisk.backing
         locator.diskId = int(wdisk.key)
@@ -125,7 +125,7 @@ def relocate_vm(vm_name, content, host_dest, datastore_dest=None, **kwargs):
     try:
         vm = get_object(content, [vim.VirtualMachine], vm_name)
         current_host = vm.runtime.host.name
-        print("vmotion_vm current_host:" + current_host)
+        print(("vmotion_vm current_host:" + current_host))
 
         # Create Relocate Spec
         spec = vim.VirtualMachineRelocateSpec()
@@ -138,12 +138,12 @@ def relocate_vm(vm_name, content, host_dest, datastore_dest=None, **kwargs):
 
             # Find destination host
             destination_host = get_object(content, [vim.HostSystem], host_dest)
-            print("vmotion_vm destination_host:" + str(destination_host))
+            print(("vmotion_vm destination_host:" + str(destination_host)))
             spec.host = destination_host
 
             # Find destination Resource pool
             resource_pool = destination_host.parent.resourcePool
-            print("vmotion_vm resource_pool:" + str(resource_pool))
+            print(("vmotion_vm resource_pool:" + str(resource_pool)))
             spec.pool = resource_pool
 
         # Check whether storage vmotion required and construct spec accordingly
@@ -156,7 +156,7 @@ def relocate_vm(vm_name, content, host_dest, datastore_dest=None, **kwargs):
             spec.datastore = datastore_dest_id
             spec.disk = construct_locator(template_disks, datastore_dest_id)
 
-        print("relocate_vm spec:" + str(spec))
+        print(("relocate_vm spec:" + str(spec)))
         task = vm.RelocateVM_Task(spec)
         while task.info.state == vim.TaskInfo.State.running:
             continue
@@ -200,7 +200,7 @@ def main():
                     datastore_dest=datastore_dest)
 
     except vmodl.MethodFault as error:
-        print("Caught vmodl fault : " + error.msg)
+        print(("Caught vmodl fault : " + error.msg))
         return -1
 
     return 0

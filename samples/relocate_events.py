@@ -16,7 +16,7 @@ import sys
 from pyVmomi import vim
 from pyVim.connect import SmartConnectNoSSL
 from pyVim.task import WaitForTask
-from tools import cli
+from .tools import cli
 
 __author__ = 'prziborowski'
 
@@ -66,15 +66,15 @@ def main():
     events = eventManager.QueryEvent(filterSpec)
 
     for event in events:
-        print("%s" % event._wsdlName)
-        print("VM: %s" % event.vm.name)
-        print("User: %s" % event.userName)
-        print("Host: %s -> %s" % (event.sourceHost.name, event.host.name))
-        print("Datacenter: %s -> %s" % (event.sourceDatacenter.name,
-                                        event.datacenter.name))
-        print("Datastore: %s -> %s" % (event.sourceDatastore.name,
-                                       event.ds.name))
-    print("%s" % events)
+        print(("%s" % event._wsdlName))
+        print(("VM: %s" % event.vm.name))
+        print(("User: %s" % event.userName))
+        print(("Host: %s -> %s" % (event.sourceHost.name, event.host.name)))
+        print(("Datacenter: %s -> %s" % (event.sourceDatacenter.name,
+                                        event.datacenter.name)))
+        print(("Datastore: %s -> %s" % (event.sourceDatastore.name,
+                                       event.ds.name)))
+    print(("%s" % events))
 
 if __name__ == '__main__':
     main()

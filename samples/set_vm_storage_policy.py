@@ -17,7 +17,7 @@ the script list_vm_storage_policy.py
 
 import atexit
 import re
-import tools.cli as cli
+from . import tools.cli as cli
 
 from pyVmomi import pbm, vim, VmomiSupport, SoapStubAdapter
 from pyVim.connect import SmartConnect, SmartConnectNoSSL, Disconnect
@@ -279,9 +279,9 @@ def main():
         pmObjectType = pbm.ServerObjectRef.ObjectType("virtualMachine")
         pmRef = pbm.ServerObjectRef(key=vm._moId,
                                     objectType=pmObjectType)
-        print('\r\nVirtual machine name: {}{}{}'.format(bcolors.OKGREEN,
+        print(('\r\nVirtual machine name: {}{}{}'.format(bcolors.OKGREEN,
                                                         vm.name,
-                                                        bcolors.ENDC))
+                                                        bcolors.ENDC)))
 
         # The implementation of idempotency for the operation of the storage
         # policy assignment for VM Home
@@ -289,18 +289,18 @@ def main():
             if not CheckStorageProfileAssociated(pm,
                                                  pmRef,
                                                  policyName):
-                print('Set VM Home policy: '
+                print(('Set VM Home policy: '
                       '{}{}{}'.format(bcolors.OKGREEN,
                                       policyName,
-                                      bcolors.ENDC))
+                                      bcolors.ENDC)))
 
                 try:
                     SetVMStorageProfile(vm, storageProfile)
                 except Exception as exc:
-                    print('VM reconfiguration task error: '
+                    print(('VM reconfiguration task error: '
                           '{}{}{}'.format(bcolors.FAIL,
                                           exc,
-                                          bcolors.ENDC))
+                                          bcolors.ENDC)))
             else:
                 print('Set VM Home policy: Nothing to do')
 
@@ -321,23 +321,23 @@ def main():
                     if not CheckStorageProfileAssociated(pm,
                                                          pmRef,
                                                          policyName):
-                        print('Set {} policy: '
+                        print(('Set {} policy: '
                               '{}{}{}'.format(device.deviceInfo.label,
                                               bcolors.OKGREEN,
                                               policyName,
-                                              bcolors.ENDC))
+                                              bcolors.ENDC)))
                         try:
                             SetVirtualDiskStorageProfile(vm,
                                                          device,
                                                          storageProfile)
                         except Exception as exc:
-                            print('Virtual disk reconfiguration task error: '
+                            print(('Virtual disk reconfiguration task error: '
                                   '{}{}{}'.format(bcolors.FAIL,
                                                   exc,
-                                                  bcolors.ENDC))
+                                                  bcolors.ENDC)))
                     else:
-                        print('Set {} policy: Nothing to do'.format(
-                            device.deviceInfo.label))
+                        print(('Set {} policy: Nothing to do'.format(
+                            device.deviceInfo.label)))
 
 
 if __name__ == "__main__":

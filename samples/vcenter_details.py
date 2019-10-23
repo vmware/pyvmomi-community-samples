@@ -25,8 +25,8 @@ from pyVim import connect
 from pyVmomi import vmodl
 from pyVmomi import vim
 
-from tools import cli
-from tools import vm
+from .tools import cli
+from .tools import vm
 
 
 def parse_service_instance(service_instance):
@@ -74,7 +74,7 @@ def main():
         parse_service_instance(service_instance)
 
     except vmodl.MethodFault as e:
-        print("Caught vmodl fault : {}".format(e.msg))
+        print(("Caught vmodl fault : {}".format(e.msg)))
         return -1
 
     return 0

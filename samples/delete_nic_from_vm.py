@@ -11,7 +11,7 @@ http://opensource.org/licenses/Apache-2.0
 """
 from pyVmomi import vim
 from pyVmomi import vmodl
-from tools import tasks
+from .tools import tasks
 from pyVim.connect import SmartConnect, Disconnect
 import atexit
 import argparse
@@ -131,7 +131,8 @@ def main():
     if vm:
         del_nic(serviceInstance, vm, int(args.unit_number))
     else:
-        print "VM not found"
+        print("VM not found")
+
 
 # start this thing
 if __name__ == "__main__":

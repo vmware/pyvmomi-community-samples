@@ -17,7 +17,7 @@ Python program for detaching a disk from a VM without deleting the VMDK
 
 import atexit
 
-from tools import cli, tasks, disk
+from .tools import cli, tasks, disk
 from pyVim import connect
 from pyVmomi import vmodl
 from pyVmomi import vim
@@ -59,7 +59,7 @@ def get_args():
 def get_hdd_prefix_label(language):
     language_prefix_label_mapper = {
         'English': 'Hard disk ',
-        'Chinese': u'硬盘 '
+        'Chinese': '硬盘 '
     }
     return language_prefix_label_mapper.get(language)
 
@@ -132,7 +132,7 @@ def main():
             raise RuntimeError("VM not found.")
 
     except vmodl.MethodFault as error:
-        print("Caught vmodl fault : " + error.msg)
+        print(("Caught vmodl fault : " + error.msg))
         return -1
 
     return 0

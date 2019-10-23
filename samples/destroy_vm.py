@@ -13,7 +13,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-from __future__ import print_function
+
 
 import atexit
 
@@ -21,8 +21,8 @@ from pyVim import connect
 
 from pyVmomi import vim
 
-from tools import cli
-from tools import tasks
+from .tools import cli
+from .tools import tasks
 
 
 def setup_args():
@@ -102,13 +102,13 @@ if VM is None:
         .format(ARGS.vm, ARGS.uuid, ARGS.name, ARGS.ip)
         )
 
-print("Found: {0}".format(VM.name))
-print("The current powerState is: {0}".format(VM.runtime.powerState))
+print(("Found: {0}".format(VM.name)))
+print(("The current powerState is: {0}".format(VM.runtime.powerState)))
 if format(VM.runtime.powerState) == "poweredOn":
-    print("Attempting to power off {0}".format(VM.name))
+    print(("Attempting to power off {0}".format(VM.name)))
     TASK = VM.PowerOffVM_Task()
     tasks.wait_for_tasks(SI, [TASK])
-    print("{0}".format(TASK.info.state))
+    print(("{0}".format(TASK.info.state)))
 
 print("Destroying VM from vSphere.")
 TASK = VM.Destroy_Task()

@@ -15,11 +15,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-from __future__ import print_function
+
 import atexit
 from pyVim.connect import SmartConnectNoSSL, Disconnect
 from pyVmomi import vim
-from tools import cli
+from .tools import cli
 
 MAX_DEPTH = 10
 
@@ -52,7 +52,7 @@ def printvminfo(vm, depth=1):
         return
 
     summary = vm.summary
-    print(summary.config.name)
+    print((summary.config.name))
 
 
 def main():

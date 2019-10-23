@@ -5,7 +5,7 @@ Github: https://github.com/chupman/
 Example: Get guest info with folder and host placement
 
 """
-from __future__ import print_function
+
 
 from pyVmomi import vim
 
@@ -145,7 +145,7 @@ def main():
                     vm2dict(dc.name, cluster.name, hostname, vm, summary)
 
     if not args.silent:
-        print(json.dumps(data, sort_keys=True, indent=4))
+        print((json.dumps(data, sort_keys=True, indent=4)))
 
     if outputjson:
         data2json(data, args)

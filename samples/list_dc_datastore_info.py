@@ -13,7 +13,7 @@
 
 import atexit
 import requests
-from tools import cli
+from .tools import cli
 from pyVmomi import vim
 from pyVim.connect import SmartConnect, Disconnect
 
@@ -67,19 +67,19 @@ def print_datastore_info(ds_obj):
     ds_overp = ds_provisioned - ds_capacity
     ds_overp_pct = (ds_overp * 100) / ds_capacity \
         if ds_capacity else 0
-    print ""
-    print "Name                  : {}".format(summary.name)
-    print "URL                   : {}".format(summary.url)
-    print "Capacity              : {} GB".format(sizeof_fmt(ds_capacity))
-    print "Free Space            : {} GB".format(sizeof_fmt(ds_freespace))
-    print "Uncommitted           : {} GB".format(sizeof_fmt(ds_uncommitted))
-    print "Provisioned           : {} GB".format(sizeof_fmt(ds_provisioned))
+    print("")
+    print(("Name                  : {}".format(summary.name)))
+    print(("URL                   : {}".format(summary.url)))
+    print(("Capacity              : {} GB".format(sizeof_fmt(ds_capacity))))
+    print(("Free Space            : {} GB".format(sizeof_fmt(ds_freespace))))
+    print(("Uncommitted           : {} GB".format(sizeof_fmt(ds_uncommitted))))
+    print(("Provisioned           : {} GB".format(sizeof_fmt(ds_provisioned))))
     if ds_overp > 0:
-        print "Over-provisioned      : {} GB / {} %".format(
+        print(("Over-provisioned      : {} GB / {} %".format(
             sizeof_fmt(ds_overp),
-            ds_overp_pct)
-    print "Hosts                 : {}".format(len(ds_obj.host))
-    print "Virtual Machines      : {}".format(len(ds_obj.vm))
+            ds_overp_pct)))
+    print(("Hosts                 : {}".format(len(ds_obj.host))))
+    print(("Virtual Machines      : {}".format(len(ds_obj.vm))))
 
 
 def main():

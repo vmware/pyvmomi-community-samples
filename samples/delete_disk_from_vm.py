@@ -14,10 +14,10 @@
 
 import atexit
 import requests
-from tools import cli
+from .tools import cli
 from pyVmomi import vim
 from pyVim.connect import SmartConnect, Disconnect
-from tools import tasks
+from .tools import tasks
 
 # disable  urllib3 warnings
 if hasattr(requests.packages.urllib3, 'disable_warnings'):
@@ -27,7 +27,7 @@ if hasattr(requests.packages.urllib3, 'disable_warnings'):
 def get_hdd_prefix_label(language):
     language_prefix_label_mapper = {
         'English': 'Hard disk ',
-        'Chinese': u'硬盘 '
+        'Chinese': '硬盘 '
     }
     return language_prefix_label_mapper.get(language)
 
@@ -104,7 +104,7 @@ def main():
     atexit.register(Disconnect, si)
 
     content = si.RetrieveContent()
-    print('Searching for VM {}'.format(args.vmname))
+    print(('Searching for VM {}'.format(args.vmname)))
     vm_obj = get_obj(content, [vim.VirtualMachine], args.vmname)
 
     if vm_obj:
@@ -114,7 +114,7 @@ def main():
                                     "{}?".format(args.unitnumber),
                                     default='no')
         delete_virtual_disk(si, vm_obj, args.unitnumber, args.language)
-        print('VM HDD "{}" successfully deleted.'.format(args.unitnumber))
+        print(('VM HDD "{}" successfully deleted.'.format(args.unitnumber)))
     else:
         print('VM not found')
 

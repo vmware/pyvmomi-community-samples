@@ -75,21 +75,21 @@ si = SmartConnectNoSSL(
         port=int(args.port)
     )
 
-print("logged in to {0}".format(args.host))
+print(("logged in to {0}".format(args.host)))
 session_id = si.content.sessionManager.currentSession.key
-print("current pyVmomi session id: {0}".format(session_id))
+print(("current pyVmomi session id: {0}".format(session_id)))
 
 print("Listing all sessions I can see:")
 for session in si.content.sessionManager.sessionList:
-    print(
+    print((
         "session key={0.key}, "
         "username={0.userName}, "
         "ip={0.ipAddress}".format(session)
-        )
+        ))
 
 print("logout")
 si.content.sessionManager.Logout()
 
 # The current session will be None after logout
 session = si.content.sessionManager.currentSession
-print("current pyVmomi session: {0}".format(session))
+print(("current pyVmomi session: {0}".format(session)))

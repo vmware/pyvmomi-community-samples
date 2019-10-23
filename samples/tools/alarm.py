@@ -6,7 +6,7 @@ Blog: http://www.errr-online.com/
 This code has been released under the terms of the Apache 2.0 licenses
 http://www.apache.org/licenses/LICENSE-2.0.html
 """
-from __future__ import print_function
+
 
 import logging
 from xml.etree.ElementTree import Element
@@ -132,10 +132,10 @@ def print_triggered_alarms(entity=None):
     """
     alarms = entity.triggeredAlarmState
     for alarm in alarms:
-        print("#"*40)
+        print(("#"*40))
         # The alarm key looks like alarm-101.host-95
-        print("alarm_moref: {0}".format(alarm.key.split('.')[0]))
-        print("alarm status: {0}".format(alarm.overallStatus))
+        print(("alarm_moref: {0}".format(alarm.key.split('.')[0])))
+        print(("alarm status: {0}".format(alarm.overallStatus)))
 
 
 def get_alarm_refs(entity=None):

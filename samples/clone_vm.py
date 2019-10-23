@@ -12,7 +12,7 @@ import atexit
 import argparse
 import getpass
 
-from add_nic_to_vm import add_nic
+from .add_nic_to_vm import add_nic
 
 
 def get_args():
@@ -84,8 +84,9 @@ def get_args():
                         required=False,
                         action='store',
                         default=None,
-                        help='Datastorecluster (DRS Storagepod) you wish the VM to end up on \
-                            Will override the datastore-name parameter.')
+                        help='Datastorecluster (DRS Storagepod) you wish the\
+                        VM to end up on \
+                        Will override the datastore-name parameter.')
 
     parser.add_argument('--cluster-name',
                         required=False,
@@ -202,7 +203,7 @@ def clone_vm(
                 storageSpec=storagespec)
             rec_action = rec.recommendations[0].action[0]
             real_datastore_name = rec_action.destination.name
-        except:
+        except Exception:
             real_datastore_name = template.datastore[0].info.name
 
         datastore = get_obj(content, [vim.Datastore], real_datastore_name)

@@ -14,7 +14,7 @@ Error handling
 """
 
 
-from __future__ import print_function
+
 from pyVim.connect import SmartConnect, SmartConnectNoSSL, Disconnect
 from pyVmomi import vim
 import atexit
@@ -116,7 +116,7 @@ def main():
     dc = get_obj(content, [vim.Datacenter], args.datacenter)
 
     if dc is None:
-        print("Failed to find the datacenter %s" % args.datacenter)
+        print(("Failed to find the datacenter %s" % args.datacenter))
         return 0
 
     if args.dvswitch == 'all':
@@ -125,16 +125,16 @@ def main():
     else:
         dvsn = get_obj(content, [vim.DistributedVirtualSwitch], args.dvswitch)
         if dvsn is None:
-            print("Failed to find the dvswitch %s" % args.dvswitch)
+            print(("Failed to find the dvswitch %s" % args.dvswitch))
             return 0
         else:
             dvs_lists = [dvsn]
 
-    print('Datacenter Name'.ljust(40)+' :', args.datacenter)
+    print(('Datacenter Name'.ljust(40)+' :', args.datacenter))
     for dvs in dvs_lists:
-        print(40*'#')
-        print('Dvswitch Name'.ljust(40)+' :', dvs.name)
-        print(40*'#')
+        print((40*'#'))
+        print(('Dvswitch Name'.ljust(40)+' :', dvs.name))
+        print((40*'#'))
         for dvs_pg in dvs.portgroup:
             vlanInfo = dvs_pg.config.defaultPortConfig.vlan
             cl = vim.dvs.VmwareDistributedVirtualSwitch.TrunkVlanSpec
@@ -148,7 +148,7 @@ def main():
                 wd = " | Trunk | vlan id: " + ','.join(vlanlist)
             else:
                 wd = " | vlan id: " + str(vlanInfo.vlanId)
-            print(dvs_pg.name.ljust(40) + wd)
+            print((dvs_pg.name.ljust(40) + wd))
 
 
 if __name__ == "__main__":

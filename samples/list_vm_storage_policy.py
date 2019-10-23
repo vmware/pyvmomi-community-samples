@@ -20,11 +20,11 @@ __author__ = 'William Lam'
 
 # retrieve SPBM API endpoint
 def GetPbmConnection(vpxdStub):
-    import Cookie
+    import http.cookies
     import pyVmomi
     sessionCookie = vpxdStub.cookie.split('"')[1]
     httpContext = VmomiSupport.GetHttpContext()
-    cookie = Cookie.SimpleCookie()
+    cookie = http.cookies.SimpleCookie()
     cookie["vmware_soap_session"] = sessionCookie
     httpContext["cookies"] = cookie
     VmomiSupport.GetRequestContext()["vcSessionCookie"] = sessionCookie
@@ -68,8 +68,8 @@ def showCapabilities(capabilities):
         for constraint in capability.constraint:
             if hasattr(constraint, 'propertyInstance'):
                 for propertyInstance in constraint.propertyInstance:
-                    print("\tKey: %s Value: %s" % (propertyInstance.id,
-                                                   propertyInstance.value))
+                    print(("\tKey: %s Value: %s" % (propertyInstance.id,
+                                                   propertyInstance.value)))
 
 
 # Start program
@@ -106,13 +106,13 @@ def main():
         profiles = pm.PbmRetrieveContent(profileIds=profileIds)
 
     for profile in profiles:
-        print("Name: %s " % profile.name)
-        print("ID: %s " % profile.profileId.uniqueId)
-        print("Description: %s " % profile.description)
+        print(("Name: %s " % profile.name))
+        print(("ID: %s " % profile.profileId.uniqueId))
+        print(("Description: %s " % profile.description))
         if hasattr(profile.constraints, 'subProfiles'):
             subprofiles = profile.constraints.subProfiles
             for subprofile in subprofiles:
-                print("RuleSetName: %s " % subprofile.name)
+                print(("RuleSetName: %s " % subprofile.name))
                 capabilities = subprofile.capability
                 showCapabilities(capabilities)
         print("")

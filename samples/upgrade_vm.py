@@ -25,13 +25,13 @@ If version is not specified, the default of the highest version
 the host supports is used.
 """
 
-from __future__ import print_function
+
 import atexit
 
 from pyVim import connect, task
 from pyVmomi import vim
 
-from tools import cli
+from .tools import cli
 
 
 def get_args():
@@ -84,10 +84,10 @@ def connect_vsphere(username, password, hostname, port, use_ssl):
             server = connect.SmartConnectNoSSL(host=hostname, user=username,
                                                pwd=password, port=port)
     except vim.fault.InvalidLogin:
-        print("ERROR: Invalid login credentials for user '%s'" % username)
+        print(("ERROR: Invalid login credentials for user '%s'" % username))
         exit(1)
     except vim.fault as message:
-        print("Error connecting to vSphere: %s" % str(message))
+        print(("Error connecting to vSphere: %s" % str(message)))
         exit(1)
 
     # Ensures clean disconnect upon program termination
@@ -105,13 +105,13 @@ def main():
     content = service_instance.RetrieveContent()
     virtual_machine = get_vm(content, args.name)
     if not virtual_machine:
-        print("Could not find VM %s" % args.name)
+        print(("Could not find VM %s" % args.name))
     else:
-        print("Upgrading VM %s" % args.name)
+        print(("Upgrading VM %s" % args.name))
 
         # Set the hardware version to use if specified
         if args.version is not None:
-            print("New version will be %s" % args.version)
+            print(("New version will be %s" % args.version))
             version = "vmx-{:02d}".format(args.version)
         else:
             version = None

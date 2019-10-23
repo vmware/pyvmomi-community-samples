@@ -17,8 +17,8 @@ import atexit
 
 from pyVim import connect
 from pyVmomi import vim
-from tools import cli
-from tools import tasks
+from .tools import cli
+from .tools import tasks
 
 
 def setup_args():
@@ -56,7 +56,7 @@ vm = si.content.searchIndex.FindByUuid(None, args.uuid, True)
 if not vm:
     raise SystemExit("Unable to locate VirtualMachine.")
 
-print("Found: {0}".format(vm.name))
+print(("Found: {0}".format(vm.name)))
 spec = vim.vm.ConfigSpec()
 spec.annotation = args.message
 task = vm.ReconfigVM_Task(spec)

@@ -13,7 +13,7 @@
 
 import atexit
 import requests
-from tools import cli
+from .tools import cli
 from pyVmomi import vim
 from pyVim.connect import SmartConnect, Disconnect
 
@@ -53,10 +53,10 @@ def get_vms(content):
 
 
 def print_vmwareware_tools_status(vm):
-    print _columns_four.format(vm.name,
+    print((_columns_four.format(vm.name,
                                vm.guest.toolsRunningStatus,
                                vm.guest.toolsVersion,
-                               vm.guest.toolsVersionStatus2)
+                               vm.guest.toolsVersionStatus2)))
 
 
 def main():
@@ -74,17 +74,17 @@ def main():
     content = si.RetrieveContent()
 
     if args.vmname:
-        print 'Searching for VM {}'.format(args.vmname)
+        print(('Searching for VM {}'.format(args.vmname)))
         vm_obj = get_obj(content, [vim.VirtualMachine], args.vmname)
         if vm_obj:
-            print _columns_four.format('Name', 'Status',
-                                       'Version', 'Version Status')
+            print((_columns_four.format('Name', 'Status',
+                                       'Version', 'Version Status')))
             print_vmwareware_tools_status(vm_obj)
         else:
-            print "VM not found"
+            print("VM not found")
     else:
-        print _columns_four.format('Name', 'Status',
-                                   'Version', 'Version Status')
+        print((_columns_four.format('Name', 'Status',
+                                   'Version', 'Version Status')))
         for vm_obj in get_vms(content):
             print_vmwareware_tools_status(vm_obj)
 

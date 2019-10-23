@@ -18,10 +18,10 @@ import requests
 from pyVim import connect
 from pyVmomi import vim
 
-from tools import cli
-from tools import tasks
+from .tools import cli
+from .tools import tasks
 
-from add_nic_to_vm import add_nic, get_obj
+from .add_nic_to_vm import add_nic, get_obj
 
 try:
     input = raw_input
@@ -150,7 +150,7 @@ def create_dummy_vm(vm_name, service_instance, vm_folder, resource_pool,
                                files=vmx_file, guestId='dosGuest',
                                version='vmx-07')
 
-    print("Creating VM {}...".format(vm_name))
+    print(("Creating VM {}...".format(vm_name)))
     task = vm_folder.CreateVM_Task(config=config, pool=resource_pool)
     tasks.wait_for_tasks(service_instance, [task])
 
@@ -197,8 +197,8 @@ def main():
     vmfolder = get_obj(content, [vim.Folder], args.folder)
     resource_pool = get_obj(content, [vim.ResourcePool], args.resource_pool)
 
-    print("Connecting to Marvel API and retrieving " + str(args.count) +
-          " random character(s) ...")
+    print(("Connecting to Marvel API and retrieving " + str(args.count) +
+          " random character(s) ..."))
 
     characters = get_marvel_characters(args.count,
                                        marvel_public_key,

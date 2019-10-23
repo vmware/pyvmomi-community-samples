@@ -16,7 +16,7 @@ import atexit
 from pyVim.connect import Disconnect, SmartConnectNoSSL, SmartConnect
 from pyVmomi import vim, vmodl
 
-from tools import cli
+from .tools import cli
 
 
 def get_args():
@@ -61,8 +61,8 @@ def configure_dvs_pg(service_instance, dvs_name, dv_pg_name):
     # get distributed Switch and its port group objects
     dvs = get_obj(content, [vim.DistributedVirtualSwitch], dvs_name)
     dv_pg = get_obj(content, [vim.dvs.DistributedVirtualPortgroup], dv_pg_name)
-    print("The distributed virtual Switch is {0}" .format(dvs))
-    print("The distributed port group is {0}".format(dv_pg))
+    print(("The distributed virtual Switch is {0}" .format(dvs)))
+    print(("The distributed port group is {0}".format(dv_pg)))
 
     # construct selection sets
     selection_sets = []
@@ -70,15 +70,15 @@ def configure_dvs_pg(service_instance, dvs_name, dv_pg_name):
     dv_pg_ss.dvsUuid = dvs.uuid
     dv_pg_ss.portgroupKey.append(dv_pg.key)
     selection_sets.append(dv_pg_ss)
-    print("The selected port group configurations  are {0}"
-          .format(selection_sets))
+    print(("The selected port group configurations  are {0}"
+          .format(selection_sets)))
 
     # Backup/Export the configuration
     entity_backup_config = service_instance.content\
         .dvSwitchManager\
         .DVSManagerExportEntity_Task(selection_sets)
     export_result = entity_backup_config.info.result
-    print("The result of export configuration are {0}".format(export_result))
+    print(("The result of export configuration are {0}".format(export_result)))
 
     # Destroy the port group configuration
     dv_pg.Destroy_Task()
@@ -88,8 +88,8 @@ def configure_dvs_pg(service_instance, dvs_name, dv_pg_name):
         .dvSwitchManager\
         .DVSManagerImportEntity_Task(export_result,
                                      'createEntityWithOriginalIdentifier')
-    print("The result of restore configuration is {0}"
-          .format(entity_restore_config.info.result))
+    print(("The result of restore configuration is {0}"
+          .format(entity_restore_config.info.result)))
 
 
 def main():
@@ -114,7 +114,7 @@ def main():
         configure_dvs_pg(service_instance, args.dvs_name, args.dvs_pg_name)
 
     except vmodl.MethodFault as error:
-        print("Caught vmodl fault : {0}".format(error.msg))
+        print(("Caught vmodl fault : {0}".format(error.msg)))
         return -1
 
     return 0

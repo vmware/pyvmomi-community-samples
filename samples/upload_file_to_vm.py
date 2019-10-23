@@ -9,11 +9,11 @@ http://www.apache.org/licenses/LICENSE-2.0.html
 Example script to upload a file from host to guest
 
 """
-from __future__ import with_statement
+
 import atexit
 import requests
-from tools import cli
-from tools import tasks
+from .tools import cli
+from .tools import tasks
 from pyVim import connect
 from pyVmomi import vim, vmodl
 import re
@@ -100,13 +100,13 @@ def main():
             url = re.sub(r"^https://\*:", "https://"+str(args.host)+":", url)
             resp = requests.put(url, data=fileinmemory, verify=False)
             if not resp.status_code == 200:
-                print "Error while uploading file"
+                print("Error while uploading file")
             else:
-                print "Successfully uploaded file"
-        except IOError, e:
-            print e
+                print("Successfully uploaded file")
+        except IOError as e:
+            print(e)
     except vmodl.MethodFault as error:
-        print "Caught vmodl fault : " + error.msg
+        print(("Caught vmodl fault : " + error.msg))
         return -1
 
     return 0

@@ -17,7 +17,7 @@ Python program for creating a first class disk (fcd) from a snapshot
 
 import atexit
 
-from tools import cli, tasks, disk, pbmhelper
+from .tools import cli, tasks, disk, pbmhelper
 from pyVim import connect
 from pyVmomi import vmodl, vim, pbm, VmomiSupport
 
@@ -140,7 +140,7 @@ def main():
         tasks.wait_for_tasks(service_instance, [task])
 
     except vmodl.MethodFault as error:
-        print("Caught vmodl fault : " + error.msg)
+        print(("Caught vmodl fault : " + error.msg))
         return -1
 
     return 0

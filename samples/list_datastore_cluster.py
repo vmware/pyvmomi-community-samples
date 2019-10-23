@@ -73,12 +73,12 @@ def main():
         for ds_cluster in ds_cluster_list:
             if ds_cluster.name == args.dscluster:
                 datastores = ds_cluster.childEntity
-                print "Datastores: "
+                print("Datastores: ")
                 for datastore in datastores:
-                    print datastore.name
+                    print((datastore.name))
 
     except vmodl.MethodFault as error:
-        print "Caught vmodl fault : " + error.msg
+        print(("Caught vmodl fault : " + error.msg))
         return -1
 
     return 0

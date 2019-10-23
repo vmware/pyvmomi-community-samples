@@ -17,7 +17,7 @@ Python program for attaching a first class disk (fcd) to a virtual machine
 
 import atexit
 
-from tools import cli, tasks, disk
+from .tools import cli, tasks, disk
 from pyVim import connect
 from pyVmomi import vmodl
 from pyVmomi import vim
@@ -141,7 +141,7 @@ def main():
             raise RuntimeError("VM not found.")
 
     except vmodl.MethodFault as error:
-        print("Caught vmodl fault : " + error.msg)
+        print(("Caught vmodl fault : " + error.msg))
         return -1
 
     return 0

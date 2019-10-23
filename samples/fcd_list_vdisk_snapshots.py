@@ -17,7 +17,7 @@ Python program for listing all snapshots of a first class disk (fcd)
 
 import atexit
 
-from tools import cli, tasks, disk
+from .tools import cli, tasks, disk
 from pyVim import connect
 from pyVmomi import vmodl
 from pyVmomi import vim
@@ -60,9 +60,9 @@ def list_fcd_snapshots(content, vdisk):
         # Print snapshot information
         print("")
         for s in snapshots:
-            print("Name: %s " % s.description)
-            print("ID: %s " % s.id.id)
-            print("Create Time: %s " % s.createTime)
+            print(("Name: %s " % s.description))
+            print(("ID: %s " % s.id.id))
+            print(("Create Time: %s " % s.createTime))
             print("")
     else:
         print("No snapshots found for this vdisk.")
@@ -101,7 +101,7 @@ def main():
         list_fcd_snapshots(content, vdisk)
 
     except vmodl.MethodFault as error:
-        print("Caught vmodl fault : " + error.msg)
+        print(("Caught vmodl fault : " + error.msg))
         return -1
 
     return 0

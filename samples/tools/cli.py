@@ -107,12 +107,12 @@ def prompt_y_n_question(question, default="no"):
         raise ValueError("Invalid default answer: '{}'".format(default))
 
     while True:
-        print(question + prompt)
+        print((question + prompt))
         # Make compatible with both Python2/3
         try:
             choice = input().lower()
         except ImportError:
-            choice = raw_input().lower()
+            choice = input().lower()
         if default is not None and choice == '':
             return valid[default]
         elif choice in valid:

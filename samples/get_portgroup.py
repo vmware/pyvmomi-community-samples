@@ -17,7 +17,7 @@ Python program for retrieving a port group for both VSS and DVS
 
 import atexit
 
-from tools import cli
+from .tools import cli
 from pyVim import connect
 from pyVmomi import vmodl
 from pyVmomi import vim
@@ -88,7 +88,7 @@ def main():
         print(pg)
 
     except vmodl.MethodFault as error:
-        print("Caught vmodl fault : {0}".format(error.msg))
+        print(("Caught vmodl fault : {0}".format(error.msg)))
         return -1
 
     return 0

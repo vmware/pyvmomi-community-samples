@@ -17,7 +17,7 @@ the script list_vm_storage_policy.py
 
 import atexit
 import re
-import tools.cli as cli
+from . import tools.cli as cli
 
 from pyVmomi import pbm, vim, VmomiSupport, SoapStubAdapter
 from pyVim.connect import SmartConnect, SmartConnectNoSSL, Disconnect
@@ -124,8 +124,8 @@ def ShowStorageProfileCapabilities(capabilities):
         for constraint in capability.constraint:
             if hasattr(constraint, 'propertyInstance'):
                 for propertyInstance in constraint.propertyInstance:
-                    print("\tKey: {} Value: {}".format(propertyInstance.id,
-                                                       propertyInstance.value))
+                    print(("\tKey: {} Value: {}".format(propertyInstance.id,
+                                                       propertyInstance.value)))
 
 
 def ShowStorageProfile(profiles):
@@ -137,15 +137,15 @@ def ShowStorageProfile(profiles):
     """
 
     for profile in profiles:
-        print("Name: {}{}{} ".format(bcolors.OKGREEN,
+        print(("Name: {}{}{} ".format(bcolors.OKGREEN,
                                      profile.name,
-                                     bcolors.ENDC))
-        print("ID: {} ".format(profile.profileId.uniqueId))
-        print("Description: {} ".format(profile.description))
+                                     bcolors.ENDC)))
+        print(("ID: {} ".format(profile.profileId.uniqueId)))
+        print(("Description: {} ".format(profile.description)))
         if hasattr(profile.constraints, 'subProfiles'):
             subprofiles = profile.constraints.subProfiles
             for subprofile in subprofiles:
-                print("RuleSetName: {} ".format(subprofile.name))
+                print(("RuleSetName: {} ".format(subprofile.name)))
                 capabilities = subprofile.capability
                 ShowStorageProfileCapabilities(capabilities)
 
@@ -213,9 +213,9 @@ def main():
 
     vm_list = SearchVMByName(serviceInstance, args.vm_name, args.strict)
     for vm in vm_list:
-        print("Virtual machine name: {}{}{}".format(bcolors.OKGREEN,
+        print(("Virtual machine name: {}{}{}".format(bcolors.OKGREEN,
                                                     vm.name,
-                                                    bcolors.ENDC))
+                                                    bcolors.ENDC)))
         pmObjectType = pbm.ServerObjectRef.ObjectType("virtualMachine")
         pmRef = pbm.ServerObjectRef(key=vm._moId,
                                     objectType=pmObjectType)
@@ -234,7 +234,7 @@ def main():
                                             objectType=pmObjectType)
                 profiles = GetStorageProfiles(pm, pmRef)
                 if len(profiles) > 0:
-                    print(device.deviceInfo.label)
+                    print((device.deviceInfo.label))
                     ShowStorageProfile(profiles)
                     print("")
         print("")

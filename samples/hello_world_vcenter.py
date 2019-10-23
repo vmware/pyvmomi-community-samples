@@ -80,21 +80,21 @@ def main():
 
         atexit.register(connect.Disconnect, service_instance)
 
-        print "\nHello World!\n"
-        print "If you got here, you authenticted into vCenter."
-        print "The server is {}!".format(args.host)
+        print("\nHello World!\n")
+        print("If you got here, you authenticted into vCenter.")
+        print(("The server is {}!".format(args.host)))
         # NOTE (hartsock): only a successfully authenticated session has a
         # session key aka session id.
         session_id = service_instance.content.sessionManager.currentSession.key
-        print "current session id: {}".format(session_id)
-        print "Well done!"
-        print "\n"
-        print "Download, learn and contribute back:"
-        print "https://github.com/vmware/pyvmomi-community-samples"
-        print "\n\n"
+        print(("current session id: {}".format(session_id)))
+        print("Well done!")
+        print("\n")
+        print("Download, learn and contribute back:")
+        print("https://github.com/vmware/pyvmomi-community-samples")
+        print("\n\n")
 
     except vmodl.MethodFault as error:
-        print "Caught vmodl fault : " + error.msg
+        print(("Caught vmodl fault : " + error.msg))
         return -1
 
     return 0

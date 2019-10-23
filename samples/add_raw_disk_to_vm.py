@@ -15,7 +15,7 @@ from pyVmomi import vim
 from pyVmomi import vmodl
 from pyVim.connect import SmartConnect, SmartConnectNoSSL, Disconnect
 from pyVim.task import WaitForTasks
-from tools import cli
+from .tools import cli
 import atexit
 import argparse
 import getpass
@@ -107,7 +107,7 @@ def add_raw_disk(vm, si, device_name, disk_mode, compatibility_mode):
     disk_spec.device.controllerKey = controller.key
     spec.deviceChange = [disk_spec]
     WaitForTasks([vm.ReconfigVM_Task(spec=spec)], si=si)
-    print("Raw disk added to %s" % (vm.config.name))
+    print(("Raw disk added to %s" % (vm.config.name)))
 
 
 def main():

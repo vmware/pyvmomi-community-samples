@@ -117,16 +117,16 @@ def main():
         for host in hosts:
             optionManager = host.configManager.advancedOption
             option = vim.option.OptionValue(key=args.key,
-                                            value=long(args.value))
-            print("Updating %s on ESXi host %s "
-                  "with value of %s" % (args.key, host.name, args.value))
+                                            value=int(args.value))
+            print(("Updating %s on ESXi host %s "
+                  "with value of %s" % (args.key, host.name, args.value)))
             optionManager.UpdateOptions(changedValue=[option])
 
     except vmodl.MethodFault as e:
-        print("Caught vmodl fault : " + e.msg)
+        print(("Caught vmodl fault : " + e.msg))
         return -1
     except Exception as e:
-        print("Caught exception : " + str(e))
+        print(("Caught exception : " + str(e)))
         return -1
 
     return 0

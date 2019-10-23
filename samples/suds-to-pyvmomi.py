@@ -41,7 +41,7 @@ else:
 
 url = "https://%s/sdk/vimService.wsdl" % args.host
 
-print "Python suds..."
+print("Python suds...")
 client = suds.client.Client(url, location=url)
 si = suds.sudsobject.Property("ServiceInstance")
 si._type = "ServiceInstance"
@@ -84,12 +84,12 @@ def get_current_session(client):
 current_session = get_current_session(client)
 
 if current_session:
-    print "current session id: %s" % current_session.key
+    print(("current session id: %s" % current_session.key))
     cookies = client.options.transport.cookiejar
     for cookie in cookies:
-        print "cookie '%s' contents: %s" % (cookie.name, cookie.value)
+        print(("cookie '%s' contents: %s" % (cookie.name, cookie.value)))
 else:
-    print "not logged in"
+    print("not logged in")
     raise RuntimeError("this sample doesn't work if you can't authenticate")
 
 # now to move the current session ID over to pyVmomi
@@ -107,8 +107,8 @@ def extract_vmware_cookie_suds(client):
 # dynamically inject this method into the suds client:
 client.__class__.extract_vmware_cookie = extract_vmware_cookie_suds
 
-print "=" * 80
-print "suds session to pyvmomi "
+print(("=" * 80))
+print("suds session to pyvmomi ")
 
 # Unfortunately, you can't connect without a login in pyVmomi
 si = connect.SmartConnect(host=args.host,
@@ -122,12 +122,12 @@ si.content.sessionManager.Logout()
 # inject the pyVmomi stub with the suds cookie values...
 si._stub.cookie = client.extract_vmware_cookie()
 
-print "current suds session id: "
-print get_current_session(client).key
-print
-print "current pyVmomi session id: %s"
-print si.content.sessionManager.currentSession.key
-print
+print("current suds session id: ")
+print((get_current_session(client).key))
+print()
+print("current pyVmomi session id: %s")
+print((si.content.sessionManager.currentSession.key))
+print()
 
 # always clean up your sessions:
 si.content.sessionManager.Logout()

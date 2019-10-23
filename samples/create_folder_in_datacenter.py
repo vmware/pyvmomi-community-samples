@@ -5,7 +5,7 @@ Github: https://github.com/chinmayb/
 Example: Create a folder in a datacenter if not exists
 
 """
-from __future__ import print_function
+
 
 from pyVmomi import vim
 
@@ -79,12 +79,12 @@ def main():
     content = si.RetrieveContent()
     dc = get_obj(content, [vim.Datacenter], args.datacenter)
     if (get_obj(content, [vim.Folder], args.folder)):
-        print("Folder '%s' already exists" % args.folder)
+        print(("Folder '%s' already exists" % args.folder))
         return 0
     create_folder(content, dc.hostFolder, args.folder)
-    print("Successfully created the host folder '%s'" % args.folder)
+    print(("Successfully created the host folder '%s'" % args.folder))
     create_folder(content, dc.vmFolder, args.folder)
-    print("Successfully created the VM folder '%s'" % args.folder)
+    print(("Successfully created the VM folder '%s'" % args.folder))
     return 0
 
 

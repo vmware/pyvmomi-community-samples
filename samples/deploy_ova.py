@@ -24,7 +24,7 @@ from argparse import ArgumentParser
 from getpass import getpass
 from six.moves.urllib.request import Request, urlopen
 
-from tools import cli
+from .tools import cli
 
 from pyVim.connect import SmartConnectNoSSL, Disconnect
 from pyVmomi import vim, vmodl
@@ -56,8 +56,8 @@ def main():
                                pwd=args.password,
                                port=args.port)
         atexit.register(Disconnect, si)
-    except:
-        print("Unable to connect to %s" % args.host)
+    except Exception:
+        print(("Unable to connect to %s" % args.host))
         return 1
 
     if args.datacenter:
@@ -91,7 +91,7 @@ def main():
     if len(cisr.error):
         print("The following errors will prevent import of this OVA:")
         for error in cisr.error:
-            print("%s" % error)
+            print(("%s" % error))
         return 1
 
     ovf_handle.set_spec(cisr)
@@ -102,7 +102,7 @@ def main():
         time.sleep(1)
 
     if lease.state == vim.HttpNfcLease.State.error:
-        print("Lease error: %s" % lease.error)
+        print(("Lease error: %s" % lease.error))
         return 1
     if lease.state == vim.HttpNfcLease.State.done:
         return 0
@@ -217,8 +217,7 @@ class OvfHandler(object):
         """
         self.handle = self._create_file_handle(ovafile)
         self.tarfile = tarfile.open(fileobj=self.handle)
-        ovffilename = list(filter(lambda x: x.endswith(".ovf"),
-                                  self.tarfile.getnames()))[0]
+        ovffilename = list([x for x in self.tarfile.getnames() if x.endswith(".ovf")])[0]
         ovffile = self.tarfile.extractfile(ovffilename)
         self.descriptor = ovffile.read().decode()
 
@@ -246,8 +245,7 @@ class OvfHandler(object):
         """
         Does translation for disk key to file name, returning a file handle.
         """
-        ovffilename = list(filter(lambda x: x == fileItem.path,
-                                  self.tarfile.getnames()))[0]
+        ovffilename = list([x for x in self.tarfile.getnames() if x == fileItem.path])[0]
         return self.tarfile.extractfile(ovffilename)
 
     def get_device_url(self, fileItem, lease):
@@ -269,11 +267,11 @@ class OvfHandler(object):
             print("Finished deploy successfully.")
             return 0
         except vmodl.MethodFault as e:
-            print("Hit an error in upload: %s" % e)
+            print(("Hit an error in upload: %s" % e))
             lease.Abort(e)
         except Exception as e:
-            print("Lease: %s" % lease.info)
-            print("Hit an error in upload: %s" % e)
+            print(("Lease: %s" % lease.info))
+            print(("Hit an error in upload: %s" % e))
             lease.Abort(vmodl.fault.SystemError(reason=str(e)))
             raise
         return 1

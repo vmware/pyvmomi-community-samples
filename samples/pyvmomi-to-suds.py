@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
-import cookielib
+import http.cookiejar
 import getpass
 import suds
 
@@ -80,22 +80,22 @@ def get_current_session(client):
     return results.get_property('currentSession')
 
 
-print "pyVmomi login... "
+print("pyVmomi login... ")
 
 si = connect.SmartConnect(host=args.host,
                           user=args.user,
                           pwd=password,
                           port=int(args.port))
 
-print "current session id: %s" % si.content.sessionManager.currentSession.key
+print(("current session id: %s" % si.content.sessionManager.currentSession.key))
 pyvmomi_cookie = si._stub.cookie
-print "current cookie contents: %s" % pyvmomi_cookie
+print(("current cookie contents: %s" % pyvmomi_cookie))
 
 VMWARE_COOKIE_NAME = 'vmware_soap_session'
 
 
 def inject_vmware_cookie_suds(client, cookie_value, domain):
-    cookie = cookielib.Cookie(0,
+    cookie = http.cookiejar.Cookie(0,
                               VMWARE_COOKIE_NAME,
                               cookie_value,
                               None,
@@ -117,8 +117,8 @@ def inject_vmware_cookie_suds(client, cookie_value, domain):
 
 client.__class__.set_vmware_cookie = inject_vmware_cookie_suds
 
-print "=" * 80
-print "pyvmomi to suds"
+print(("=" * 80))
+print("pyvmomi to suds")
 
 si._stub.cookie = pyvmomi_cookie
 
@@ -129,11 +129,11 @@ end_of_value = pyvmomi_cookie.index(";")
 cookie_value = pyvmomi_cookie[start_of_value:end_of_value]
 
 session_id = si.content.sessionManager.currentSession.key
-print "current pyVmomi session id: %s" % session_id
+print(("current pyVmomi session id: %s" % session_id))
 
 # injecting the cookie value:
 client.set_vmware_cookie(cookie_value, args.host)
 soap_session_id = get_current_session(client).key
-print "current suds session id:    %s" % soap_session_id
+print(("current suds session id:    %s" % soap_session_id))
 
 assert session_id == soap_session_id

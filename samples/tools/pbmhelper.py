@@ -28,7 +28,7 @@ def create_pbm_session(stub):
     try:
         from http import cookies
     except ImportError:
-        import Cookie as cookies
+        import http.cookies as cookies
 
     sessionCookie = stub.cookie.split('"')[1]
     httpContext = VmomiSupport.GetHttpContext()

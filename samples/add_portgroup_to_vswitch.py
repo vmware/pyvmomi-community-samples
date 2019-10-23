@@ -7,7 +7,7 @@ Note: Example code For testing purposes only
 This code has been released under the terms of the Apache-2.0 license
 http://opensource.org/licenses/Apache-2.0
 """
-from __future__ import print_function
+
 from pyVim.connect import SmartConnect, SmartConnectNoSSL, Disconnect
 from pyVmomi import vim
 import atexit
@@ -82,7 +82,7 @@ def GetVMHosts(content, regex_esxi=None):
             if re.findall(r'%s.*' % regex_esxi, esxi.name):
                 match_obj.append(esxi)
         match_obj_name = [match_esxi.name for match_esxi in match_obj]
-        print("Matched ESXi hosts: %s" % match_obj_name)
+        print(("Matched ESXi hosts: %s" % match_obj_name))
         host_view.Destroy()
         return match_obj
     else:

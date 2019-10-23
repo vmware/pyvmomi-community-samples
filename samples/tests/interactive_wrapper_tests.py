@@ -88,7 +88,7 @@ class ESXTests(TestCase):
         resources = [resource_1, resource_2, resource_3]
         self.raw_esx.licensableResource.resource = resources
 
-        self.assertEquals(self.wrapped_esx.get_number_of_cores(), 42)
+        self.assertEqual(self.wrapped_esx.get_number_of_cores(), 42)
 
 
 class getAllVMInFolderTests(TestCase):

@@ -8,7 +8,7 @@ This code has been released under the terms of the Apache-2.0 license
 http://opensource.org/licenses/Apache-2.0
 """
 
-from __future__ import print_function
+
 from pyVim.connect import SmartConnect, Disconnect
 from pyVmomi import vim
 import atexit
@@ -74,9 +74,9 @@ def main():
     hosts = GetVMHosts(content)
     hostSwitchesDict = GetHostsSwitches(hosts)
 
-    for host, vswithes in hostSwitchesDict.items():
+    for host, vswithes in list(hostSwitchesDict.items()):
         for v in vswithes:
-            print(v.name)
+            print((v.name))
 
 
 # Main section
