@@ -37,14 +37,31 @@ from pyVim.task import WaitForTask
 from pyVim import connect
 from pyVim.connect import Disconnect, SmartConnect, GetSi
 
-inputs = {'vcenter_ip': '192.168.1.10',
-          'vcenter_password': 'my_password',
-          'vcenter_user': 'root',
-          'vm_name': 'dummy_vm',
-          # operation in 'create/remove/revert/
-          # list_all/list_current/remove_all'
-          'operation': 'create',
-          'snapshot_name': 'snap1',
+parser = argparse.ArgumentParser(description="vCenter Snapshot Operations")
+parser.add_argument("user", help="Type the vCenter server user")
+parser.add_argument("password", help="Type the vCenter server password")
+parser.add_argument("server", help="vCenter server FQDN")
+parser.add_argument("vm", help="Virtual machine name")
+parser.add_argument("operation", help="create|remove|list_current|remove_all")
+parser.add_argument("-name", help="Name of the snapshot")
+parser.add_argument("-description", help="Description for the snapshot.")
+args = parser.parse_args()
+
+if args.operation == 'create' and args.name is None:
+    print("The '%s' argument requires a snapshot name." % args.operation)
+    sys.exit()
+
+if args.operation in ['remove', 'revert'] and args.name is None:
+    print("The '%s' argument requires a snapshot name." % args.operation)
+    sys.exit()
+
+inputs = {'vcenter_ip': args.server,
+          'vcenter_password': args.password,
+          'vcenter_user': args.user,
+          'vm_name': args.vm,
+          'operation': args.operation,
+          'snapshot_name': args.name,
+          'snapshot_description': args.description,
           'ignore_ssl': True
           }
 
@@ -133,14 +150,14 @@ def main():
 
     if operation == 'create':
         snapshot_name = inputs['snapshot_name']
-        description = "Test snapshot"
+        snapshot_description = inputs['snapshot_description']
         dumpMemory = False
         quiesce = False
 
         print("Creating snapshot %s for virtual machine %s" % (
                                         snapshot_name, vm.name))
         WaitForTask(vm.CreateSnapshot(
-            snapshot_name, description, dumpMemory, quiesce))
+            snapshot_name, snapshot_description, dumpMemory, quiesce))
 
     elif operation in ['remove', 'revert']:
         snapshot_name = inputs['snapshot_name']
