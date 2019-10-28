@@ -236,12 +236,13 @@ def main():
 
                     temp_target_disk = os.path.join(target_directory,
                                                     deviceUrl.targetId)
-                    print 'Downloading {} to {}'.format(deviceUrl.url,
-                                                        temp_target_disk)
+                    url = deviceUrl.url.replace('*', args.host)
+                    print 'Downloading {} to {}'.format(url, temp_target_disk)
+
                     current_bytes_written = download_device(
                         headers=headers, cookies=cookies,
                         temp_target_disk=temp_target_disk,
-                        device_url=deviceUrl.url,
+                        device_url=url,
                         lease_updater=lease_updater,
                         total_bytes_written=total_bytes_written,
                         total_bytes_to_write=total_bytes_to_write)
@@ -292,6 +293,7 @@ def main():
         # Complete lease upon exception
         http_nfc_lease.HttpNfcLeaseComplete()
         sys.exit(1)
+
 
 if __name__ == '__main__':
     main()
