@@ -56,6 +56,9 @@ def main():
                                pwd=args.password,
                                port=args.port)
         atexit.register(Disconnect, si)
+    except vim.fault.InvalidLogin as e:
+        print(e.msg)
+        return 1
     except:
         print("Unable to connect to %s" % args.host)
         return 1
