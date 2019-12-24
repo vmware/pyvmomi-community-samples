@@ -36,8 +36,7 @@ def parse_service_instance(service_instance):
     """
 
     content = service_instance.RetrieveContent()
-    object_view = content.viewManager.CreateContainerView(content.rootFolder,
-                                                          [], True)
+    object_view = content.viewManager.CreateContainerView(content.rootFolder, [], True)
     for obj in object_view.view:
         print(obj)
         if isinstance(obj, vim.VirtualMachine):

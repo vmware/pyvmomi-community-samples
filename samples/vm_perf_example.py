@@ -14,7 +14,7 @@
 """
 
 from pyVmomi import vim
-from tools import cli
+import argparse
 from pyVim.connect import SmartConnectNoSSL, Disconnect
 import atexit
 import sys
@@ -22,7 +22,12 @@ import sys
 
 def main():
 
-    args = cli.get_args()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("host")
+    parser.add_argument("user")
+    parser.add_argument("password")
+    parser.add_argument("port")
+    args = parser.parse_args()
 
     # Connect to the host without SSL signing
     try:
