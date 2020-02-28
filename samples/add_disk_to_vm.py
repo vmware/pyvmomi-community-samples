@@ -63,6 +63,13 @@ def get_args():
                         choices=['thick', 'thin'],
                         help='thick or thin')
 
+    parser.add_argument('--disk-mode',
+                        required=False,
+                        action='store',
+                        default='persistent',
+                        choices=['persistent', 'independent_nonpersistent'],
+                        help='persistent or independent_nonpersistent')
+
     parser.add_argument('--disk-size',
                         required=True,
                         action='store',
@@ -88,7 +95,7 @@ def get_obj(content, vimtype, name):
     return obj
 
 
-def add_disk(vm, si, disk_size, disk_type):
+def add_disk(vm, si, disk_size, disk_type, disk_mode):
         spec = vim.vm.ConfigSpec()
         # get all disks on a VM, set unit_number to the next available
         unit_number = 0
@@ -114,7 +121,10 @@ def add_disk(vm, si, disk_size, disk_type):
             vim.vm.device.VirtualDisk.FlatVer2BackingInfo()
         if disk_type == 'thin':
             disk_spec.device.backing.thinProvisioned = True
-        disk_spec.device.backing.diskMode = 'persistent'
+        if disk_mode == 'independent_nonpersistent':
+            disk_spec.device.backing.diskMode = 'independent_nonpersistent'
+        else:
+            disk_spec.device.backing.diskMode = 'persistent'
         disk_spec.device.unitNumber = unit_number
         disk_spec.device.capacityInKB = new_disk_kb
         disk_spec.device.controllerKey = controller.key
@@ -126,6 +136,11 @@ def add_disk(vm, si, disk_size, disk_type):
 
 def main():
     args = get_args()
+    # Default disk_mode is persistent unless specified
+    disk_mode = 'persistent'
+
+    if args.disk_mode:
+        disk_mode = args.disk_mode
 
     # connect this thing
     si = SmartConnect(
@@ -145,7 +160,7 @@ def main():
         vm = get_obj(content, [vim.VirtualMachine], args.vm_name)
 
     if vm:
-        add_disk(vm, si, args.disk_size, args.disk_type)
+        add_disk(vm, si, args.disk_size, args.disk_type, disk_mode)
     else:
         print "VM not found"
 
