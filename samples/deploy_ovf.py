@@ -104,7 +104,7 @@ def get_ovf_descriptor(ovf_path):
                 f.close()
                 return ovfd
             except:
-                print "Could not read file: %s" % ovf_path
+                print("Could not read file: %s" % ovf_path)
                 exit(1)
 
 
@@ -138,7 +138,7 @@ def get_objects(si, args):
     elif len(datastore_list) > 0:
         datastore_obj = datastore_list[0]
     else:
-        print "No datastores found in DC (%s)." % datacenter_obj.name
+        print("No datastores found in DC (%s)." % datacenter_obj.name)
 
     # Get cluster object.
     cluster_list = datacenter_obj.hostFolder.childEntity
@@ -147,7 +147,7 @@ def get_objects(si, args):
     elif len(cluster_list) > 0:
         cluster_obj = cluster_list[0]
     else:
-        print "No clusters found in DC (%s)." % datacenter_obj.name
+        print("No clusters found in DC (%s)." % datacenter_obj.name)
 
     # Generate resource pool.
     resource_pool_obj = cluster_obj.resourcePool
@@ -183,7 +183,7 @@ def main():
                                   pwd=args.password,
                                   port=args.port)
     except:
-        print "Unable to connect to %s" % args.host
+        print("Unable to connect to %s" % args.host)
         exit(1)
     objs = get_objects(si, args)
     manager = si.content.ovfManager
@@ -213,7 +213,7 @@ def main():
             keepalive_thread.join()
             return 0
         elif (lease.state == vim.HttpNfcLease.State.error):
-            print "Lease error: " + lease.state.error
+            print("Lease error: " + lease.state.error)
             exit(1)
     connect.Disconnect(si)
 
