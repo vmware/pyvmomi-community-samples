@@ -211,10 +211,12 @@ def main():
             system(curl_cmd)
             lease.HttpNfcLeaseComplete()
             keepalive_thread.join()
-            return 0
+            break
         elif (lease.state == vim.HttpNfcLease.State.error):
             print("Lease error: " + lease.state.error)
             exit(1)
+            
+    print("Import successful.")
     connect.Disconnect(si)
 
 if __name__ == "__main__":
