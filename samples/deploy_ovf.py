@@ -95,6 +95,9 @@ def get_ovf_descriptor(ovf_path):
     Read in the OVF descriptor.
     """
     if path.exists(ovf_path):
+        # optional: add correct file encoding for ovf file
+        # e.g. esxi 6.7 exports in utf-8-sig, so use       
+        # open(ovf_path, 'r', encoding='utf-8-sig')
         with open(ovf_path, 'r') as f:
             try:
                 ovfd = f.read()
