@@ -68,7 +68,15 @@ def get_args():
                         default=None,
                         help='Name of the cluster you wish the VM to\
                           end up on. If left blank the first cluster found\
-                          will be used')
+                          will be used.')
+
+    parser.add_argument('--vm_name',
+                        required=False,
+                        action='store',
+                        default=None,
+                        help='Name of the imported VM.\
+                          If left blank, name from ovf file \
+                          will be used.')
 
     parser.add_argument('-v', '--vmdk_path',
                         required=True,
@@ -95,13 +103,16 @@ def get_ovf_descriptor(ovf_path):
     Read in the OVF descriptor.
     """
     if path.exists(ovf_path):
+        # optional: add correct file encoding for ovf file
+        # e.g. esxi 6.7 exports in utf-8-sig, so use       
+        # open(ovf_path, 'r', encoding='utf-8-sig')
         with open(ovf_path, 'r') as f:
             try:
                 ovfd = f.read()
                 f.close()
                 return ovfd
             except:
-                print "Could not read file: %s" % ovf_path
+                print("Could not read file: %s" % ovf_path)
                 exit(1)
 
 
@@ -135,7 +146,7 @@ def get_objects(si, args):
     elif len(datastore_list) > 0:
         datastore_obj = datastore_list[0]
     else:
-        print "No datastores found in DC (%s)." % datacenter_obj.name
+        print("No datastores found in DC (%s)." % datacenter_obj.name)
 
     # Get cluster object.
     cluster_list = datacenter_obj.hostFolder.childEntity
@@ -144,7 +155,7 @@ def get_objects(si, args):
     elif len(cluster_list) > 0:
         cluster_obj = cluster_list[0]
     else:
-        print "No clusters found in DC (%s)." % datacenter_obj.name
+        print("No clusters found in DC (%s)." % datacenter_obj.name)
 
     # Generate resource pool.
     resource_pool_obj = cluster_obj.resourcePool
@@ -180,19 +191,27 @@ def main():
                                   pwd=args.password,
                                   port=args.port)
     except:
-        print "Unable to connect to %s" % args.host
+        print("Unable to connect to %s" % args.host)
         exit(1)
     objs = get_objects(si, args)
     manager = si.content.ovfManager
-    spec_params = vim.OvfManager.CreateImportSpecParams()
+
+    spec_params = vim.OvfManager.CreateImportSpecParams(
+        entityName=(args.vm_name if args.vm_name is not None else '')
+    )
+
     import_spec = manager.CreateImportSpec(ovfd,
                                            objs["resource pool"],
                                            objs["datastore"],
                                            spec_params)
     lease = objs["resource pool"].ImportVApp(import_spec.importSpec,
                                              objs["datacenter"].vmFolder)
+
+    vm = None
+
     while(True):
         if (lease.state == vim.HttpNfcLease.State.ready):
+            vm = lease.info.entity
             # Assuming single VMDK.
             url = lease.info.deviceUrl[0].url.replace('*', args.host)
             # Spawn a dawmon thread to keep the lease active while POSTing
@@ -201,18 +220,22 @@ def main():
             keepalive_thread.start()
             # POST the VMDK to the host via curl. Requests library would work
             # too.
-            curl_cmd = (
-                "curl -Ss -X POST --insecure -T %s -H 'Content-Type: \
-                application/x-vnd.vmware-streamVmdk' %s" %
-                (args.vmdk_path, url))
+            curl_cmd = f"curl -Ss -X POST --insecure -T {args.vmdk_path} -H 'Content-Type:application/x-vnd.vmware-streamVmdk' {url}"
             system(curl_cmd)
             lease.HttpNfcLeaseComplete()
             keepalive_thread.join()
-            return 0
+            break
         elif (lease.state == vim.HttpNfcLease.State.error):
-            print "Lease error: " + lease.state.error
+            print("Lease error: " + lease.state.error)
             exit(1)
+            
+    print("Import successful.")
+    if (vm is not None):
+        print(f"Imported as '{vm.name}'")
+
     connect.Disconnect(si)
+
+    return 0
 
 if __name__ == "__main__":
     exit(main())
