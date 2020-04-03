@@ -68,7 +68,15 @@ def get_args():
                         default=None,
                         help='Name of the cluster you wish the VM to\
                           end up on. If left blank the first cluster found\
-                          will be used')
+                          will be used.')
+
+    parser.add_argument('--vm_name',
+                        required=False,
+                        action='store',
+                        default=None,
+                        help='Name of the imported VM.\
+                          If left blank, name from ovf file \
+                          will be used.')
 
     parser.add_argument('-v', '--vmdk_path',
                         required=True,
@@ -187,15 +195,23 @@ def main():
         exit(1)
     objs = get_objects(si, args)
     manager = si.content.ovfManager
-    spec_params = vim.OvfManager.CreateImportSpecParams()
+
+    spec_params = vim.OvfManager.CreateImportSpecParams(
+        entityName=(args.vm_name if args.vm_name is not None else '')
+    )
+
     import_spec = manager.CreateImportSpec(ovfd,
                                            objs["resource pool"],
                                            objs["datastore"],
                                            spec_params)
     lease = objs["resource pool"].ImportVApp(import_spec.importSpec,
                                              objs["datacenter"].vmFolder)
+
+    vm = None
+
     while(True):
         if (lease.state == vim.HttpNfcLease.State.ready):
+            vm = lease.info.entity
             # Assuming single VMDK.
             url = lease.info.deviceUrl[0].url.replace('*', args.host)
             # Spawn a dawmon thread to keep the lease active while POSTing
@@ -214,7 +230,12 @@ def main():
             exit(1)
             
     print("Import successful.")
+    if (vm is not None):
+        print(f"Imported as '{vm.name}'")
+
     connect.Disconnect(si)
+
+    return 0
 
 if __name__ == "__main__":
     exit(main())
