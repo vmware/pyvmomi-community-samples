@@ -16,6 +16,9 @@ import requests
 from tools import cli
 from pyVmomi import vim
 from pyVim.connect import SmartConnect, Disconnect
+import ssl
+
+context = ssl._create_unverified_context()
 
 _columns_four = "{0:<20} {1:<30} {2:<30} {3:<20}"
 
@@ -55,7 +58,7 @@ def get_vms(content):
 def print_vmwareware_tools_status(vm):
     print _columns_four.format(vm.name,
                                vm.guest.toolsRunningStatus,
-                               vm.guest.toolsVersion,
+                               str(vm.guest.toolsVersion),
                                vm.guest.toolsVersionStatus2)
 
 
@@ -67,7 +70,8 @@ def main():
         host=args.host,
         user=args.user,
         pwd=args.password,
-        port=args.port)
+        port=args.port,
+        sslContext=context)
     # disconnect vc
     atexit.register(Disconnect, si)
 
