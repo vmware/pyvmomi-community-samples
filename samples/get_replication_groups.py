@@ -87,7 +87,7 @@ def get_replication_groups(vasa_provider, rg_ids=[], rg_names=[]):
                 for rg_name in rg_names:
                     if hasattr(r_group.rgInfo, "name"):
                         if ((r_group.rgInfo.name == rg_name) or
-                            (rg_name == r_group.groupId.deviceGroupId.id)):
+                             (rg_name == r_group.groupId.deviceGroupId.id)):
                             print("\n")
                             print("Source Replication Group Name: ",
                                   r_group.rgInfo.name)
