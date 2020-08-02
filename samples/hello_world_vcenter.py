@@ -33,6 +33,12 @@ def get_args():
     parser = argparse.ArgumentParser(
         description='Standard Arguments for talking to vCenter')
 
+    # because -k is often used for "insecure"
+    parser.add_argument('-k', '--insecure',
+                        required=False,
+                        action='store_true',
+                        help='Ignore TLS Certificate checks (accept self signed certs)')
+
     # because -h is reserved for 'help' we use -s for service
     parser.add_argument('-s', '--host',
                         required=True,
@@ -73,30 +79,35 @@ def main():
     args = get_args()
 
     try:
-        service_instance = connect.SmartConnect(host=args.host,
+        if args.insecure:
+            service_instance = connect.SmartConnectNoSSL(host=args.host,
+                                                user=args.user,
+                                                pwd=args.password,
+                                                port=int(args.port))
+        else:
+            service_instance = connect.SmartConnect(host=args.host,
                                                 user=args.user,
                                                 pwd=args.password,
                                                 port=int(args.port))
 
         atexit.register(connect.Disconnect, service_instance)
 
-        print "\nHello World!\n"
-        print "If you got here, you authenticted into vCenter."
-        print "The server is {}!".format(args.host)
+        print("\nHello World!\n")
+        print("If you got here, you authenticted into vCenter.")
+        print("The server is {}!" .format(args.host))
         # NOTE (hartsock): only a successfully authenticated session has a
         # session key aka session id.
         session_id = service_instance.content.sessionManager.currentSession.key
-        print "current session id: {}".format(session_id)
-        print "Well done!"
-        print "\n"
-        print "Download, learn and contribute back:"
-        print "https://github.com/vmware/pyvmomi-community-samples"
-        print "\n\n"
+        print("current session id: {}".format(session_id))
+        print("Well done!")
+        print("\n")
+        print("Download, learn and contribute back:")
+        print("https://github.com/vmware/pyvmomi-community-samples")
+        print("\n\n")
 
     except vmodl.MethodFault as error:
-        print "Caught vmodl fault : " + error.msg
+        print("Caught vmodl fault : " + error.msg)
         return -1
-
     return 0
 
 # Start program
