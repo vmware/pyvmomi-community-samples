@@ -30,7 +30,7 @@ def get_args():
                         help='Port to connect on')
     parser.add_argument('-u', '--user', required=True, action='store',
                         help='User name to use when connecting to host')
-    parser.add_argument('-p', '--password', required=True, action='store',
+    parser.add_argument('-p', '--password', required=False, action='store',
                         help='Password to use when connecting to host')
     parser.add_argument('-j', '--json', default=False, action='store_true',
                         help='Output to JSON')
