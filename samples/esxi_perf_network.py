@@ -21,7 +21,7 @@ Written by Andre Pompas
 
 Based on Gaurav Dogra code (https://github.com/dograga)
 
-Script to extract Network usage (average) of ESXi hosts on vcenter
+Script to extract Network usage (average) of ESXi hosts
 for last 1 hour with multithreading
 """
 
