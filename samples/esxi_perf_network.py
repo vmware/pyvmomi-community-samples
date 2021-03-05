@@ -21,9 +21,23 @@ Written by Andre Pompas
 
 Based on Gaurav Dogra code (https://github.com/dograga)
 
-Script to extract Network usage (average) of ESXi hosts
+Script to extract Network usage bp/s (average) of ESXi hosts
 for last 1 hour with multithreading
 """
+
+# Example output :
+# Hostname: esxi  TimeStamp: 2021-03-05 14:34:20+00:00  Id: 196618  Instance: vmnic1  Counter: net.bytesRx.average  Usage: 0
+# Hostname: esxi  TimeStamp: 2021-03-05 14:34:20+00:00  Id: 196618  Instance: vmnic7  Counter: net.bytesRx.average  Usage: 146000
+# Hostname: esxi  TimeStamp: 2021-03-05 14:34:20+00:00  Id: 196618  Instance: vmnic0  Counter: net.bytesRx.average  Usage: 0
+# Hostname: esxi  TimeStamp: 2021-03-05 14:34:20+00:00  Id: 196618  Instance: vmnic5  Counter: net.bytesRx.average  Usage: 18000
+# Hostname: esxi  TimeStamp: 2021-03-05 14:34:20+00:00  Id: 196618  Instance: vmnic2  Counter: net.bytesRx.average  Usage: 0
+# Hostname: esxi  TimeStamp: 2021-03-05 14:34:20+00:00  Id: 196618  Instance: vmnic3  Counter: net.bytesRx.average  Usage: 0
+# Hostname: esxi  TimeStamp: 2021-03-05 14:34:20+00:00  Id: 196619  Instance: vmnic2  Counter: net.bytesTx.average  Usage: 0
+# Hostname: esxi  TimeStamp: 2021-03-05 14:34:20+00:00  Id: 196619  Instance: vmnic1  Counter: net.bytesTx.average  Usage: 0
+# Hostname: esxi  TimeStamp: 2021-03-05 14:34:20+00:00  Id: 196619  Instance: vmnic7  Counter: net.bytesTx.average  Usage: 17000
+# Hostname: esxi  TimeStamp: 2021-03-05 14:34:20+00:00  Id: 196619  Instance: vmnic3  Counter: net.bytesTx.average  Usage: 0
+# Hostname: esxi  TimeStamp: 2021-03-05 14:34:20+00:00  Id: 196619  Instance: vmnic0  Counter: net.bytesTx.average  Usage: 0
+# Hostname: esxi  TimeStamp: 2021-03-05 14:34:20+00:00  Id: 196619  Instance: vmnic5  Counter: net.bytesTx.average  Usage: 148000
 
 import atexit
 import datetime
