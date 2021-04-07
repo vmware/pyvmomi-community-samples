@@ -15,13 +15,13 @@ Example:
       $./getorphanedvms.py -s 10.90.2.10 -u vcenter.svc -p password
 """
 
-from pyVim.connect import Disconnect
-from pyVmomi import vmodl, vim
-from tools import cli, service_instance
 import argparse
 import urllib.request
 import urllib.parse
 import base64
+from pyVim.connect import Disconnect
+from pyVmomi import vmodl, vim
+from tools import cli, service_instance
 
 
 VMX_PATH = []
@@ -37,18 +37,18 @@ def updatevmx_path():
     VMX_PATH = []
 
 
-def url_fix(s, charset='utf-8'):
+def url_fix(url_str, charset='utf-8'):
     """
     function to fix any URLs that have spaces in them
     urllib for some reason doesn't like spaces
     function found on internet
     """
-    if isinstance(s, unicode):
-        s = s.encode(charset, 'ignore')
-    scheme, netloc, path, qs, anchor = urllib.parse.urlparse.urlsplit(s)
+    if isinstance(url_str, unicode):
+        url_str = url_str.encode(charset, 'ignore')
+    scheme, netloc, path, qs, anchor = urllib.parse.urlsplit(url_str)
     path = urllib.parse.quote(path, '/%')
     qs = urllib.parse.quote(qs, ':&=')
-    return urllib.parse.urlparse.urlunsplit((scheme, netloc, path, qs, anchor))
+    return urllib.parse.urlunsplit((scheme, netloc, path, qs, anchor))
 
 
 def get_args():
@@ -76,32 +76,32 @@ def get_args():
     return args
 
 
-def find_vmx(dsbrowser, dsname, datacenter, fulldsname):
+def find_vmx(ds_browser, ds_name, datacenter, full_ds_name):
     """
     function to search for VMX files on any datastore that is passed to it
     """
     args = get_args()
     search = vim.HostDatastoreBrowserSearchSpec()
     search.matchPattern = "*.vmx"
-    search_ds = dsbrowser.SearchDatastoreSubFolders_Task(dsname, search)
+    search_ds = ds_browser.SearchDatastoreSubFolders_Task(ds_name, search)
     while search_ds.info.state != "success":
         pass
     # results = search_ds.info.result
     # print(results)
 
-    for rs in search_ds.info.result:
-        dsfolder = rs.folderPath
-        for f in rs.file:
+    for sub_folder in search_ds.info.result:
+        ds_folder = sub_folder.folderPath
+        for file in sub_folder.file:
             try:
-                dsfile = f.path
-                vmfold = dsfolder.split("]")
-                vmfold = vmfold[1]
-                vmfold = vmfold[1:]
+                ds_file = file.path
+                vm_folder = ds_folder.split("]")
+                vm_folder = vm_folder[1]
+                vm_folder = vm_folder[1:]
                 vmxurl = "https://%s/folder/%s%s?dcPath=%s&dsName=%s" % \
-                         (args.host, vmfold, dsfile, datacenter, fulldsname)
+                         (args.host, vm_folder, ds_file, datacenter, full_ds_name)
                 VMX_PATH.append(vmxurl)
-            except Exception as e:
-                print("Caught exception : " + str(e))
+            except Exception as ex:
+                print("Caught exception : " + str(ex))
                 return -1
 
 
@@ -146,8 +146,8 @@ def examine_vmx(dsname):
             tempds_vm = [newdn, dspath]
             DS_VM[uuid] = tempds_vm
 
-    except Exception as e:
-        print("Caught exception : " + str(e))
+    except Exception as ex:
+        print("Caught exception : " + str(ex))
 
 
 def getvm_info(vm, depth=1):
@@ -178,8 +178,8 @@ def getvm_info(vm, depth=1):
         uuid = vm.config.instanceUuid
         uuid = uuid.replace("-", "")
         INV_VM.append(uuid)
-    except Exception as e:
-        print("Caught exception : " + str(e))
+    except Exception as ex:
+        print("Caught exception : " + str(ex))
         return -1
 
 
@@ -218,10 +218,10 @@ def main():
         # to the find_vmx and examine_vmx functions to find all
         # VMX files and search them
 
-        for ds in datastores:
-            find_vmx(ds.browser, "[%s]" % ds.summary.name, datacenter.name,
-                     ds.summary.name)
-            examine_vmx(ds.summary.name)
+        for datastore in datastores:
+            find_vmx(datastore.browser, "[%s]" % datastore.summary.name,
+                     datacenter.name, datastore.summary.name)
+            examine_vmx(datastore.summary.name)
             updatevmx_path()
 
         # each VM found in the inventory is passed to the getvm_info
@@ -245,11 +245,11 @@ def main():
         for match in dsvmkey:
             find_match(match)
         Disconnect(si)
-    except vmodl.MethodFault as e:
-        print("Caught vmodl fault : " + e.msg)
+    except vmodl.MethodFault as ex:
+        print("Caught vmodl fault : " + ex.msg)
         return -1
-    except Exception as e:
-        print("Caught exception : " + str(e))
+    except Exception as ex:
+        print("Caught exception : " + str(ex))
         return -1
 
     return 0

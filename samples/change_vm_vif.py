@@ -10,8 +10,6 @@ Example script to change the network of the Virtual Machine NIC
 
 """
 
-import atexit
-
 from tools import cli, tasks, service_instance, pchelper
 from pyVmomi import vim, vmodl
 
@@ -22,7 +20,8 @@ def main():
     """
 
     parser = cli.Parser()
-    parser.add_optional_arguments(cli.Argument.UUID, cli.Argument.VM_NAME, cli.Argument.NETWORK_NAME)
+    parser.add_optional_arguments(
+        cli.Argument.UUID, cli.Argument.VM_NAME, cli.Argument.NETWORK_NAME)
     parser.add_custom_argument('--is_VDS',
                                action="store_true",
                                default=False,
@@ -59,7 +58,8 @@ def main():
                         pchelper.get_obj(content, [vim.Network], args.network_name)
                     nicspec.device.backing.deviceName = args.network_name
                 else:
-                    network = pchelper.get_obj(content, [vim.dvs.DistributedVirtualPortgroup], args.network_name)
+                    network = pchelper.get_obj(
+                        content, [vim.dvs.DistributedVirtualPortgroup], args.network_name)
                     dvs_port_connection = vim.dvs.PortConnection()
                     dvs_port_connection.portgroupKey = network.key
                     dvs_port_connection.switchUuid = \

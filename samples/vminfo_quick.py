@@ -10,7 +10,6 @@
  Script to quickly get all the VMs with a set of common properties.
 
 """
-from __future__ import print_function
 import atexit
 from time import clock
 from pyVmomi import vim

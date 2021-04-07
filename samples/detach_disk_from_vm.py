@@ -15,11 +15,8 @@
 Python program for detaching a disk from a VM without deleting the VMDK
 """
 
-import atexit
-
 from tools import cli, tasks, pchelper, service_instance
-from pyVmomi import vmodl
-from pyVmomi import vim
+from pyVmomi import vmodl, vim
 
 
 def get_hdd_prefix_label(language):

@@ -18,9 +18,9 @@ Python port of William Lam's generateHTML5VMConsole.pl
 Also ported SHA fingerprint fetching to Python OpenSSL library
 """
 
-import OpenSSL
 import ssl
 import time
+import OpenSSL
 from pyVmomi import vim
 from tools import cli, service_instance
 
@@ -35,9 +35,9 @@ def get_vm(content, name):
     container = content.viewManager.CreateContainerView(
         content.rootFolder, [vim.VirtualMachine], True)
 
-    for c in container.view:
-        if c.name == name:
-            vm = c
+    for vm_obj in container.view:
+        if vm_obj.name == name:
+            vm = vm_obj
             break
     return vm
 

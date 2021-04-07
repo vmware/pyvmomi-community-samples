@@ -38,13 +38,15 @@ def main():
 
     try:
         vmnames = args.vm_name
-        if not len(vmnames):
+        if not vmnames:
             print("No virtual machine specified for poweron")
 
         # Retreive the list of Virtual Machines from the inventory objects
         # under the rootFolder
         content = si.content
-        obj_view = content.viewManager.CreateContainerView(content.rootFolder, [vim.VirtualMachine], True)
+        obj_view = content.viewManager.CreateContainerView(content.rootFolder,
+                                                           [vim.VirtualMachine],
+                                                           True)
         vm_list = obj_view.view
         obj_view.Destroy()
 
@@ -55,10 +57,10 @@ def main():
         wait_for_tasks(si, tasks)
 
         print("Virtual Machine(s) have been powered on successfully")
-    except vmodl.MethodFault as e:
-        print("Caught vmodl fault : " + e.msg)
-    except Exception as e:
-        print("Caught Exception : " + str(e))
+    except vmodl.MethodFault as error:
+        print("Caught vmodl fault : " + error.msg)
+    except Exception as error:
+        print("Caught Exception : " + str(error))
 
 
 # Start program

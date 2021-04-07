@@ -12,7 +12,6 @@ from os import system, path
 from sys import exit
 from threading import Thread
 from time import sleep
-from pyVim import connect
 from pyVmomi import vim
 from tools import cli, service_instance
 
@@ -22,12 +21,12 @@ def get_ovf_descriptor(ovf_path):
     Read in the OVF descriptor.
     """
     if path.exists(ovf_path):
-        with open(ovf_path, 'r') as f:
+        with open(ovf_path, 'r') as ovf_file:
             try:
-                ovfd = f.read()
-                f.close()
+                ovfd = ovf_file.read()
+                ovf_file.close()
                 return ovfd
-            except:
+            except Exception:
                 print("Could not read file: %s" % ovf_path)
                 exit(1)
 
@@ -36,9 +35,9 @@ def get_obj_in_list(obj_name, obj_list):
     """
     Gets an object out of a list (obj_list) whos name matches obj_name.
     """
-    for o in obj_list:
-        if o.name == obj_name:
-            return o
+    for obj in obj_list:
+        if obj.name == obj_name:
+            return obj
     print("Unable to find object by the name of %s in list:\n%s" %
           (obj_name, map(lambda o: o.name, obj_list)))
     exit(1)
@@ -63,6 +62,7 @@ def get_objects(si, args):
         datastore_obj = datastore_list[0]
     else:
         print("No datastores found in DC (%s)." % datacenter_obj.name)
+        exit(1)
 
     # Get cluster object.
     cluster_list = datacenter_obj.hostFolder.childEntity
@@ -72,6 +72,7 @@ def get_objects(si, args):
         cluster_obj = cluster_list[0]
     else:
         print("No clusters found in DC (%s)." % datacenter_obj.name)
+        exit(1)
 
     # Generate resource pool.
     resource_pool_obj = cluster_obj.resourcePool
@@ -85,16 +86,16 @@ def keep_lease_alive(lease):
     """
     Keeps the lease alive while POSTing the VMDK.
     """
-    while(True):
+    while True:
         sleep(5)
         try:
             # Choosing arbitrary percentage to keep the lease alive.
             lease.HttpNfcLeaseProgress(50)
-            if (lease.state == vim.HttpNfcLease.State.done):
+            if lease.state == vim.HttpNfcLease.State.done:
                 return
             # If the lease is released, we get an exception.
             # Returning to kill the thread.
-        except:
+        except Exception:
             return
 
 
@@ -115,8 +116,8 @@ def main():
                                            spec_params)
     lease = objs["resource pool"].ImportVApp(import_spec.importSpec,
                                              objs["datacenter"].vmFolder)
-    while(True):
-        if (lease.state == vim.HttpNfcLease.State.ready):
+    while True:
+        if lease.state == vim.HttpNfcLease.State.ready:
             # Assuming single VMDK.
             url = lease.info.deviceUrl[0].url.replace('*', args.host)
             # Spawn a dawmon thread to keep the lease active while POSTing
@@ -133,10 +134,9 @@ def main():
             lease.HttpNfcLeaseComplete()
             keepalive_thread.join()
             return 0
-        elif (lease.state == vim.HttpNfcLease.State.error):
+        elif lease.state == vim.HttpNfcLease.State.error:
             print("Lease error: " + lease.state.error)
             exit(1)
-    connect.Disconnect(si)
 
 
 if __name__ == "__main__":

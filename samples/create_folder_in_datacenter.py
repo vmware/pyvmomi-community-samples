@@ -5,7 +5,6 @@ Github: https://github.com/chinmayb/
 Example: Create a folder in a datacenter if not exists
 
 """
-from __future__ import print_function
 
 from pyVmomi import vim
 from tools import cli, pchelper, service_instance
@@ -26,13 +25,13 @@ def main():
     si = service_instance.connect(args)
 
     content = si.RetrieveContent()
-    dc = pchelper.get_obj(content, [vim.Datacenter], args.datacenter_name)
-    if (pchelper.search_for_obj(content, [vim.Folder], args.folder_name)):
-        print("Folder '%s' already exists" % args.folder_name)
+    datacenter = pchelper.get_obj(content, [vim.Datacenter], args.datacenter_name)
+    if pchelper.search_for_obj(content, [vim.Folder], args.folder_name):
+        print("Folder '%s' already exists", args.folder_name)
         return 0
-    create_folder(dc.hostFolder, args.folder_name)
+    create_folder(datacenter.hostFolder, args.folder_name)
     print("Successfully created the host folder '%s'" % args.folder_name)
-    create_folder(dc.vmFolder, args.folder_name)
+    create_folder(datacenter.vmFolder, args.folder_name)
     print("Successfully created the VM folder '%s'" % args.folder_name)
     return 0
 

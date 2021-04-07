@@ -45,11 +45,11 @@ def main():
             if option_manager.UpdateOptions(changedValue=[option]):
                 print("Settings updated!")
 
-    except vmodl.MethodFault as e:
-        print("Caught vmodl fault : " + e.msg)
+    except vmodl.MethodFault as ex:
+        print("Caught vmodl fault : " + ex.msg)
         return -1
-    except Exception as e:
-        print("Caught exception : " + str(e))
+    except Exception as ex:
+        print("Caught exception : " + str(ex))
         return -1
 
     return 0

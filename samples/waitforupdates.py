@@ -20,14 +20,11 @@ Sample Python program for monitoring property changes to objects of one
 or more types
 """
 
-
-from tools import serviceutil
-from pyVmomi import vim, vmodl
-from tools import cli, service_instance
-
 import atexit
 import collections
 import sys
+from pyVmomi import vim, vmodl
+from tools import cli, service_instance, serviceutil
 
 
 def parse_propspec(propspec):
@@ -76,9 +73,9 @@ def make_wait_options(max_wait_seconds=None, max_object_updates=None):
     return waitopts
 
 
-def make_property_collector(pc, from_node, props):
+def make_property_collector(prop_collector, from_node, props):
     """
-    :type pc: pyVmomi.VmomiSupport.vmodl.query.PropertyCollector
+    :type prop_collector: pyVmomi.VmomiSupport.vmodl.query.PropertyCollector
     :type from_node: pyVmomi.VmomiSupport.ManagedObject
     :type props: collections.Sequence
     :rtype: pyVmomi.VmomiSupport.vmodl.query.PropertyCollector.Filter
@@ -106,14 +103,16 @@ def make_property_collector(pc, from_node, props):
     filter_spec.propSet = prop_set
 
     try:
-        pc_filter = pc.CreateFilter(filter_spec, True)
+        pc_filter = prop_collector.CreateFilter(filter_spec, True)
         atexit.register(pc_filter.Destroy)
         return pc_filter
     except vmodl.MethodFault as ex:
         if ex._wsdlName == 'InvalidProperty':
-            print("InvalidProperty fault while creating PropertyCollector filter : %s" % ex.name, file=sys.stderr)
+            print("InvalidProperty fault while creating PropertyCollector filter : %s"
+                  % ex.name, file=sys.stderr)
         else:
-            print("Problem creating PropertyCollector filter : %s" % str(ex.faultMessage), file=sys.stderr)
+            print("Problem creating PropertyCollector filter : %s"
+                  % str(ex.faultMessage), file=sys.stderr)
         raise
 
 
@@ -124,8 +123,8 @@ def monitor_property_changes(si, propspec, iterations=None):
     :type iterations: int or None
     """
 
-    pc = si.content.propertyCollector
-    make_property_collector(pc, si.content.rootFolder, propspec)
+    prop_collector = si.content.propertyCollector
+    make_property_collector(prop_collector, si.content.rootFolder, propspec)
     waitopts = make_wait_options(30)
 
     version = ''
@@ -136,29 +135,29 @@ def monitor_property_changes(si, propspec, iterations=None):
                 print('Iteration limit reached, monitoring stopped')
                 break
 
-        result = pc.WaitForUpdatesEx(version, waitopts)
+        result = prop_collector.WaitForUpdatesEx(version, waitopts)
 
         # timeout, call again
         if result is None:
             continue
 
         # process results
-        for filterSet in result.filterSet:
-            for objectSet in filterSet.objectSet:
-                moref = getattr(objectSet, 'obj', None)
+        for filter_set in result.filterSet:
+            for object_set in filter_set.objectSet:
+                moref = getattr(object_set, 'obj', None)
                 assert moref is not None, \
                     'object moref should always be present in objectSet'
 
                 moref = str(moref).strip('\'')
 
-                kind = getattr(objectSet, 'kind', None)
+                kind = getattr(object_set, 'kind', None)
                 assert (
                         kind is not None
                         and kind in ('enter', 'modify', 'leave',)), \
                     'objectSet kind must be valid'
 
                 if kind in ('enter', 'modify'):
-                    change_set = getattr(objectSet, 'changeSet', None)
+                    change_set = getattr(object_set, 'changeSet', None)
                     assert (change_set is not None
                             and isinstance(change_set, collections.Sequence)
                             and len(change_set) > 0), \
@@ -202,8 +201,8 @@ def main():
     parser.add_custom_argument('--iterations', type=int, default=None,
                                action='store',
                                help="""
-                               The number of updates to receive before exiting, default is no limit.Must be 1
-                               or more if specified.
+                               The number of updates to receive before exiting
+                               , default is no limit. Must be 1 or more if specified.
                                """)
     parser.add_custom_argument('--propspec', dest='propspec', required=True,
                                action='append',
@@ -214,7 +213,8 @@ def main():
 
     if args.iterations is not None and args.iterations < 1:
         parser.print_help()
-        print('\nInvalid argument: Iteration count must be omitted or greater than 0', file=sys.stderr)
+        print('\nInvalid argument: Iteration count must be omitted or greater than 0',
+              file=sys.stderr)
         sys.exit(-1)
 
     try:
@@ -234,9 +234,9 @@ if __name__ == '__main__':
     try:
         main()
         sys.exit(0)
-    except Exception as e:
-        print("Caught exception : " + str(e), file=sys.stderr)
-    except KeyboardInterrupt as e:
+    except Exception as ex:
+        print("Caught exception : " + str(ex), file=sys.stderr)
+    except KeyboardInterrupt:
         print("Exiting", file=sys.stderr)
         sys.exit(0)
 

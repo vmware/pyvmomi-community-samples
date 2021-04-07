@@ -30,25 +30,25 @@ __author__ = 'prziborowski'
 
 def main():
     parser = cli.Parser()
-    parser.add_optional_arguments(
-        cli.Argument.OVA_PATH, cli.Argument.DATACENTER_NAME, cli.Argument.RESOURCE_POOL, cli.Argument.DATASTORE_NAME)
+    parser.add_optional_arguments(cli.Argument.OVA_PATH, cli.Argument.DATACENTER_NAME,
+                                  cli.Argument.RESOURCE_POOL, cli.Argument.DATASTORE_NAME)
     args = parser.get_args()
     si = service_instance.connect(args)
 
     if args.datacenter_name:
-        dc = get_dc(si, args.datacenter_name)
+        datacenter = get_dc(si, args.datacenter_name)
     else:
-        dc = si.content.rootFolder.childEntity[0]
+        datacenter = si.content.rootFolder.childEntity[0]
 
     if args.resource_pool:
-        rp = get_rp(si, dc, args.resource_pool)
+        resource_pool = get_rp(si, datacenter, args.resource_pool)
     else:
-        rp = get_largest_free_rp(si, dc)
+        resource_pool = get_largest_free_rp(si, datacenter)
 
     if args.datastore_name:
-        ds = get_ds(dc, args.datastore_name)
+        datastore = get_ds(datacenter, args.datastore_name)
     else:
-        ds = get_largest_free_ds(dc)
+        datastore = get_largest_free_ds(datacenter)
 
     ovf_handle = OvfHandler(args.ova_path)
 
@@ -58,11 +58,12 @@ def main():
     # networkMapping (to map to networks)
     # propertyMapping (descriptor specific properties)
     cisp = vim.OvfManager.CreateImportSpecParams()
-    cisr = ovf_manager.CreateImportSpec(ovf_handle.get_descriptor(), rp, ds, cisp)
+    cisr = ovf_manager.CreateImportSpec(
+        ovf_handle.get_descriptor(), resource_pool, datastore, cisp)
 
     # These errors might be handleable by supporting the parameters in
     # CreateImportSpecParams
-    if len(cisr.error):
+    if cisr.error:
         print("The following errors will prevent import of this OVA:")
         for error in cisr.error:
             print("%s" % error)
@@ -70,7 +71,7 @@ def main():
 
     ovf_handle.set_spec(cisr)
 
-    lease = rp.ImportVApp(cisr.importSpec, dc.vmFolder)
+    lease = resource_pool.ImportVApp(cisr.importSpec, datacenter.vmFolder)
     while lease.state == vim.HttpNfcLease.State.initializing:
         print("Waiting for lease to be ready...")
         time.sleep(1)
@@ -89,77 +90,77 @@ def get_dc(si, name):
     """
     Get a datacenter by its name.
     """
-    for dc in si.content.rootFolder.childEntity:
-        if dc.name == name:
-            return dc
+    for datacenter in si.content.rootFolder.childEntity:
+        if datacenter.name == name:
+            return datacenter
     raise Exception('Failed to find datacenter named %s' % name)
 
 
-def get_rp(si, dc, name):
+def get_rp(si, datacenter, name):
     """
     Get a resource pool in the datacenter by its names.
     """
     view_manager = si.content.viewManager
-    container_view = view_manager.CreateContainerView(dc, [vim.ResourcePool], True)
+    container_view = view_manager.CreateContainerView(datacenter, [vim.ResourcePool], True)
     try:
-        for rp in container_view.view:
-            if rp.name == name:
-                return rp
+        for resource_pool in container_view.view:
+            if resource_pool.name == name:
+                return resource_pool
     finally:
         container_view.Destroy()
     raise Exception("Failed to find resource pool %s in datacenter %s" %
-                    (name, dc.name))
+                    (name, datacenter.name))
 
 
-def get_largest_free_rp(si, dc):
+def get_largest_free_rp(si, datacenter):
     """
     Get the resource pool with the largest unreserved memory for VMs.
     """
     view_manager = si.content.viewManager
-    container_view = view_manager.CreateContainerView(dc, [vim.ResourcePool], True)
+    container_view = view_manager.CreateContainerView(datacenter, [vim.ResourcePool], True)
     largest_rp = None
     unreserved_for_vm = 0
     try:
-        for rp in container_view.view:
-            if rp.runtime.memory.unreservedForVm > unreserved_for_vm:
-                largest_rp = rp
-                unreserved_for_vm = rp.runtime.memory.unreservedForVm
+        for resource_pool in container_view.view:
+            if resource_pool.runtime.memory.unreservedForVm > unreserved_for_vm:
+                largest_rp = resource_pool
+                unreserved_for_vm = resource_pool.runtime.memory.unreservedForVm
     finally:
         container_view.Destroy()
     if largest_rp is None:
-        raise Exception("Failed to find a resource pool in dc %s" % dc.name)
+        raise Exception("Failed to find a resource pool in datacenter %s" % datacenter.name)
     return largest_rp
 
 
-def get_ds(dc, name):
+def get_ds(datacenter, name):
     """
     Pick a datastore by its name.
     """
-    for ds in dc.datastore:
+    for datastore in datacenter.datastore:
         try:
-            if ds.name == name:
-                return ds
-        except:  # Ignore datastores that have issues
+            if datastore.name == name:
+                return datastore
+        except Exception:  # Ignore datastores that have issues
             pass
-    raise Exception("Failed to find %s on datacenter %s" % (name, dc.name))
+    raise Exception("Failed to find %s on datacenter %s" % (name, datacenter.name))
 
 
-def get_largest_free_ds(dc):
+def get_largest_free_ds(datacenter):
     """
     Pick the datastore that is accessible with the largest free space.
     """
     largest = None
     largest_free = 0
-    for ds in dc.datastore:
+    for datastore in datacenter.datastore:
         try:
-            free_space = ds.summary.freeSpace
-            if free_space > largest_free and ds.summary.accessible:
+            free_space = datastore.summary.freeSpace
+            if free_space > largest_free and datastore.summary.accessible:
                 largest_free = free_space
-                largest = ds
-        except:  # Ignore datastores that have issues
+                largest = datastore
+        except Exception:  # Ignore datastores that have issues
             pass
     if largest is None:
-        raise Exception('Failed to find any free datastores on %s' % dc.name)
+        raise Exception('Failed to find any free datastores on %s' % datacenter.name)
     return largest
 
 
@@ -201,8 +202,7 @@ class OvfHandler(object):
         """
         if os.path.exists(entry):
             return FileHandle(entry)
-        else:
-            return WebHandle(entry)
+        return WebHandle(entry)
 
     def get_descriptor(self):
         return self.descriptor
@@ -214,7 +214,7 @@ class OvfHandler(object):
         """
         self.spec = spec
 
-    def get_disk(self, file_item, lease):
+    def get_disk(self, file_item):
         """
         Does translation for disk key to file name, returning a file handle.
         """
@@ -240,13 +240,13 @@ class OvfHandler(object):
             lease.Complete()
             print("Finished deploy successfully.")
             return 0
-        except vmodl.MethodFault as e:
-            print("Hit an error in upload: %s" % e)
-            lease.Abort(e)
-        except Exception as e:
+        except vmodl.MethodFault as ex:
+            print("Hit an error in upload: %s" % ex)
+            lease.Abort(ex)
+        except Exception as ex:
             print("Lease: %s" % lease.info)
-            print("Hit an error in upload: %s" % e)
-            lease.Abort(vmodl.fault.SystemError(reason=str(e)))
+            print("Hit an error in upload: %s" % ex)
+            lease.Abort(vmodl.fault.SystemError(reason=str(ex)))
         return 1
 
     def upload_disk(self, file_item, lease, host):
@@ -254,7 +254,7 @@ class OvfHandler(object):
         Upload an individual disk. Passes the file handle of the
         disk directly to the urlopen request.
         """
-        ovffile = self.get_disk(file_item, lease)
+        ovffile = self.get_disk(file_item)
         if ovffile is None:
             return
         device_url = self.get_device_url(file_item, lease)
@@ -284,7 +284,7 @@ class OvfHandler(object):
                                         vim.HttpNfcLease.State.error]:
                 self.start_timer()
             sys.stderr.write("Progress: %d%%\r" % prog)
-        except:  # Any exception means we should stop updating progress.
+        except Exception:  # Any exception means we should stop updating progress.
             pass
 
 
@@ -381,4 +381,4 @@ class WebHandle(object):
 
 
 if __name__ == "__main__":
-    exit(main())
+    sys.exit(main())

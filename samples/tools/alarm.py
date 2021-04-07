@@ -6,7 +6,6 @@ Blog: http://www.errr-online.com/
 This code has been released under the terms of the Apache 2.0 licenses
 http://www.apache.org/licenses/LICENSE-2.0.html
 """
-from __future__ import print_function
 
 import logging
 from xml.etree.ElementTree import Element
@@ -109,7 +108,7 @@ def _send_request(payload=None, session=None):
     # Ive seen some code in pyvmomi where it seems like we check for http vs
     # https but since the default is https do people really run it on http?
     url = 'https://{0}/sdk'.format(host_port)
-    logging.debug("Sending {0} to {1}".format(payload, url))
+    logging.debug("Sending %s to %s", payload, url)
     # I opted to ignore invalid ssl here because that happens in pyvmomi.
     # Once pyvmomi validates ssl it wont take much to make it happen here.
     res = requests.post(url=url, data=payload, headers={
@@ -118,8 +117,7 @@ def _send_request(payload=None, session=None):
         'Content-Type': 'application/xml'
     }, verify=False)
     if res.status_code != 200:
-        logging.debug("Failed to reset alarm. HTTP Status: {0}".format(
-            res.status_code))
+        logging.debug("Failed to reset alarm. HTTP Status: %s", res.status_code)
         return False
     return True
 

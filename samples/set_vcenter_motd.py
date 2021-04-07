@@ -18,7 +18,8 @@ import requests
 from tools import cli, service_instance
 # Snippet borrowed from Michael Rice
 # https://gist.github.com/michaelrice/a6794a017e349fc65d01
-requests.packages.urllib3.disable_warnings()
+requests.packages.urllib3.disable_warnings(
+    requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
 
 # Demonstrates configuring the Message of the Day (MOTD) on vCenter Server

@@ -15,7 +15,8 @@ from pyVmomi import vim
 
 
 parser = cli.Parser()
-parser.add_optional_arguments(cli.Argument.VM_NAME, cli.Argument.DNS_NAME, cli.Argument.UUID, cli.Argument.VM_IP)
+parser.add_optional_arguments(
+    cli.Argument.VM_NAME, cli.Argument.DNS_NAME, cli.Argument.UUID, cli.Argument.VM_IP)
 args = parser.get_args()
 si = service_instance.connect(args)
 

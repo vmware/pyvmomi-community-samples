@@ -12,13 +12,12 @@
 #
 
 import requests
-from tools import cli
 from pyVmomi import vim
-from tools import tasks, service_instance, pchelper
+from tools import cli, tasks, service_instance, pchelper
 
 # disable  urllib3 warnings
-if hasattr(requests.packages.urllib3, 'disable_warnings'):
-    requests.packages.urllib3.disable_warnings()
+requests.packages.urllib3.disable_warnings(
+    requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
 
 def update_virtual_cd_backend_by_obj(si, vm_obj, cdrom_number,
@@ -74,7 +73,8 @@ def update_virtual_cd_backend_by_obj(si, vm_obj, cdrom_number,
 def main():
     parser = cli.Parser()
     parser.add_required_arguments(cli.Argument.VM_NAME)
-    # Full path to iso. i.e. "[ds1] folder/Ubuntu.iso" If not provided, backend will set to RemotePassThrough
+    # Full path to iso. i.e. "[ds1] folder/Ubuntu.iso"
+    # If not provided, backend will set to RemotePassThrough
     parser.add_optional_arguments(cli.Argument.ISO)
     parser.add_custom_argument('--unitnumber', required=True, help='CD/DVD unit number.', type=int)
     args = parser.get_args()
@@ -87,7 +87,8 @@ def main():
     if vm_obj:
         update_virtual_cd_backend_by_obj(si, vm_obj, args.unitnumber, args.iso)
         device_change = args.iso if args.iso else 'Client Device'
-        print('VM CD/DVD {} successfully state changed to {}'.format(args.unitnumber, device_change))
+        print('VM CD/DVD {} successfully state changed to {}'.format(args.unitnumber,
+                                                                     device_change))
     else:
         print("VM not found")
 

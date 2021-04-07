@@ -15,11 +15,8 @@
 Python program for retrieving a port group for both VSS and DVS
 """
 
-import atexit
-
 from tools import cli, pchelper, service_instance
-from pyVmomi import vmodl
-from pyVmomi import vim
+from pyVmomi import vmodl, vim
 
 
 def main():
@@ -36,8 +33,8 @@ def main():
         content = si.RetrieveContent()
 
         # searching for port group
-        pg = pchelper.get_obj(content, [vim.Network], args.port_group)
-        print(pg)
+        port_group = pchelper.get_obj(content, [vim.Network], args.port_group)
+        print(port_group)
 
     except vmodl.MethodFault as error:
         print("Caught vmodl fault : {0}".format(error.msg))

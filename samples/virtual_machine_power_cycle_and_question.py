@@ -30,8 +30,8 @@ def _create_char_spinner():
     """Creates a generator yielding a char based spinner.
     """
     while True:
-        for c in '|/-\\':
-            yield c
+        for character in '|/-\\':
+            yield character
 
 
 _spinner = _create_char_spinner()
@@ -52,8 +52,8 @@ def answer_vm_question(virtual_machine, choice=None):
     choices = virtual_machine.runtime.question.choice.choiceInfo
     default_option = None
     if virtual_machine.runtime.question.choice.defaultIndex is not None:
-        ii = virtual_machine.runtime.question.choice.defaultIndex
-        default_option = choices[ii]
+        index = virtual_machine.runtime.question.choice.defaultIndex
+        default_option = choices[index]
     while choice not in [o.key for o in choices]:
         print("VM power on is paused by this question:\n\n")
         print("\n".join(textwrap.wrap(
@@ -64,7 +64,7 @@ def answer_vm_question(virtual_machine, choice=None):
             print("default (%s): %s\n" % (default_option.label,
                                           default_option.key))
         if choice is None:
-            choice = raw_input("\nchoice number: ").strip()
+            choice = input("\nchoice number: ").strip()
         print("...")
     return choice
 
@@ -145,5 +145,4 @@ if vm.runtime.powerState != vim.VirtualMachinePowerState.poweredOn:
             print(fault_msg.message)
         sys.exit(-1)
 
-print
 sys.exit(0)

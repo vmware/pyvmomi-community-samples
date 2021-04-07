@@ -45,7 +45,8 @@ def main():
                 nicspec.device.wakeOnLanEnabled = True
 
                 # NSX-T Logical Switch
-                if isinstance(pchelper.get_obj(content, [vim.Network], args.port_group), vim.OpaqueNetwork):
+                if isinstance(pchelper.get_obj(
+                        content, [vim.Network], args.port_group), vim.OpaqueNetwork):
                     network = \
                         pchelper.get_obj(content, [vim.Network], args.port_group)
                     nicspec.device.backing = \
@@ -58,7 +59,8 @@ def main():
 
                 # vSphere Distributed Virtual Switch
                 elif hasattr(pchelper.get_obj(content, [vim.Network], args.port_group), 'portKeys'):
-                    network = pchelper.get_obj(content, [vim.dvs.DistributedVirtualPortgroup], args.port_group)
+                    network = pchelper.get_obj(
+                        content, [vim.dvs.DistributedVirtualPortgroup], args.port_group)
                     dvs_port_connection = vim.dvs.PortConnection()
                     dvs_port_connection.portgroupKey = network.key
                     dvs_port_connection.switchUuid = \

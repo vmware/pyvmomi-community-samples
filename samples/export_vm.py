@@ -21,8 +21,8 @@ from pyVmomi import vim
 from tools import cli, service_instance, pchelper
 
 # disable  urllib3 warnings
-if hasattr(requests.packages.urllib3, 'disable_warnings'):
-    requests.packages.urllib3.disable_warnings()
+requests.packages.urllib3.disable_warnings(
+    requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
 
 def print_http_nfc_lease_info(info):
@@ -205,22 +205,22 @@ def main():
                 print('HTTP NFC Lease Ready')
                 print_http_nfc_lease_info(http_nfc_lease.info)
 
-                for deviceUrl in http_nfc_lease.info.deviceUrl:
-                    if not deviceUrl.targetId:
-                        print("No targetId found for url: {}.".format(deviceUrl.url))
+                for device_url in http_nfc_lease.info.deviceUrl:
+                    if not device_url.targetId:
+                        print("No targetId found for url: {}.".format(device_url.url))
                         print("Device is not eligible for export. "
                               "This could be a mounted iso or img of some sort")
                         print("Skipping...")
                         continue
 
                     temp_target_disk = os.path.join(target_directory,
-                                                    deviceUrl.targetId)
-                    print('Downloading {} to {}'.format(deviceUrl.url,
+                                                    device_url.targetId)
+                    print('Downloading {} to {}'.format(device_url.url,
                                                         temp_target_disk))
                     current_bytes_written = download_device(
                         headers=headers, cookies=cookies,
                         temp_target_disk=temp_target_disk,
-                        device_url=deviceUrl.url,
+                        device_url=device_url.url,
                         lease_updater=lease_updater,
                         total_bytes_written=total_bytes_written,
                         total_bytes_to_write=total_bytes_to_write)
@@ -229,12 +229,12 @@ def main():
                     print('Creating OVF file for {}'.format(temp_target_disk))
                     # Adding Disk to OVF Files list
                     ovf_file = vim.OvfManager.OvfFile()
-                    ovf_file.deviceId = deviceUrl.key
-                    ovf_file.path = deviceUrl.targetId
+                    ovf_file.deviceId = device_url.key
+                    ovf_file.path = device_url.targetId
                     ovf_file.size = current_bytes_written
                     ovf_files.append(ovf_file)
                 break
-            elif http_nfc_lease.state == vim.HttpNfcLease.State.initializing:
+            if http_nfc_lease.state == vim.HttpNfcLease.State.initializing:
                 print('HTTP NFC Lease Initializing.')
             elif http_nfc_lease.state == vim.HttpNfcLease.State.error:
                 print("HTTP NFC Lease error: {}".format(
@@ -252,20 +252,20 @@ def main():
                                                             cdp=ovf_parameters)
         if vm_descriptor_result.error:
             raise vm_descriptor_result.error[0].fault
-        else:
-            vm_descriptor = vm_descriptor_result.ovfDescriptor
-            target_ovf_descriptor_path = os.path.join(target_directory,
-                                                      vm_descriptor_name +
-                                                      '.ovf')
-            print('Writing OVF Descriptor {}'.format(
-                target_ovf_descriptor_path))
-            with open(target_ovf_descriptor_path, 'wb') as handle:
-                handle.write(str.encode(vm_descriptor))
-            # ending lease
-            http_nfc_lease.HttpNfcLeaseProgress(100)
-            http_nfc_lease.HttpNfcLeaseComplete()
-            # stopping thread
-            lease_updater.stop()
+
+        vm_descriptor = vm_descriptor_result.ovfDescriptor
+        target_ovf_descriptor_path = os.path.join(target_directory,
+                                                  vm_descriptor_name +
+                                                  '.ovf')
+        print('Writing OVF Descriptor {}'.format(
+            target_ovf_descriptor_path))
+        with open(target_ovf_descriptor_path, 'wb') as handle:
+            handle.write(str.encode(vm_descriptor))
+        # ending lease
+        http_nfc_lease.HttpNfcLeaseProgress(100)
+        http_nfc_lease.HttpNfcLeaseComplete()
+        # stopping thread
+        lease_updater.stop()
     except Exception as ex:
         print(ex)
         # Complete lease upon exception

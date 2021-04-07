@@ -7,19 +7,18 @@ Note: Example code For testing purposes only
 This code has been released under the terms of the Apache-2.0 license
 http://opensource.org/licenses/Apache-2.0
 """
-from __future__ import print_function
+import sys
 from pyVmomi import vim
 from tools import cli, service_instance
-import sys
 
 
 def get_vm_hosts(content):
     host_view = content.viewManager.CreateContainerView(content.rootFolder,
                                                         [vim.HostSystem],
                                                         True)
-    obj = [host for host in host_view.view]
+    hosts = list(host_view.view)
     host_view.Destroy()
-    return obj
+    return hosts
 
 
 def del_hosts_switch(hosts, vswitch_name):

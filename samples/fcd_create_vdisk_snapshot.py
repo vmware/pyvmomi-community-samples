@@ -16,8 +16,7 @@ Python program for creating a snapshot of a first class disk (fcd)
 """
 
 from tools import cli, tasks, disk, pchelper, service_instance
-from pyVmomi import vmodl
-from pyVmomi import vim
+from pyVmomi import vmodl, vim
 
 
 def main():

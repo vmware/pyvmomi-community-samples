@@ -8,8 +8,7 @@ associated devices
 """
 
 import json
-from pyVmomi import vmodl
-from pyVmomi import vim
+from pyVmomi import vmodl, vim
 from tools import cli, service_instance
 
 

@@ -13,6 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+Example for adding a VM note
+"""
+
 from pyVmomi import vim
 from tools import cli, service_instance, tasks, pchelper
 

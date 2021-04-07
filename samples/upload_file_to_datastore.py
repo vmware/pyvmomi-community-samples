@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 
-from __future__ import print_function  # This import is for python2.*
-import requests
+"""
+Example for file upload to datastore
+"""
+
 import ssl
-from pyVmomi import vim
-from pyVmomi import vmodl
+import requests
+from pyVmomi import vim, vmodl
 from tools import cli, service_instance
 
 
@@ -20,8 +22,8 @@ def main():
         ssl_context.verify_mode = ssl.CERT_NONE
         verify_cert = False
         # disable urllib3 warnings
-        if hasattr(requests.packages.urllib3, 'disable_warnings'):
-            requests.packages.urllib3.disable_warnings()
+        requests.packages.urllib3.disable_warnings(
+            requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
     try:
         si = service_instance.connect(args)
@@ -37,15 +39,15 @@ def main():
         # Find the datastore and datacenter we are using
         datacenter = None
         datastore = None
-        for dc in datacenters_object_view.view:
+        for dc_obj in datacenters_object_view.view:
             datastores_object_view = content.viewManager.CreateContainerView(
-                dc,
+                dc_obj,
                 [vim.Datastore],
                 True)
-            for ds in datastores_object_view.view:
-                if ds.info.name == args.datastore_name:
-                    datacenter = dc
-                    datastore = ds
+            for ds_obj in datastores_object_view.view:
+                if ds_obj.info.name == args.datastore_name:
+                    datacenter = dc_obj
+                    datastore = ds_obj
         if not datacenter or not datastore:
             print("Could not find the datastore specified")
             raise SystemExit(-1)
@@ -82,18 +84,18 @@ def main():
 
         # Get the file to upload ready, extra protection by using with against
         # leaving open threads
-        with open(args.local_file_path, "rb") as f:
+        with open(args.local_file_path, "rb") as file_data:
             # Connect and upload the file
             requests.put(http_url,
                          params=params,
-                         data=f,
+                         data=file_data,
                          headers=headers,
                          cookies=cookie,
                          verify=verify_cert)
         print("uploaded the file")
 
-    except vmodl.MethodFault as e:
-        print("Caught vmodl fault : " + e.msg)
+    except vmodl.MethodFault as ex:
+        print("Caught vmodl fault : " + ex.msg)
         raise SystemExit(-1)
 
     raise SystemExit(0)

@@ -28,7 +28,7 @@ vSphere Python SDK program to perform snapshot operations.
 
 import sys
 from tools import cli, pchelper, service_instance
-from pyVmomi import vim, vmodl
+from pyVmomi import vim
 from pyVim.task import WaitForTask
 
 
@@ -69,7 +69,8 @@ def main():
 
     print("Trying to connect to VCENTER SERVER . . .")
     parser = cli.Parser()
-    parser.add_optional_arguments(cli.Argument.VM_NAME, cli.Argument.SNAPSHOT_OPERATION, cli.Argument.SNAPSHOT_NAME)
+    parser.add_optional_arguments(
+        cli.Argument.VM_NAME, cli.Argument.SNAPSHOT_OPERATION, cli.Argument.SNAPSHOT_NAME)
     args = parser.get_args()
     si = service_instance.connect(args)
 

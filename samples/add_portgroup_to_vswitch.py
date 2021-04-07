@@ -7,30 +7,29 @@ Note: Example code For testing purposes only
 This code has been released under the terms of the Apache-2.0 license
 http://opensource.org/licenses/Apache-2.0
 """
-from __future__ import print_function
-from pyVmomi import vim
-from tools import cli, service_instance
 import sys
 import re
+from pyVmomi import vim
+from tools import cli, service_instance
 
 
 def get_vm_hosts(content, regex_esxi=None):
     host_view = content.viewManager.CreateContainerView(content.rootFolder,
                                                         [vim.HostSystem],
                                                         True)
-    obj = [host for host in host_view.view]
+    hosts = list(host_view.view)
     match_obj = []
     if regex_esxi:
-        for esxi in obj:
+        for esxi in hosts:
             if re.findall(r'%s.*' % regex_esxi, esxi.name):
                 match_obj.append(esxi)
         match_obj_name = [match_esxi.name for match_esxi in match_obj]
         print("Matched ESXi hosts: %s" % match_obj_name)
         host_view.Destroy()
         return match_obj
-    else:
-        host_view.Destroy()
-        return obj
+
+    host_view.Destroy()
+    return hosts
 
 
 def add_hosts_portgroup(hosts, vswitch_name, portgroup_name, vlan_id):
@@ -55,8 +54,12 @@ def add_host_portgroup(host, vswitch_name, portgroup_name, vlan_id):
 
 
 def main():
+    """
+    Sample for adding a port group to a virtual switch
+    """
     parser = cli.Parser()
-    parser.add_required_arguments(cli.Argument.VSWITCH_NAME, cli.Argument.PORT_GROUP, cli.Argument.VLAN_ID)
+    parser.add_required_arguments(
+        cli.Argument.VSWITCH_NAME, cli.Argument.PORT_GROUP, cli.Argument.VLAN_ID)
     parser.add_optional_arguments(cli.Argument.ESX_NAME_REGEX)
     args = parser.get_args()
     si = service_instance.connect(args)

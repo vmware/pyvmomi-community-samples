@@ -16,9 +16,9 @@ def get_vm_hosts(content):
     host_view = content.viewManager.CreateContainerView(content.rootFolder,
                                                         [vim.HostSystem],
                                                         True)
-    obj = [host for host in host_view.view]
+    hosts = list(host_view.view)
     host_view.Destroy()
-    return obj
+    return hosts
 
 
 def del_hosts_portgroup(hosts, portgroup_name):

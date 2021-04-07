@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-from pyVmomi import vim, pbm, VmomiSupport
-from tools import cli, service_instance
 import ast
 import ssl
+from pyVmomi import pbm, VmomiSupport
+from tools import cli, service_instance
 
 """
 Example of using Storage Policy Based Management (SPBM) API
@@ -86,7 +86,8 @@ def update_profile(pm, profile, rules):
 # Start program
 def main():
     parser = cli.Parser()
-    parser.add_custom_argument('--policy-name', required=True, action='store', help='VM Storage Policy ID')
+    parser.add_custom_argument('--policy-name', required=True, action='store',
+                               help='VM Storage Policy ID')
     parser.add_custom_argument('--policy-rule', required=True, action='store',
                                help="VM Storage Policy Rule encoded as dictionary"
                                "example:"

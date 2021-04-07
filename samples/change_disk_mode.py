@@ -7,16 +7,14 @@
 # http://opensource.org/licenses/Apache-2.0
 #
 
-import atexit
 import requests
-from tools import cli
 from pyVmomi import vim
-from tools import tasks, service_instance, pchelper
+from tools import cli, tasks, service_instance, pchelper
 
 
 # disable urllib3 warnings
-if hasattr(requests.packages.urllib3, 'disable_warnings'):
-    requests.packages.urllib3.disable_warnings()
+requests.packages.urllib3.disable_warnings(
+    requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
 
 def change_disk_mode(si, vm_obj, disk_number, mode,
@@ -67,7 +65,8 @@ def main():
 
     if vm_obj:
         change_disk_mode(si, vm_obj, args.disk_number, args.disk_mode)
-        print('VM Disk {} successfully changed to mode {}.'.format(args.disk_number, args.disk_mode))
+        print('VM Disk {} successfully changed to mode {}.'.format(args.disk_number,
+                                                                   args.disk_mode))
     else:
         print("VM not found.")
 

@@ -13,13 +13,12 @@
 #
 
 import requests
-from tools import cli
 from pyVmomi import vim
-from tools import tasks, pchelper, service_instance
+from tools import cli, tasks, pchelper, service_instance
 
 # disable  urllib3 warnings
-if hasattr(requests.packages.urllib3, 'disable_warnings'):
-    requests.packages.urllib3.disable_warnings()
+requests.packages.urllib3.disable_warnings(
+    requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
 
 def get_hdd_prefix_label(language):
@@ -67,7 +66,8 @@ def delete_virtual_disk(si, vm_obj, disk_number, language):
 def main():
     parser = cli.Parser()
     parser.add_required_arguments(cli.Argument.VM_NAME)
-    parser.add_custom_argument('--unitnumber', required=True, help='HDD number to delete.', type=int)
+    parser.add_custom_argument('--unitnumber', required=True,
+                               help='HDD number to delete.', type=int)
     parser.add_custom_argument('--yes', help='Confirm disk deletion.', action='store_true')
     parser.add_custom_argument('--language', default='English', help='Language your vcenter used.')
     args = parser.get_args()

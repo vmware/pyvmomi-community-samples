@@ -97,7 +97,7 @@ def check_storage_profile_associated(profile_manager, ref, name):
 def search_storage_profile_by_name(profile_manager, name):
     """Search vmware storage policy profile by name
 
-    :param profileManager: A VMware Storage Policy Service manager object
+    :param profile_manager: A VMware Storage Policy Service manager object
     :type profileManager: pbm.profile.ProfileManager
     :param name: A VMware Storage Policy profile name
     :type name: str
@@ -116,6 +116,7 @@ def search_storage_profile_by_name(profile_manager, name):
     for storageProfile in storage_profiles:
         if storageProfile.name == name:
             return storageProfile
+    return -1
 
 
 def set_vm_storage_profile(vm, profile):
@@ -207,8 +208,8 @@ def main():
     parser.add_custom_argument('--set_vm_home', required=False, action='store_true',
                                help='Set the specified policy for vm home.')
     parser.add_custom_argument('--virtual_disk_number', required=False, nargs='+', metavar='int',
-                               help='The sequence numbers of the virtual disks for which the specified policy should be'
-                                    ' set. Space as delimiter.')
+                               help='The sequence numbers of the virtual disks for which '
+                                    'the specified policy should be set. Space as delimiter.')
     args = parser.get_args()
     si = service_instance.connect(args)
 
@@ -258,7 +259,8 @@ def main():
                              device.deviceInfo.label).group(1) in vd_number:
                     pm_object_type = \
                         pbm.ServerObjectRef.ObjectType("virtualDiskId")
-                    pm_ref = pbm.ServerObjectRef(key="{}:{}".format(vm._moId, device.key), objectType=pm_object_type)
+                    pm_ref = pbm.ServerObjectRef(
+                        key="{}:{}".format(vm._moId, device.key), objectType=pm_object_type)
 
                     # The implementation of idempotency for the operation
                     # of the storage policy assignment for virtual disk

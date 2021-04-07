@@ -114,9 +114,9 @@ def search_for_obj(content, vim_type, name, folder=None, recurse=True):
     obj = None
     container = content.viewManager.CreateContainerView(folder, vim_type, recurse)
 
-    for c in container.view:
-        if c.name == name:
-            obj = c
+    for managed_object_ref in container.view:
+        if managed_object_ref.name == name:
+            obj = managed_object_ref
             break
     container.Destroy()
     return obj

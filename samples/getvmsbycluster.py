@@ -5,10 +5,8 @@ Github: https://github.com/chupman/
 Example: Get guest info with folder and host placement
 
 """
-from __future__ import print_function
-from tools import cli, service_instance
-import argparse
 import json
+from tools import cli, service_instance
 
 
 data = {}
@@ -49,23 +47,23 @@ def vmsummary(summary, guest):
     return vmsum
 
 
-def vm2dict(dc, cluster, host, vm, summary):
+def vm2dict(datacenter, cluster, host, vm, summary):
     # If nested folder path is required, split into a separate function
     vmname = vm.summary.config.name
-    data[dc][cluster][host][vmname]['folder'] = vm.parent.name
-    data[dc][cluster][host][vmname]['mem'] = summary['mem']
-    data[dc][cluster][host][vmname]['diskGB'] = summary['diskGB']
-    data[dc][cluster][host][vmname]['cpu'] = summary['cpu']
-    data[dc][cluster][host][vmname]['path'] = summary['path']
-    data[dc][cluster][host][vmname]['net'] = summary['net']
-    data[dc][cluster][host][vmname]['ostype'] = summary['ostype']
-    data[dc][cluster][host][vmname]['state'] = summary['state']
-    data[dc][cluster][host][vmname]['annotation'] = summary['annotation']
+    data[datacenter][cluster][host][vmname]['folder'] = vm.parent.name
+    data[datacenter][cluster][host][vmname]['mem'] = summary['mem']
+    data[datacenter][cluster][host][vmname]['diskGB'] = summary['diskGB']
+    data[datacenter][cluster][host][vmname]['cpu'] = summary['cpu']
+    data[datacenter][cluster][host][vmname]['path'] = summary['path']
+    data[datacenter][cluster][host][vmname]['net'] = summary['net']
+    data[datacenter][cluster][host][vmname]['ostype'] = summary['ostype']
+    data[datacenter][cluster][host][vmname]['state'] = summary['state']
+    data[datacenter][cluster][host][vmname]['annotation'] = summary['annotation']
 
 
 def data2json(raw_data, args):
-    with open(args.jsonfile, 'w') as f:
-        json.dump(raw_data, f)
+    with open(args.jsonfile, 'w') as json_file:
+        json.dump(raw_data, json_file)
 
 
 def main():
@@ -75,7 +73,8 @@ def main():
     parser = cli.Parser()
     parser.add_custom_argument('--json', required=False, action='store_true',
                                help='Write out to json file')
-    parser.add_custom_argument('--jsonfile', required=False, action='store', default='getvmsbycluster.json',
+    parser.add_custom_argument('--jsonfile', required=False, action='store',
+                               default='getvmsbycluster.json',
                                help='Filename and path of json file')
     parser.add_custom_argument('--silent', required=False, action='store_true',
                                help='supress output to screen')
@@ -86,23 +85,23 @@ def main():
     content = si.RetrieveContent()
     children = content.rootFolder.childEntity
     for child in children:  # Iterate though DataCenters
-        dc = child
-        data[dc.name] = {}  # Add data Centers to data dict
-        clusters = dc.hostFolder.childEntity
+        datacenter = child
+        data[datacenter.name] = {}  # Add data Centers to data dict
+        clusters = datacenter.hostFolder.childEntity
         for cluster in clusters:  # Iterate through the clusters in the DC
             # Add Clusters to data dict
-            data[dc.name][cluster.name] = {}
+            data[datacenter.name][cluster.name] = {}
             hosts = cluster.host  # Variable to make pep8 compliance
             for host in hosts:  # Iterate through Hosts in the Cluster
                 hostname = host.summary.config.name
                 # Add VMs to data dict by config name
-                data[dc.name][cluster.name][hostname] = {}
+                data[datacenter.name][cluster.name][hostname] = {}
                 vms = host.vm
                 for vm in vms:  # Iterate through each VM on the host
                     vmname = vm.summary.config.name
-                    data[dc.name][cluster.name][hostname][vmname] = {}
+                    data[datacenter.name][cluster.name][hostname][vmname] = {}
                     summary = vmsummary(vm.summary, vm.guest)
-                    vm2dict(dc.name, cluster.name, hostname, vm, summary)
+                    vm2dict(datacenter.name, cluster.name, hostname, vm, summary)
 
     if not args.silent:
         print(json.dumps(data, sort_keys=True, indent=4))

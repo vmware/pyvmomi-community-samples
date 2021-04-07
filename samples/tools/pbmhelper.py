@@ -62,24 +62,24 @@ def retrieve_storage_policy(pbm_content, policy):
     retrieve_storage_policy(pbm_content, "Policy Name")
     """
     # Set PbmQueryProfile
-    pm = pbm_content.profileManager
+    profile_manager = pbm_content.profileManager
 
     # Retrieving Storage Policies
-    profile_ids = pm.PbmQueryProfile(resourceType=pbm.profile.ResourceType(
+    profile_ids = profile_manager.PbmQueryProfile(resourceType=pbm.profile.ResourceType(
         resourceType="STORAGE"), profileCategory="REQUIREMENT"
     )
     if len(profile_ids) > 0:
-        profiles = pm.PbmRetrieveContent(profileIds=profile_ids)
+        profiles = profile_manager.PbmRetrieveContent(profileIds=profile_ids)
     else:
         raise RuntimeError("No Storage Policies found.")
 
     # Searching for Storage Policy
-    profile = None
-    for p in profiles:
-        if p.name == policy:
-            profile = p
+    storage_polity_profile = None
+    for profile in profiles:
+        if profile.name == policy:
+            storage_polity_profile = profile
             break
-    if not profile:
+    if not storage_polity_profile:
         raise RuntimeError("Storage Policy specified not found.")
 
-    return profile
+    return storage_polity_profile

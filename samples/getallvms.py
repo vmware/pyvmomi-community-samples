@@ -19,8 +19,7 @@ Python program for listing the VMs on an ESX / vCenter host
 """
 
 import re
-from pyVmomi import vmodl
-from pyVmomi import vim
+from pyVmomi import vmodl, vim
 from tools import cli, service_instance
 
 
@@ -62,7 +61,8 @@ def main():
     """
 
     parser = cli.Parser()
-    parser.add_custom_argument('-f', '--find', required=False, action='store', help='String to match VM names')
+    parser.add_custom_argument('-f', '--find', required=False,
+                               action='store', help='String to match VM names')
     args = parser.get_args()
     si = service_instance.connect(args)
 

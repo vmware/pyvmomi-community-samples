@@ -14,6 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+Find VM by UUID
+"""
+
+import sys
 from tools import cli, service_instance
 
 
@@ -30,7 +35,7 @@ vm = search_index.FindByUuid(None, args.uuid, True)
 
 if vm is None:
     print("Could not find virtual machine '{0}'".format(args.uuid))
-    exit(1)
+    sys.exit(1)
 
 print("Found Virtual Machine")
 details = {'name': vm.summary.config.name,

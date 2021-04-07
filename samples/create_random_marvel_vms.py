@@ -14,10 +14,11 @@ import random
 import time
 import requests
 from pyVmomi import vim
-from tools import cli, service_instance, tasks
-from add_nic_to_vm import add_nic, get_obj
+from tools import cli, service_instance, tasks, pchelper
+from add_nic_to_vm import add_nic
 
 try:
+    # pylint: disable=redefined-builtin
     input = raw_input
 except NameError:
     pass
@@ -140,8 +141,8 @@ def main():
         marvel_private_key = input('Marvel private key: ').strip()
 
     content = si.RetrieveContent()
-    vmfolder = get_obj(content, [vim.Folder], args.folder_name)
-    resource_pool = get_obj(content, [vim.ResourcePool], args.resource_pool)
+    vmfolder = pchelper.get_obj(content, [vim.Folder], args.folder_name)
+    resource_pool = pchelper.get_obj(content, [vim.ResourcePool], args.resource_pool)
 
     print("Connecting to Marvel API and retrieving " + str(args.count) +
           " random character(s) ...")
@@ -155,7 +156,7 @@ def main():
         create_dummy_vm(vm_name, si, vmfolder, resource_pool,
                         args.datastore_name)
         if args.opaque_network_name:
-            vm = get_obj(content, [vim.VirtualMachine], vm_name)
+            vm = pchelper.get_obj(content, [vim.VirtualMachine], vm_name)
             add_nic(si, vm, args.opaque_network_name)
     return 0
 

@@ -31,13 +31,15 @@ class Parser:
         parser = cli.Parser()
         parser.add_required_arguments(cli.Argument.VM_NAME)
         parser.add_optional_arguments(cli.Argument.DATACENTER_NAME, cli.Argument.NIC_NAME)
-        parser.add_custom_argument('--disk-number', required=True, help='Disk number to change mode.')
+        parser.add_custom_argument(
+            '--disk-number', required=True, help='Disk number to change mode.')
         args = parser.get_args()
     """
 
     def __init__(self):
         """
-        Defines two arguments groups. One for the standard arguments and one for sample specific arguments.
+        Defines two arguments groups.
+        One for the standard arguments and one for sample specific arguments.
         The standard group cannot be extended.
         """
         self._parser = argparse.ArgumentParser(description='Arguments for talking to vCenter')
@@ -113,6 +115,9 @@ class Parser:
         self._specific_args_group.add_argument(*name_or_flags, **options)
 
     def set_epilog(self, epilog):
+        """
+        Text to display after the argument help
+        """
         self._parser.epilog = epilog
 
     def _prompt_for_password(self, args):
@@ -121,8 +126,8 @@ class Parser:
         """
         if not args.password:
             args.password = getpass.getpass(
-                prompt='"--password" not provided! Please enter password for host %s and user %s: ' %
-                       (args.host, args.user))
+                prompt='"--password" not provided! Please enter password for host %s and user %s: '
+                       % (args.host, args.user))
         return args
 
 
@@ -228,7 +233,8 @@ class Argument:
     }
     VIHOST = {
         'name_or_flags': ['--vihost'],
-        'options': {'action': 'store', 'help': 'Name/ip address of ESXi host as seen in vCenter Server'}
+        'options': {'action': 'store',
+                    'help': 'Name/ip address of ESXi host as seen in vCenter Server'}
     }
     DVS_PORT_GROUP_NAME = {
         'name_or_flags': ['--dvs-pg-name'],
@@ -248,7 +254,8 @@ class Argument:
     }
     DISK_TYPE = {
         'name_or_flags': ['--disk-type'],
-        'options': {'action': 'store', 'default': 'thin', 'choices': ['thick', 'thin'], 'help': 'thick or thin'}
+        'options': {'action': 'store',
+                    'default': 'thin', 'choices': ['thick', 'thin'], 'help': 'thick or thin'}
     }
     DISK_SIZE = {
         'name_or_flags': ['--disk-size'],
@@ -307,7 +314,8 @@ class Argument:
     ISO = {
         'name_or_flags': ['--iso'],
         'options': {'action': 'store',
-                    'help': 'ISO to use in test. Use datastore path format. E.g. [datastore1] path/to/file.iso'}
+                    'help': 'ISO to use in test. Use datastore path format. '
+                            'E.g. [datastore1] path/to/file.iso'}
     }
     NIC_NAME = {
         'name_or_flags': ['--nic-name'],
@@ -319,7 +327,8 @@ class Argument:
     }
     NIC_STATE = {
         'name_or_flags': ['--nic-state'],
-        'options': {'action': 'store', 'choices': ['delete', 'disconnect', 'connect'], 'help': 'NIC number.'}
+        'options': {'action': 'store', 'choices': ['delete', 'disconnect', 'connect'],
+                    'help': 'NIC number.'}
     }
     VMDK_PATH = {
         'name_or_flags': ['--vmdk-path'],
@@ -349,7 +358,8 @@ class Argument:
     SNAPSHOT_OPERATION = {
         'name_or_flags': ['-op', '--snapshot-operation'],
         'options': {'action': 'store',
-                    'choices': ['create', 'remove', 'revert', 'list_all', 'list_current', 'remove_all'],
+                    'choices':
+                        ['create', 'remove', 'revert', 'list_all', 'list_current', 'remove_all'],
                     'help': 'Snapshot operation'}
     }
     SNAPSHOT_NAME = {

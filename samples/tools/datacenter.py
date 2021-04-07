@@ -14,7 +14,7 @@ adding resources like HostSystems.
 from pyVmomi import vim
 
 
-def create_datacenter(dcname=None, service_instance=None, folder=None):
+def create_datacenter(dc_name=None, service_instance=None, folder=None):
     """
     Creates a new datacenter with the given name.
     Any % (percent) character used in this name parameter must be escaped,
@@ -38,18 +38,18 @@ def create_datacenter(dcname=None, service_instance=None, folder=None):
 
     :param folder: Folder object to create DC in. If None it will default to
                    rootFolder
-    :param dcname: Name for the new datacenter.
+    :param dc_name: Name for the new datacenter.
     :param service_instance: ServiceInstance connection to a given vCenter
     :return:
     """
-    if len(dcname) > 79:
+    if len(dc_name) > 79:
         raise ValueError("The name of the datacenter must be under "
                          "80 characters.")
     if folder is None:
         folder = service_instance.content.rootFolder
 
     if folder is not None and isinstance(folder, vim.Folder):
-        dc_moref = folder.CreateDatacenter(name=dcname)
+        dc_moref = folder.CreateDatacenter(name=dc_name)
         return dc_moref
 
 
@@ -68,5 +68,5 @@ if __name__ == "__main__":
                               user=MY_ARGS.user,
                               pwd=MY_ARGS.password,
                               port=MY_ARGS.port)
-    create_datacenter(dcname=MY_ARGS.name, service_instance=SI)
+    create_datacenter(dc_name=MY_ARGS.name, service_instance=SI)
     atexit.register(connect.Disconnect, SI)

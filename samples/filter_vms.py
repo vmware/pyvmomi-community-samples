@@ -21,7 +21,6 @@ a traverse spec go through all the datacenters to gather VMs that
 may also be in sub-folders.
 
 """
-import sys
 from pyVmomi import vim, vmodl
 from tools import cli, service_instance, pchelper
 
@@ -44,9 +43,9 @@ def create_filter_spec(vms, prop):
 
 def filter_results(result, value):
     vms = []
-    for o in result.objects:
-        if o.propSet[0].val == value:
-            vms.append(o.obj)
+    for obj in result.objects:
+        if obj.propSet[0].val == value:
+            vms.append(obj.obj)
     return vms
 
 
@@ -62,10 +61,10 @@ def main():
     content = si.RetrieveContent()
     vms = pchelper.get_all_obj(content, [vim.VirtualMachine])
 
-    pc = content.propertyCollector
+    prop_collector = content.propertyCollector
     filter_spec = create_filter_spec(vms, args.property)
     options = vmodl.query.PropertyCollector.RetrieveOptions()
-    result = pc.RetrievePropertiesEx([filter_spec], options)
+    result = prop_collector.RetrievePropertiesEx([filter_spec], options)
     vms = filter_results(result, args.value)
     print("VMs with %s = %s" % (args.property, args.value))
     for vm in vms:

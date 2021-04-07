@@ -9,8 +9,8 @@ http://www.apache.org/licenses/LICENSE-2.0.html
 Example code for using the task scheduler.
 """
 
-from tools import cli, service_instance
 from datetime import datetime, timedelta
+from tools import cli, service_instance
 from pyVmomi import vim
 from pyVim import connect
 
@@ -21,7 +21,7 @@ def main():
     parser.add_optional_arguments(cli.Argument.POWER_ON)
     args = parser.get_args()
     try:
-        dt = datetime.now() + timedelta(minutes=int(args.minutes))
+        date_time = datetime.now() + timedelta(minutes=int(args.minutes))
         # dt = datetime.strptime(args.date, '%d/%m/%Y %H:%M')
     except ValueError:
         print('Unrecognized date format')
@@ -44,7 +44,7 @@ def main():
     spec.name = 'PowerOff vm %s' % args.vm_name
     spec.description = ''
     spec.scheduler = vim.scheduler.OnceTaskScheduler()
-    spec.scheduler.runAt = dt
+    spec.scheduler.runAt = date_time
     spec.action = vim.action.MethodAction()
     if args.power_on:
         spec.action.name = vim.VirtualMachine.PowerOn
@@ -56,6 +56,7 @@ def main():
 
     if si.content.scheduledTaskManager.CreateScheduledTask(vm, spec) is not None:
         print('Scheduled Task Successfully')
+    return 0
 
 
 if __name__ == "__main__":

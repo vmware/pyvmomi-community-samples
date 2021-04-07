@@ -12,13 +12,12 @@
 #
 
 import requests
-from tools import cli
 from pyVmomi import vim
-from tools import service_instance, pchelper
+from tools import cli, service_instance, pchelper
 
 # disable  urllib3 warnings
-if hasattr(requests.packages.urllib3, 'disable_warnings'):
-    requests.packages.urllib3.disable_warnings()
+requests.packages.urllib3.disable_warnings(
+    requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
 
 # http://stackoverflow.com/questions/1094841/

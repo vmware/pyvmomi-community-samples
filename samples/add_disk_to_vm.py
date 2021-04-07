@@ -18,6 +18,9 @@ from tools import cli, pchelper, service_instance
 
 
 def add_disk(vm, disk_size, disk_type):
+    """
+    Add disk to vm
+    """
     spec = vim.vm.ConfigSpec()
     # get all disks on a VM, set unit_number to the next available
     unit_number = 0
@@ -30,7 +33,7 @@ def add_disk(vm, disk_size, disk_type):
                 unit_number += 1
             if unit_number >= 16:
                 print("we don't support this many disks")
-                return
+                return -1
         if isinstance(device, vim.vm.device.VirtualSCSIController):
             controller = device
     if controller is None:
@@ -55,9 +58,13 @@ def add_disk(vm, disk_size, disk_type):
     spec.deviceChange = dev_changes
     vm.ReconfigVM_Task(spec=spec)
     print("%sGB disk added to %s" % (disk_size, vm.config.name))
+    return 0
 
 
 def main():
+    """
+    Sample for adding a disk to vm
+    """
     parser = cli.Parser()
     parser.add_optional_arguments(cli.Argument.VM_NAME, cli.Argument.UUID,
                                   cli.Argument.DISK_TYPE, cli.Argument.DISK_SIZE)

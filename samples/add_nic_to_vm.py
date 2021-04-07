@@ -60,6 +60,9 @@ def add_nic(si, vm, network_name):
 
 
 def main():
+    """
+    Sample for adding a NIC to vm
+    """
     parser = cli.Parser()
     parser.add_required_arguments(cli.Argument.PORT_GROUP)
     parser.add_optional_arguments(cli.Argument.VM_NAME, cli.Argument.UUID)

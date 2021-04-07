@@ -145,7 +145,8 @@ def relocate_vm(vm_name, content, host_dest, datastore_dest=None):
 def main():
 
     parser = cli.Parser()
-    parser.add_required_arguments(cli.Argument.VM_NAME, cli.Argument.DATASTORE_NAME, cli.Argument.ESX_NAME)
+    parser.add_required_arguments(
+        cli.Argument.VM_NAME, cli.Argument.DATASTORE_NAME, cli.Argument.ESX_NAME)
     args = parser.get_args()
     si = service_instance.connect(args)
 

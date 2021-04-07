@@ -39,7 +39,7 @@ def parse_service_instance(si):
             vm.print_vm_info(obj)
 
     object_view.Destroy()
-    return
+    return 0
 
 
 def main():
@@ -56,8 +56,8 @@ def main():
         # ## Do the actual parsing of data ## #
         parse_service_instance(si)
 
-    except vmodl.MethodFault as e:
-        print("Caught vmodl fault : {}".format(e.msg))
+    except vmodl.MethodFault as ex:
+        print("Caught vmodl fault : {}".format(ex.msg))
         return -1
 
     return 0

@@ -3,8 +3,8 @@ This module implements simple helper functions for managing service instance obj
 """
 __author__ = "VMware, Inc."
 
-from pyVim.connect import SmartConnect, Disconnect
 import atexit
+from pyVim.connect import SmartConnect, Disconnect
 
 
 def connect(args):
@@ -32,8 +32,8 @@ def connect(args):
 
         # doing this means you don't need to remember to disconnect your script/objects
         atexit.register(Disconnect, service_instance)
-    except IOError as e:
-        print(e)
+    except IOError as io_error:
+        print(io_error)
 
     if not service_instance:
         raise SystemExit("Unable to connect to host with supplied credentials.")

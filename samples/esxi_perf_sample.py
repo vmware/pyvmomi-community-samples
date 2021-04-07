@@ -9,8 +9,7 @@ Rbvmomi sample https://gist.github.com/toobulkeh/6124975
 
 import datetime
 from tools import cli, service_instance
-from pyVmomi import vmodl
-from pyVmomi import vim
+from pyVmomi import vmodl, vim
 
 
 def main():
@@ -42,11 +41,11 @@ def main():
 
         print(perf_manager.QueryPerf(querySpec=[query]))
 
-    except vmodl.MethodFault as e:
-        print("Caught vmodl fault : " + e.msg)
+    except vmodl.MethodFault as ex:
+        print("Caught vmodl fault : " + ex.msg)
         return -1
-    except Exception as e:
-        print("Caught exception : " + str(e))
+    except Exception as ex:
+        print("Caught exception : " + str(ex))
         return -1
 
     return 0

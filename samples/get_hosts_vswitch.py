@@ -8,7 +8,6 @@ This code has been released under the terms of the Apache-2.0 license
 http://opensource.org/licenses/Apache-2.0
 """
 
-from __future__ import print_function
 from pyVmomi import vim
 from tools import cli, service_instance
 import sys
@@ -18,9 +17,9 @@ def get_vm_hosts(content):
     host_view = content.viewManager.CreateContainerView(content.rootFolder,
                                                         [vim.HostSystem],
                                                         True)
-    obj = [host for host in host_view.view]
+    hosts = list(host_view.view)
     host_view.Destroy()
-    return obj
+    return hosts
 
 
 def get_hosts_switches(hosts):
@@ -42,8 +41,8 @@ def main():
     if host_switches_dict is not None:
         print("The vSwitches are:\n")
     for host, vswithes in host_switches_dict.items():
-        for v in vswithes:
-            print(v.name)
+        for vswitch in vswithes:
+            print(vswitch.name)
 
 
 # Main section

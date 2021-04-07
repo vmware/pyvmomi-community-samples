@@ -13,9 +13,9 @@
      VM tools must be installed on all virtual machines.
 """
 
+import sys
 from pyVmomi import vim
 from tools import cli, service_instance
-import sys
 
 
 def main():
@@ -32,9 +32,10 @@ def main():
     # performance stat example: cpu.usagemhz.LATEST
     # counterId example: 6
     counter_info = {}
-    for c in perf_manager.perfCounter:
-        full_name = c.groupInfo.key + "." + c.nameInfo.key + "." + c.rollupType
-        counter_info[full_name] = c.key
+    for counter in perf_manager.perfCounter:
+        full_name = counter.groupInfo.key + "." + \
+                    counter.nameInfo.key + "." + counter.rollupType
+        counter_info[full_name] = counter.key
 
     # create a list of vim.VirtualMachine objects so
     # that we can query them for statistics
@@ -52,7 +53,8 @@ def main():
 
         # Using the IDs form a list of MetricId
         # objects for building the Query Spec
-        metric_ids = [vim.PerformanceManager.MetricId(counterId=c, instance="*") for c in counter_ids]
+        metric_ids = [vim.PerformanceManager.MetricId(
+            counterId=counter, instance="*") for counter in counter_ids]
 
         # Build the specification to be used
         # for querying the performance manager
@@ -61,13 +63,13 @@ def main():
                                                 metricId=metric_ids)
         # Query the performance manager
         # based on the metrics created above
-        result = perf_manager.QueryStats(querySpec=[spec])
+        result_stats = perf_manager.QueryStats(querySpec=[spec])
 
         # Loop through the results and print the output
         output = ""
-        for r in result:
+        for _ in result_stats:
             output += "name:        " + child.summary.config.name + "\n"
-            for val in result[0].value:
+            for val in result_stats[0].value:
                 # python3
                 if sys.version_info[0] > 2:
                     counterinfo_k_to_v = list(counter_info.keys())[

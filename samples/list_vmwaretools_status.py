@@ -18,8 +18,8 @@ from pyVmomi import vim
 _columns_four = "{0!s:<20} {1!s:<30} {2!s:<30} {3!s:<20}"
 
 # disable  urllib3 warnings
-if hasattr(requests.packages.urllib3, 'disable_warnings'):
-    requests.packages.urllib3.disable_warnings()
+requests.packages.urllib3.disable_warnings(
+    requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
 
 def get_vms(content):

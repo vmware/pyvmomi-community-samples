@@ -11,21 +11,23 @@
 # Prerequisite: Dswitch with atleast one distributed port group configured
 # for the datacenter
 
-import atexit
+"""
+Example for configuring a distributed port group
+"""
 
 from pyVmomi import vim, vmodl
 from tools import cli, service_instance, pchelper
 
 
-def configure_dvs_pg(service_instance, dvs_name, dv_pg_name):
+def configure_dvs_pg(si, dvs_name, dv_pg_name):
     """
     Configures the distributed port group
-    :param service_instance: Vcenter service instance
+    :param si: Vcenter service instance
     :param dvs_name: Name of the distributed virtual switch
     :param dv_pg_name: Name of distributed virtual port group
     """
     # Retrieve the content
-    content = service_instance.RetrieveContent()
+    content = si.RetrieveContent()
 
     # get distributed Switch and its port group objects
     dvs = pchelper.get_obj(content, [vim.DistributedVirtualSwitch], dvs_name)
@@ -43,7 +45,7 @@ def configure_dvs_pg(service_instance, dvs_name, dv_pg_name):
           .format(selection_sets))
 
     # Backup/Export the configuration
-    entity_backup_config = service_instance.content\
+    entity_backup_config = si.content\
         .dvSwitchManager\
         .DVSManagerExportEntity_Task(selection_sets)
     export_result = entity_backup_config.info.result
@@ -53,7 +55,7 @@ def configure_dvs_pg(service_instance, dvs_name, dv_pg_name):
     dv_pg.Destroy_Task()
 
     # Restore/Import port group configuration
-    entity_restore_config = service_instance.content\
+    entity_restore_config = si.content\
         .dvSwitchManager\
         .DVSManagerImportEntity_Task(export_result,
                                      'createEntityWithOriginalIdentifier')

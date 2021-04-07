@@ -23,8 +23,8 @@ def get_hosts(conn):
     content = conn.RetrieveContent()
     container = content.viewManager.CreateContainerView(
         content.rootFolder, [vim.HostSystem], True)
-    obj = [host for host in container.view]
-    return obj
+    hosts = list(container.view)
+    return hosts
 
 
 def action_hosts(comma_list, connection, defstartdelay):
@@ -32,13 +32,13 @@ def action_hosts(comma_list, connection, defstartdelay):
     acthosts = comma_list.split(",")
     allhosts = get_hosts(connection)
     host_names = [h.name for h in allhosts]
-    for a in acthosts:
-        if a not in host_names:
-            print("The host cant be found " + a)
+    for action_host in acthosts:
+        if action_host not in host_names:
+            print("The host cant be found " + action_host)
 
-    for h in allhosts:
-        if h.name in acthosts:
-            enable_autorestart(h, defstartdelay)
+    for host in allhosts:
+        if host.name in acthosts:
+            enable_autorestart(host, defstartdelay)
 
 
 def enable_autorestart(host, defstartdelay):
@@ -95,8 +95,8 @@ si = service_instance.connect(args)
 if args.listallhosts is True:
     vSpherehosts = get_hosts(si)
     print("All the Hosts Attached are :\n")
-    for hosts in vSpherehosts:
-        print("\n" + hosts.name)
+    for host in vSpherehosts:
+        print("\n" + host.name)
 
 if args.actionhosts is not None:
     action_hosts(

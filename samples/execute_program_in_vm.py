@@ -24,11 +24,10 @@ python execute_program_in_vm.py
     the content of the network configuration to /tmp/plop
 
 """
-from __future__ import with_statement
-from tools import cli, service_instance, pchelper
-from pyVmomi import vim, vmodl
 import time
 import re
+from tools import cli, service_instance, pchelper
+from pyVmomi import vim, vmodl
 
 
 def main():
@@ -43,7 +42,8 @@ def main():
     parser.add_custom_argument('--path_to_program', required=False, action='store',
                                help='Path inside VM to the program. e.g. "/bin/cat"')
     parser.add_custom_argument('--program_arguments', required=False, action='store',
-                               help='Program command line options. e.g. "/etc/network/interfaces > /tmp/plop"')
+                               help='Program command line options. '
+                                    'e.g. "/etc/network/interfaces > /tmp/plop"')
     args = parser.get_args()
     si = service_instance.connect(args)
     try:
@@ -60,8 +60,7 @@ def main():
             raise SystemExit("Unable to locate the virtual machine.")
 
         tools_status = vm.guest.toolsStatus
-        if (tools_status == 'toolsNotInstalled' or
-                tools_status == 'toolsNotRunning'):
+        if tools_status in ('toolsNotInstalled', 'toolsNotRunning'):
             raise SystemExit(
                 "VMwareTools is either not running or not installed. "
                 "Rerun the script after verifying that VMwareTools "
@@ -72,42 +71,42 @@ def main():
         )
 
         try:
-            pm = content.guestOperationsManager.processManager
+            profile_manager = content.guestOperationsManager.processManager
 
-            if(args.program_arguments):
-                ps = vim.vm.guest.ProcessManager.ProgramSpec(
+            if args.program_arguments:
+                program_spec = vim.vm.guest.ProcessManager.ProgramSpec(
                     programPath=args.path_to_program,
                     arguments=args.program_arguments)
             else:
-                ps = vim.vm.guest.ProcessManager.ProgramSpec(
+                program_spec = vim.vm.guest.ProcessManager.ProgramSpec(
                     programPath=args.path_to_program)
 
-            res = pm.StartProgramInGuest(vm, creds, ps)
+            res = profile_manager.StartProgramInGuest(vm, creds, program_spec)
 
             if res > 0:
                 print("Program submitted, PID is %d" % res)
-                pid_exitcode = pm.ListProcessesInGuest(vm, creds,
-                                                       [res]).pop().exitCode
+                pid_exitcode = \
+                    profile_manager.ListProcessesInGuest(vm, creds, [res]).pop().exitCode
                 # If its not a numeric result code, it says None on submit
-                while (re.match('[^0-9]+', str(pid_exitcode))):
+                while re.match('[^0-9]+', str(pid_exitcode)):
                     print("Program running, PID is %d" % res)
                     time.sleep(5)
-                    pid_exitcode = pm.ListProcessesInGuest(vm, creds,
-                                                           [res]).pop().\
-                        exitCode
-                    if (pid_exitcode == 0):
+                    pid_exitcode = \
+                        profile_manager.ListProcessesInGuest(vm, creds, [res]).pop().exitCode
+                    if pid_exitcode == 0:
                         print("Program %d completed with success" % res)
                         break
                     # Look for non-zero code to fail
-                    elif (re.match('[1-9]+', str(pid_exitcode))):
+                    elif re.match('[1-9]+', str(pid_exitcode)):
                         print("ERROR: Program %d completed with Failute" % res)
-                        print("  tip: Try running this on guest %r to debug" % summary.guest.ipAddress)
+                        print("  tip: Try running this on guest %r to debug"
+                              % vm.summary.guest.ipAddress)
                         print("ERROR: More info on process")
-                        print(pm.ListProcessesInGuest(vm, creds, [res]))
+                        print(profile_manager.ListProcessesInGuest(vm, creds, [res]))
                         break
 
-        except IOError as e:
-            print(e)
+        except IOError as ex:
+            print(ex)
     except vmodl.MethodFault as error:
         print("Caught vmodl fault : " + error.msg)
         return -1

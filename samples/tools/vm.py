@@ -32,8 +32,8 @@ def print_vm_info(vm, depth=1, max_depth=10):
         if depth > max_depth:
             return
         vm_list = vm.childEntity
-        for c in vm_list:
-            print_vm_info(c, depth + 1)
+        for child_vm in vm_list:
+            print_vm_info(child_vm, depth + 1)
         return
 
     summary = vm.summary

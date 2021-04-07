@@ -13,7 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from __future__ import print_function
+import sys
 from tools import cli, service_instance, pchelper
 from pyVmomi import vim
 
@@ -174,7 +174,7 @@ elif args.vm_name:
 
 if not vm:
     print(u"Could not find a virtual machine to examine.")
-    exit(1)
+    sys.exit(1)
 
 print(u"Found Virtual Machine")
 print(u"=====================")
@@ -236,4 +236,4 @@ for device in vm.config.hardware.device:
     print(u"  ------------------")
 
 print(u"=====================")
-exit()
+sys.exit()

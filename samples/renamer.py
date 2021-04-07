@@ -57,7 +57,7 @@ while entity_stack:
 
 if obj is None:
     print("A object named %s could not be found" % args.name)
-    exit()
+    sys.exit()
 
 if args.new_name:
     new_name = args.new_name

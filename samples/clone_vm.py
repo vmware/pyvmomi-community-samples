@@ -8,8 +8,6 @@ Clone a VM from template example
 """
 from pyVmomi import vim
 from tools import cli, service_instance, pchelper
-import argparse
-import getpass
 
 from add_nic_to_vm import add_nic
 
@@ -28,8 +26,7 @@ def wait_for_task(task):
 
 
 def clone_vm(
-        content, template, vm_name, si,
-        datacenter_name, vm_folder, datastore_name,
+        content, template, vm_name, datacenter_name, vm_folder, datastore_name,
         cluster_name, resource_pool, power_on, datastorecluster_name):
     """
     Clone a VM from a template/VM, datacenter_name, vm_folder, datastore_name
@@ -80,7 +77,7 @@ def clone_vm(
                 storageSpec=storagespec)
             rec_action = rec.recommendations[0].action[0]
             real_datastore_name = rec_action.destination.name
-        except:
+        except Exception:
             real_datastore_name = template.datastore[0].info.name
 
         datastore = pchelper.get_obj(content, [vim.Datastore], real_datastore_name)
@@ -119,10 +116,9 @@ def main():
 
     if template:
         clone_vm(
-            content, template, args.vm_name, si,
-            args.datacenter_name, args.vm_folder,
-            args.datastore_name, args.cluster_name,
-            args.resource_pool, args.power_on, args.datastorecluster_name)
+            content, template, args.vm_name, args.datacenter_name, args.vm_folder,
+            args.datastore_name, args.cluster_name, args.resource_pool, args.power_on,
+            args.datastorecluster_name)
         if args.opaque_network_name:
             vm = pchelper.get_obj(content, [vim.VirtualMachine], args.vm_name)
             add_nic(si, vm, args.opaque_network_name)

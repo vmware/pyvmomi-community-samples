@@ -7,14 +7,15 @@ Email: laujunbupt0913@163.com
 # Note: Example code For testing purposes only
 """
 
+import sys
 from pyVmomi import vim
 from tools import cli, service_instance, pchelper
-import sys
-import argparse
-import getpass
 
 
 def add_nic(vm, mac, port):
+    """
+    Add NIC to vm
+    """
     spec = vim.vm.ConfigSpec()
     nic_changes = []
     nic_spec = vim.vm.device.VirtualDeviceSpec()
@@ -48,6 +49,9 @@ def add_nic(vm, mac, port):
 
 
 def search_port(dvs, portgroupkey):
+    """
+    Find port by port group key
+    """
     search_portkey = []
     criteria = vim.dvs.PortCriteria()
     criteria.connected = False
@@ -61,17 +65,24 @@ def search_port(dvs, portgroupkey):
 
 
 def port_find(dvs, key):
+    """
+    Find port by port key
+    """
     obj = None
     ports = dvs.FetchDVPorts()
-    for c in ports:
-        if c.key == key:
-            obj = c
+    for port in ports:
+        if port.key == key:
+            obj = port
     return obj
 
 
 def main():
+    """
+    Sample for adding a vm NIC to a Distributed Virtual Switch
+    """
     parser = cli.Parser()
-    parser.add_required_arguments(cli.Argument.VM_NAME, cli.Argument.PORT_GROUP, cli.Argument.VM_MAC)
+    parser.add_required_arguments(
+        cli.Argument.VM_NAME, cli.Argument.PORT_GROUP, cli.Argument.VM_MAC)
     args = parser.get_args()
     si = service_instance.connect(args)
 
@@ -80,7 +91,7 @@ def main():
     portgroup = pchelper.get_obj(content, [vim.dvs.DistributedVirtualPortgroup], args.port_group)
     if portgroup is None:
         print("Portgroup not Found in DVS ...")
-        exit(0)
+        sys.exit(0)
     print("Search Available(Unused) port for VM...")
     dvs = portgroup.config.distributedVirtualSwitch
     port_key = search_port(dvs, portgroup.key)

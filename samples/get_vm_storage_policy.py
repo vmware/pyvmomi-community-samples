@@ -16,9 +16,8 @@ the script list_vm_storage_policy.py
 """
 
 import re
-import tools.cli as cli
 from pyVmomi import pbm, vim, VmomiSupport, SoapStubAdapter
-from tools import service_instance
+from tools import cli, service_instance
 
 
 class BColors(object):
@@ -192,7 +191,8 @@ def main():
             device_type = type(device).__name__
             if device_type == "vim.vm.device.VirtualDisk":
                 pm_object_type = pbm.ServerObjectRef.ObjectType("virtualDiskId")
-                pm_ref = pbm.ServerObjectRef(key="{}:{}".format(vm._moId, device.key), objectType=pm_object_type)
+                pm_ref = pbm.ServerObjectRef(
+                    key="{}:{}".format(vm._moId, device.key), objectType=pm_object_type)
                 profiles = get_storage_profiles(pm, pm_ref)
                 if len(profiles) > 0:
                     print(device.deviceInfo.label)

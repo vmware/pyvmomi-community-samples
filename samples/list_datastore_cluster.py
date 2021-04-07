@@ -6,8 +6,7 @@
 vSphere Python SDK program for listing Datastores in Datastore Cluster
 """
 
-from pyVmomi import vim
-from pyVmomi import vmodl
+from pyVmomi import vim, vmodl
 from tools import cli, service_instance
 
 

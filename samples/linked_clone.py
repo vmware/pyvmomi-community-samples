@@ -41,7 +41,8 @@ def _take_template_snapshot(si, vm):
 def main():
     parser = cli.Parser()
     parser.add_required_arguments(cli.Argument.VM_NAME, cli.Argument.TEMPLATE)
-    parser.add_optional_arguments(cli.Argument.DATACENTER_NAME, cli.Argument.CLUSTER_NAME, cli.Argument.ESX_NAME)
+    parser.add_optional_arguments(cli.Argument.DATACENTER_NAME,
+                                  cli.Argument.CLUSTER_NAME, cli.Argument.ESX_NAME)
     args = parser.get_args()
 
     urllib3.disable_warnings()
@@ -55,7 +56,8 @@ def main():
         raise Exception("Couldn't find the Datacenter with the provided name "
                         "'{}'".format(args.datacenter_name))
 
-    cluster = pchelper.search_for_obj(content, [vim.ClusterComputeResource], args.cluster_name, datacenter.hostFolder)
+    cluster = pchelper.search_for_obj(
+        content, [vim.ClusterComputeResource], args.cluster_name, datacenter.hostFolder)
 
     if not cluster:
         raise Exception("Couldn't find the Cluster with the provided name "

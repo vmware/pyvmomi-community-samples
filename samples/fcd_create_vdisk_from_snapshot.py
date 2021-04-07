@@ -16,7 +16,7 @@ Python program for creating a first class disk (fcd) from a snapshot
 """
 
 from tools import cli, tasks, disk, pbmhelper, pchelper, service_instance
-from pyVmomi import vmodl, vim, pbm
+from pyVmomi import vmodl, vim
 
 
 def main():
@@ -47,9 +47,10 @@ def main():
 
         # Retrieving Storage Policy
         if args.storage_policy_name:
-            p = pbmhelper.retrieve_storage_policy(pbm_content, args.storage_policy_name)
+            storage_policy = pbmhelper.retrieve_storage_policy(pbm_content,
+                                                               args.storage_policy_name)
             policy = [vim.vm.DefinedProfileSpec(
-                profileId=p.profileId.uniqueId)]
+                profileId=storage_policy.profileId.uniqueId)]
         else:
             policy = None
 

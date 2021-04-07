@@ -22,9 +22,9 @@ def get_dc(si, name):
     """
     Get a datacenter by its name.
     """
-    for dc in si.content.rootFolder.childEntity:
-        if dc.name == name:
-            return dc
+    for datacenter in si.content.rootFolder.childEntity:
+        if datacenter.name == name:
+            return datacenter
     raise Exception('Failed to find datacenter named %s' % name)
 
 
@@ -38,14 +38,14 @@ def main():
     si = service_instance.connect(args)
 
     if args.datacenter_name:
-        dc = get_dc(si, args.datacenter_name)
+        datacenter = get_dc(si, args.datacenter_name)
     else:
-        dc = si.content.rootFolder.childEntity[0]
+        datacenter = si.content.rootFolder.childEntity[0]
 
-    vm = si.content.searchIndex.FindChild(dc.vmFolder, args.vm_name)
+    vm = si.content.searchIndex.FindChild(datacenter.vmFolder, args.vm_name)
     if vm is None:
         raise Exception('Failed to find VM %s in datacenter %s' %
-                        (dc.name, args.vm_name))
+                        (datacenter.name, args.vm_name))
     by_entity = vim.event.EventFilterSpec.ByEntity(entity=vm, recursion="self")
     ids = ['VmRelocatedEvent', 'DrsVmMigratedEvent', 'VmMigratedEvent']
     filter_spec = vim.event.EventFilterSpec(entity=by_entity, eventTypeId=ids)

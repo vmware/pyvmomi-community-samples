@@ -15,9 +15,9 @@
 Python program for deleting a first class disk (fcd)
 """
 
+import sys
 from tools import cli, tasks, disk, pchelper, service_instance
-from pyVmomi import vmodl
-from pyVmomi import vim
+from pyVmomi import vmodl, vim
 
 
 def main():
@@ -48,7 +48,7 @@ def main():
                                                default='no')
             if not response:
                 print("Exiting script. User chose not to delete HDD.")
-                exit()
+                sys.exit()
 
         # Delete FCD
         storage = content.vStorageObjectManager

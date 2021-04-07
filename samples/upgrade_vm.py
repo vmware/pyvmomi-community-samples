@@ -25,10 +25,7 @@ If version is not specified, the default of the highest version
 the host supports is used.
 """
 
-from __future__ import print_function
-import atexit
-
-from pyVim import connect, task
+from pyVim import task
 from pyVmomi import vim
 from tools import cli, service_instance, pchelper
 

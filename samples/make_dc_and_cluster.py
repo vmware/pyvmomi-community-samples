@@ -18,9 +18,9 @@ args = parser.get_args()
 si = service_instance.connect(args)
 
 content = si.RetrieveContent()
-if(pchelper.search_for_obj(content, [vim.Datacenter], args.datacenter_name)):
+if pchelper.search_for_obj(content, [vim.Datacenter], args.datacenter_name):
     print("Datacenter '%s' already exists" % args.datacenter_name)
 else:
-    dc = datacenter.create_datacenter(dcname=args.datacenter_name, service_instance=si)
+    dc = datacenter.create_datacenter(dc_name=args.datacenter_name, service_instance=si)
     cluster.create_cluster(datacenter=dc, name=args.cluster_name)
     print("created DC and cluster")

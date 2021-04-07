@@ -12,14 +12,13 @@
 #
 
 import requests
-from tools import cli, service_instance, pchelper
+from tools import cli, service_instance, pchelper, tasks
 from pyVmomi import vim
-from tools import tasks
 
 
 # disable  urllib3 warnings
-if hasattr(requests.packages.urllib3, 'disable_warnings'):
-    requests.packages.urllib3.disable_warnings()
+requests.packages.urllib3.disable_warnings(
+    requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
 
 def update_virtual_nic_state(si, vm_obj, nic_number, new_nic_state):

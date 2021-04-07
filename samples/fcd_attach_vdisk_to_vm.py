@@ -16,8 +16,7 @@ Python program for attaching a first class disk (fcd) to a virtual machine
 """
 
 from tools import cli, tasks, disk, pchelper, service_instance
-from pyVmomi import vmodl
-from pyVmomi import vim
+from pyVmomi import vmodl, vim
 
 
 def attach_fcd_to_vm(vm, vdisk):

@@ -17,6 +17,9 @@ from tools import cli, pchelper, service_instance
 
 
 def add_raw_disk(vm, si, device_name, disk_mode, disk_compatibility_mode):
+    """
+    Add raw disk to vm
+    """
     spec = vim.vm.ConfigSpec()
     # get all disks on a VM, set unit_number to the next available
     unit_number = 0
@@ -29,7 +32,7 @@ def add_raw_disk(vm, si, device_name, disk_mode, disk_compatibility_mode):
                 unit_number += 1
             if unit_number >= 16:
                 print("we don't support this many disks")
-                return
+                return -1
         if isinstance(device, vim.vm.device.VirtualSCSIController):
             controller = device
     if controller is None:
@@ -51,13 +54,18 @@ def add_raw_disk(vm, si, device_name, disk_mode, disk_compatibility_mode):
     spec.deviceChange = [disk_spec]
     WaitForTasks([vm.ReconfigVM_Task(spec=spec)], si=si)
     print("Raw disk added to %s" % vm.config.name)
+    return 0
 
 
 def main():
+    """
+    Sample for adding a raw disk to vm
+    """
     parser = cli.Parser()
     parser.add_required_arguments(cli.Argument.DEVICE_NAME)
     parser.add_optional_arguments(
-        cli.Argument.VM_NAME, cli.Argument.UUID, cli.Argument.DISK_MODE, cli.Argument.COMPATIBILITY_MODE)
+        cli.Argument.VM_NAME, cli.Argument.UUID,
+        cli.Argument.DISK_MODE, cli.Argument.COMPATIBILITY_MODE)
     args = parser.get_args()
     si = service_instance.connect(args)
 

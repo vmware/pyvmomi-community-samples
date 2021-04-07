@@ -15,13 +15,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+Example for creating a VM
+"""
+
 import sys
-from pyVmomi import vim, vmodl
+from pyVmomi import vim
 from pyVim.task import WaitForTask
 from tools import cli, pchelper, service_instance
 
 
-def create_vm(si, vm_name, datacenter_name, host_ip, datastore_name = None):
+def create_vm(si, vm_name, datacenter_name, host_ip, datastore_name=None):
 
     content = si.RetrieveContent()
     destination_host = pchelper.get_obj(content, [vim.HostSystem], host_ip)
@@ -36,7 +40,7 @@ def create_vm(si, vm_name, datacenter_name, host_ip, datastore_name = None):
             break
     else:
         print("Datacenter %s not found!" % datacenter_name)
-        exit(1)
+        sys.exit(1)
 
     try:
         WaitForTask(vm_folder.CreateVm(config, pool=source_pool, host=destination_host))
@@ -47,7 +51,8 @@ def create_vm(si, vm_name, datacenter_name, host_ip, datastore_name = None):
         print("VM name %s already exists." % vm_name, file=sys.stderr)
 
 
-def create_config_spec(datastore_name, name, memory=4, guest="otherGuest", annotation="Sample", cpus=1):
+def create_config_spec(datastore_name, name, memory=4, guest="otherGuest",
+                       annotation="Sample", cpus=1):
     config = vim.vm.ConfigSpec()
     config.annotation = annotation
     config.memoryMB = int(memory)

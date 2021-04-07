@@ -9,9 +9,8 @@ http://www.apache.org/licenses/LICENSE-2.0.html
 Example script to upload a file from host to guest
 
 """
-from __future__ import with_statement
-import requests
 import re
+import requests
 from tools import cli, service_instance, pchelper
 from pyVmomi import vim, vmodl
 
@@ -76,8 +75,8 @@ def main():
                 print("Error while uploading file")
             else:
                 print("Successfully uploaded file")
-        except IOError as e:
-            print(e)
+        except IOError as ex:
+            print(ex)
     except vmodl.MethodFault as error:
         print("Caught vmodl fault : " + error.msg)
         return -1

@@ -32,7 +32,7 @@ def wait_for_tasks(si, tasks):
     try:
         version, state = None, None
         # Loop looking for updates till the state moves to a completed state.
-        while len(task_list):
+        while task_list:
             update = property_collector.WaitForUpdates(version)
             for filter_set in update.filterSet:
                 for obj_set in filter_set.objectSet:
