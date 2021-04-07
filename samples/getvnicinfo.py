@@ -17,9 +17,8 @@
 # limitations under the License.
 
 from __future__ import print_function
-from pyVim.connect import SmartConnect, Disconnect
 from pyVmomi import vim
-import atexit
+from tools import cli, service_instance
 import sys
 
 
@@ -104,24 +103,11 @@ def GetVMNics(vm):
                   ' (VLAN ' + vlanId + ')')
 
 
-def GetArgs():
-    if len(sys.argv) != 4:
-        host = raw_input("vCenter IP: ")
-        user = raw_input("Username: ")
-        password = raw_input("Password: ")
-    else:
-        host, user, password = sys.argv[1:]
-    return host, user, password
-
-
 def main():
     global content, hosts, hostPgDict
-    host, user, password = GetArgs()
-    serviceInstance = SmartConnect(host=host,
-                                   user=user,
-                                   pwd=password,
-                                   port=443)
-    atexit.register(Disconnect, serviceInstance)
+    parser = cli.Parser()
+    args = parser.get_args()
+    serviceInstance = service_instance.connect(args)
     content = serviceInstance.RetrieveContent()
     hosts = GetVMHosts(content)
     hostPgDict = GetHostsPortgroups(hosts)

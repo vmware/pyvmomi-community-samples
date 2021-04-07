@@ -17,44 +17,9 @@ Python program for attaching a first class disk (fcd) to a virtual machine
 
 import atexit
 
-from tools import cli, tasks, disk
-from pyVim import connect
+from tools import cli, tasks, disk, pchelper, service_instance
 from pyVmomi import vmodl
 from pyVmomi import vim
-
-
-def get_args():
-    """
-    Adds additional args for attaching a fcd to a vm
-
-    -d datastore
-    -v vdisk
-    -n vm_name
-    -i uuid
-    """
-    parser = cli.build_arg_parser()
-
-    parser.add_argument('-d', '--datastore',
-                        required=True,
-                        action='store',
-                        help='Datastore name where disk is located')
-
-    parser.add_argument('-v', '--vdisk',
-                        required=True,
-                        action='store',
-                        help='First Class Disk name to be attached')
-
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('-n', '--vm_name',
-                       action='store',
-                       help='Virtual Machine name where disk is attached')
-
-    group.add_argument('-i', '--uuid',
-                       action='store',
-                       help='Virtual Machine UUID where disk is attached')
-
-    my_args = parser.parse_args()
-    return cli.prompt_for_password(my_args)
 
 
 def attach_fcd_to_vm(vm, vdisk, datastore):
@@ -101,29 +66,20 @@ def main():
     Simple command-line program for attaching a first class disk to a vm.
     """
 
-    args = get_args()
+    parser = cli.Parser()
+    parser.add_required_arguments(cli.Argument.DATASTORE_NAME, cli.Argument.FIRST_CLASS_DISK_NAME)
+    parser.add_optional_arguments(cli.Argument.VM_NAME, cli.Argument.UUID)
+    args = parser.get_args()
+    serviceInstance = service_instance.connect(args)
 
     try:
-        if args.disable_ssl_verification:
-            service_instance = connect.SmartConnectNoSSL(host=args.host,
-                                                         user=args.user,
-                                                         pwd=args.password,
-                                                         port=int(args.port))
-        else:
-            service_instance = connect.SmartConnect(host=args.host,
-                                                    user=args.user,
-                                                    pwd=args.password,
-                                                    port=int(args.port))
-
-        atexit.register(connect.Disconnect, service_instance)
-
-        content = service_instance.RetrieveContent()
+        content = serviceInstance.RetrieveContent()
 
         # Retrieve Datastore Object
-        datastore = disk.get_obj(content, [vim.Datastore], args.datastore)
+        datastore = pchelper.get_obj(content, [vim.Datastore], args.datastore_name)
 
         # Retrieve FCD Object
-        vdisk = disk.retrieve_fcd(content, datastore, args.vdisk)
+        vdisk = disk.retrieve_fcd(content, datastore, args.fcd_name)
 
         # Retrieve VM
         vm = None
@@ -131,12 +87,12 @@ def main():
             search_index = content.searchIndex
             vm = search_index.FindByUuid(None, args.uuid, True)
         elif args.vm_name:
-            vm = disk.get_obj(content, [vim.VirtualMachine], args.vm_name)
+            vm = pchelper.get_obj(content, [vim.VirtualMachine], args.vm_name)
 
         # Attaching FCD to VM
         if vm:
             task = attach_fcd_to_vm(vm, vdisk, datastore)
-            tasks.wait_for_tasks(service_instance, [task])
+            tasks.wait_for_tasks(serviceInstance, [task])
         else:
             raise RuntimeError("VM not found.")
 

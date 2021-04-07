@@ -12,17 +12,14 @@
 # http://opensource.org/licenses/Apache-2.0
 #
 
-import atexit
 import requests
 from tools import cli
 from pyVmomi import vim
-from pyVim.connect import SmartConnect, Disconnect
-from tools import tasks
+from tools import tasks, pchelper, service_instance
 
 # disable  urllib3 warnings
 if hasattr(requests.packages.urllib3, 'disable_warnings'):
     requests.packages.urllib3.disable_warnings()
-
 
 def get_hdd_prefix_label(language):
     language_prefix_label_mapper = {
@@ -66,46 +63,18 @@ def delete_virtual_disk(si, vm_obj, disk_number, language):
     return True
 
 
-def get_args():
-    parser = cli.build_arg_parser()
-    parser.add_argument('-n', '--vmname', required=True,
-                        help="Name of the VirtualMachine you want to change.")
-    parser.add_argument('-m', '--unitnumber', required=True,
-                        help='HDD number to delete.', type=int)
-    parser.add_argument('-y', '--yes',
-                        help='Confirm disk deletion.', action='store_true')
-    parser.add_argument('-l', '--language', default='English',
-                        help='Language your vcenter used.')
-    my_args = parser.parse_args()
-    return cli.prompt_for_password(my_args)
-
-
-def get_obj(content, vim_type, name):
-    obj = None
-    container = content.viewManager.CreateContainerView(
-        content.rootFolder, vim_type, True)
-    for c in container.view:
-        if c.name == name:
-            obj = c
-            break
-    return obj
-
-
 def main():
-    args = get_args()
+    parser = cli.Parser()
+    parser.add_required_arguments(cli.Argument.VM_NAME)
+    parser.add_custom_argument('--unitnumber', required=True, help='HDD number to delete.', type=int)
+    parser.add_custom_argument('--yes', help='Confirm disk deletion.', action='store_true')
+    parser.add_custom_argument('--language', default='English', help='Language your vcenter used.')
+    args = parser.get_args()
+    serviceInstance = service_instance.connect(args)
 
-    # connect to vc
-    si = SmartConnect(
-        host=args.host,
-        user=args.user,
-        pwd=args.password,
-        port=args.port)
-    # disconnect vc
-    atexit.register(Disconnect, si)
-
-    content = si.RetrieveContent()
-    print('Searching for VM {}'.format(args.vmname))
-    vm_obj = get_obj(content, [vim.VirtualMachine], args.vmname)
+    content = serviceInstance.RetrieveContent()
+    print('Searching for VM {}'.format(args.vm_name))
+    vm_obj = pchelper.get_obj(content, [vim.VirtualMachine], args.vm_name)
 
     if vm_obj:
         if not args.yes:
@@ -113,7 +82,7 @@ def main():
                                     "to delete HDD "
                                     "{}?".format(args.unitnumber),
                                     default='no')
-        delete_virtual_disk(si, vm_obj, args.unitnumber, args.language)
+        delete_virtual_disk(serviceInstance, vm_obj, args.unitnumber, args.language)
         print('VM HDD "{}" successfully deleted.'.format(args.unitnumber))
     else:
         print('VM not found')

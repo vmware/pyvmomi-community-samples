@@ -88,7 +88,6 @@ def get_container_view(service_instance, obj_type, container=None):
 
     Returns:
         A container view ref to the discovered managed objects
-
     """
     if not container:
         container = service_instance.content.rootFolder
@@ -99,3 +98,61 @@ def get_container_view(service_instance, obj_type, container=None):
         recursive=True
     )
     return view_ref
+
+
+def search_for_obj(content, vim_type, name, folder=None, recurse=True):
+    """
+    Search the managed object for the name and type specified
+
+    Sample Usage:
+
+    get_obj(content, [vim.Datastore], "Datastore Name")
+    """
+    if folder is None:
+        folder = content.rootFolder
+
+    obj = None
+    container = content.viewManager.CreateContainerView(folder, vim_type, recurse)
+
+    for c in container.view:
+        if c.name == name:
+            obj = c
+            break
+    container.Destroy()
+    return obj
+
+
+def get_all_obj(content, vim_type, folder=None, recurse=True):
+    """
+    Search the managed object for the name and type specified
+
+    Sample Usage:
+
+    get_obj(content, [vim.Datastore], "Datastore Name")
+    """
+    if not folder:
+        folder = content.rootFolder
+
+    obj = {}
+    container = content.viewManager.CreateContainerView(folder, vim_type, recurse)
+
+    for managed_object_ref in container.view:
+        obj[managed_object_ref] = managed_object_ref.name
+
+    container.Destroy()
+    return obj
+
+
+def get_obj(content, vim_type, name, folder=None, recurse=True):
+    """
+    Retrieves the managed object for the name and type specified
+    Throws an exception if of not found.
+
+    Sample Usage:
+
+    get_obj(content, [vim.Datastore], "Datastore Name")
+    """
+    obj = search_for_obj(content, vim_type, name, folder, recurse)
+    if not obj:
+        raise RuntimeError("Managed Object " + name + " not found.")
+    return obj

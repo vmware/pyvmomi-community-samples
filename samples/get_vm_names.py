@@ -16,24 +16,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 from __future__ import print_function
-import atexit
-from pyVim.connect import SmartConnectNoSSL, Disconnect
-from pyVmomi import vim
-from tools import cli
+from tools import cli, service_instance
 
 MAX_DEPTH = 10
-
-
-def setup_args():
-
-    """
-    Get standard connection arguments
-    """
-    parser = cli.build_arg_parser()
-    my_args = parser.parse_args()
-
-    return cli.prompt_for_password(my_args)
-
 
 def printvminfo(vm, depth=1):
     """
@@ -60,19 +45,11 @@ def main():
     Simple command-line program for listing the virtual machines on a host.
     """
 
-    args = setup_args()
-    si = None
-    try:
-        si = SmartConnectNoSSL(host=args.host,
-                               user=args.user,
-                               pwd=args.password,
-                               port=int(args.port))
-        atexit.register(Disconnect, si)
-    except vim.fault.InvalidLogin:
-        raise SystemExit("Unable to connect to host "
-                         "with supplied credentials.")
+    parser = cli.Parser()
+    args = parser.get_args()
+    serviceInstance = service_instance.connect(args)
 
-    content = si.RetrieveContent()
+    content = serviceInstance.RetrieveContent()
     for child in content.rootFolder.childEntity:
         if hasattr(child, 'vmFolder'):
             datacenter = child

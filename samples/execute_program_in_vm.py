@@ -14,7 +14,7 @@ python execute_program_in_vm.py
     -s <vcenter_fqdn>
     -u <vcenter_username>
     -p <vcenter_password>
-    -v <vm_uuid>
+    -v <UUID>
     -r <vm_username>
     -w <vm_password>
     -l "/bin/cat"
@@ -25,47 +25,9 @@ python execute_program_in_vm.py
 
 """
 from __future__ import with_statement
-import atexit
-from tools import cli
-from pyVim import connect
+from tools import cli, service_instance, pchelper
 from pyVmomi import vim, vmodl
-
-
-def get_args():
-    """Get command line args from the user.
-    """
-
-    parser = cli.build_arg_parser()
-
-    parser.add_argument('-v', '--vm_uuid',
-                        required=False,
-                        action='store',
-                        help='Virtual machine uuid')
-
-    parser.add_argument('-r', '--vm_user',
-                        required=False,
-                        action='store',
-                        help='virtual machine user name')
-
-    parser.add_argument('-w', '--vm_pwd',
-                        required=False,
-                        action='store',
-                        help='virtual machine password')
-
-    parser.add_argument('-l', '--path_to_program',
-                        required=False,
-                        action='store',
-                        help='Path inside VM to the program')
-
-    parser.add_argument('-f', '--program_arguments',
-                        required=False,
-                        action='store',
-                        help='Program command line options')
-
-    args = parser.parse_args()
-
-    cli.prompt_for_password(args)
-    return args
+import time, re
 
 
 def main():
@@ -74,27 +36,24 @@ def main():
     network requirement to actually access it.
     """
 
-    args = get_args()
+    parser = cli.Parser()
+    parser.add_optional_arguments(
+        cli.Argument.VM_NAME, cli.Argument.UUID, cli.Argument.VM_USER, cli.Argument.VM_PASS)
+    parser.add_custom_argument('--path_to_program', required=False, action='store',
+                                        help='Path inside VM to the program. e.g. "/bin/cat"')
+    parser.add_custom_argument('--program_arguments', required=False, action='store',
+                                        help='Program command line options. e.g. "/etc/network/interfaces > /tmp/plop"')
+    args = parser.get_args()
+    serviceInstance = service_instance.connect(args)
     try:
-        if args.disable_ssl_verification:
-            service_instance = connect.SmartConnectNoSSL(host=args.host,
-                                                         user=args.user,
-                                                         pwd=args.password,
-                                                         port=int(args.port))
-        else:
-            service_instance = connect.SmartConnect(host=args.host,
-                                                    user=args.user,
-                                                    pwd=args.password,
-                                                    port=int(args.port))
+        content = serviceInstance.RetrieveContent()
 
-        atexit.register(connect.Disconnect, service_instance)
-        content = service_instance.RetrieveContent()
-
-        # if instanceUuid is false it will search for VM BIOS UUID instead
-        vm = content.searchIndex.FindByUuid(datacenter=None,
-                                            uuid=args.vm_uuid,
-                                            vmSearch=True,
-                                            instanceUuid=False)
+        vm = None
+        if args.uuid:
+            # if instanceUuid(last argument) is false it will search for VM BIOS UUID instead
+            vm = content.searchIndex.FindByUuid(None, args.uuid, True)
+        elif args.vm_name:
+            vm = pchelper.get_obj(content, [vim.VirtualMachine], args.vm_name)
 
         if not vm:
             raise SystemExit("Unable to locate the virtual machine.")
@@ -114,39 +73,43 @@ def main():
         try:
             pm = content.guestOperationsManager.processManager
 
-            ps = vim.vm.guest.ProcessManager.ProgramSpec(
-                programPath=args.path_to_program,
-                arguments=args.program_arguments
-            )
+            if(args.program_arguments):
+                ps = vim.vm.guest.ProcessManager.ProgramSpec(
+                    programPath=args.path_to_program,
+                    arguments=args.program_arguments)
+            else:
+                ps = vim.vm.guest.ProcessManager.ProgramSpec(
+                    programPath=args.path_to_program)
+
             res = pm.StartProgramInGuest(vm, creds, ps)
 
             if res > 0:
-                print "Program submitted, PID is %d" % res
+                print("Program submitted, PID is %d" % res)
                 pid_exitcode = pm.ListProcessesInGuest(vm, creds,
                                                        [res]).pop().exitCode
                 # If its not a numeric result code, it says None on submit
                 while (re.match('[^0-9]+', str(pid_exitcode))):
-                    print "Program running, PID is %d" % res
+                    print("Program running, PID is %d" % res)
                     time.sleep(5)
                     pid_exitcode = pm.ListProcessesInGuest(vm, creds,
                                                            [res]).pop().\
                         exitCode
                     if (pid_exitcode == 0):
-                        print "Program %d completed with success" % res
+                        print("Program %d completed with success" % res)
                         break
                     # Look for non-zero code to fail
                     elif (re.match('[1-9]+', str(pid_exitcode))):
-                        print "ERROR: Program %d completed with Failute" % res
-                        print "  tip: Try running this on guest %r to debug" \
-                            % summary.guest.ipAddress
-                        print "ERROR: More info on process"
-                        print pm.ListProcessesInGuest(vm, creds, [res])
+                        print("ERROR: Program %d completed with Failute" % res)
+                        print("  tip: Try running this on guest %r to debug" \
+                            % summary.guest.ipAddress)
+                        print("ERROR: More info on process")
+                        print(pm.ListProcessesInGuest(vm, creds, [res]))
                         break
 
-        except IOError, e:
-            print e
+        except IOError as e:
+            print(e)
     except vmodl.MethodFault as error:
-        print "Caught vmodl fault : " + error.msg
+        print("Caught vmodl fault : " + error.msg)
         return -1
 
     return 0

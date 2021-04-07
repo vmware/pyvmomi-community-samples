@@ -17,45 +17,9 @@ Python program for deleting a snapshot of a first class disk (fcd)
 
 import atexit
 
-from tools import cli, tasks, disk
-from pyVim import connect
+from tools import cli, tasks, disk, pchelper, service_instance
 from pyVmomi import vmodl
 from pyVmomi import vim
-
-
-def get_args():
-    """
-    Adds additional args for deleting a snapshot of a fcd
-
-    -d datastore
-    -v vdisk
-    -n snapshot
-    -y yes
-    """
-    parser = cli.build_arg_parser()
-
-    parser.add_argument('-d', '--datastore',
-                        required=True,
-                        action='store',
-                        help='Datastore name where disk is located')
-
-    parser.add_argument('-v', '--vdisk',
-                        required=False,
-                        action='store',
-                        help='First Class Disk name to delete snapshot for')
-
-    # because -s is reserved for 'service', we use -n for snapshot name
-    parser.add_argument('-n', '--snapshot',
-                        required=True,
-                        action='store',
-                        help='Snapshot name to be deleted')
-
-    parser.add_argument('-y', '--yes',
-                        action='store_true',
-                        help='Confirm disk deletion.')
-
-    my_args = parser.parse_args()
-    return cli.prompt_for_password(my_args)
 
 
 def main():
@@ -63,39 +27,31 @@ def main():
     Simple command-line program for deleting a snapshot of a first class disk.
     """
 
-    args = get_args()
+    parser = cli.Parser()
+    parser.add_required_arguments(
+    cli.Argument.DATASTORE_NAME, cli.Argument.FIRST_CLASS_DISK_NAME, cli.Argument.SNAPSHOT_NAME)
+    parser.add_custom_argument('--yes', action='store_true', help='Confirm disk deletion.')
+    args = parser.get_args()
+    serviceInstance = service_instance.connect(args)
 
     try:
-        if args.disable_ssl_verification:
-            service_instance = connect.SmartConnectNoSSL(host=args.host,
-                                                         user=args.user,
-                                                         pwd=args.password,
-                                                         port=int(args.port))
-        else:
-            service_instance = connect.SmartConnect(host=args.host,
-                                                    user=args.user,
-                                                    pwd=args.password,
-                                                    port=int(args.port))
-
-        atexit.register(connect.Disconnect, service_instance)
-
-        content = service_instance.RetrieveContent()
+        content = serviceInstance.RetrieveContent()
 
         # Retrieve Datastore Object
-        datastore = disk.get_obj(content, [vim.Datastore], args.datastore)
+        datastore = pchelper.get_obj(content, [vim.Datastore], args.datastore_name)
 
         # Retrieve FCD Object
-        vdisk = disk.retrieve_fcd(content, datastore, args.vdisk)
+        vdisk = disk.retrieve_fcd(content, datastore, args.fcd_name)
 
         # Retrieve Snapshot Object
         snapshot = disk.retrieve_fcd_snapshot(
-            content, datastore, vdisk, args.snapshot)
+            content, datastore, vdisk, args.snapshot_name)
 
         # Confirming Snapshot deletion
         if not args.yes:
             response = cli.prompt_y_n_question("Are you sure you want to "
                                                "delete snapshot '" +
-                                               args.snapshot + "'?",
+                                               args.snapshot_name + "'?",
                                                default='no')
             if not response:
                 print("Exiting script. User chose not to delete snapshot.")
@@ -105,7 +61,7 @@ def main():
         storage = content.vStorageObjectManager
         task = storage.DeleteSnapshot_Task(
             vdisk.config.id, datastore, snapshot)
-        tasks.wait_for_tasks(service_instance, [task])
+        tasks.wait_for_tasks(serviceInstance, [task])
 
     except vmodl.MethodFault as error:
         print("Caught vmodl fault : " + error.msg)

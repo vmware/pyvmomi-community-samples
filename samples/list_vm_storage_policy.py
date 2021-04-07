@@ -1,12 +1,8 @@
 #!/usr/bin/env python
 
-import atexit
-import argparse
-import getpass
 import ssl
-
 from pyVmomi import pbm, VmomiSupport
-from pyVim.connect import SmartConnect, Disconnect
+from tools import cli, service_instance
 
 """
 Example of using Storage Policy Based Management (SPBM) API
@@ -17,10 +13,9 @@ Required Prviledge: Profile-driven storage view
 
 __author__ = 'William Lam'
 
-
 # retrieve SPBM API endpoint
 def GetPbmConnection(vpxdStub):
-    import Cookie
+    import http.cookies as Cookie
     import pyVmomi
     sessionCookie = vpxdStub.cookie.split('"')[1]
     httpContext = VmomiSupport.GetHttpContext()
@@ -45,24 +40,6 @@ def GetPbmConnection(vpxdStub):
     return (pbmSi, pbmContent)
 
 
-def GetArgs():
-    """
-    Supports the command-line arguments listed below.
-    """
-    parser = argparse.ArgumentParser(
-        description='Process args for VSAN SDK sample application')
-    parser.add_argument('-s', '--host', required=True, action='store',
-                        help='Remote host to connect to')
-    parser.add_argument('-o', '--port', type=int, default=443, action='store',
-                        help='Port to connect on')
-    parser.add_argument('-u', '--user', required=True, action='store',
-                        help='User name to use when connecting to host')
-    parser.add_argument('-p', '--password', required=False, action='store',
-                        help='Password to use when connecting to host')
-    args = parser.parse_args()
-    return args
-
-
 def showCapabilities(capabilities):
     for capability in capabilities:
         for constraint in capability.constraint:
@@ -74,27 +51,12 @@ def showCapabilities(capabilities):
 
 # Start program
 def main():
-    args = GetArgs()
-    if args.password:
-        password = args.password
-    else:
-        password = getpass.getpass(
-            prompt='Enter password for host %s and '
-                   'user %s: ' % (args.host, args.user))
-
-    context = None
-    if hasattr(ssl, "_create_unverified_context"):
-        context = ssl._create_unverified_context()
-    si = SmartConnect(host=args.host,
-                      user=args.user,
-                      pwd=password,
-                      port=int(args.port),
-                      sslContext=context)
-
-    atexit.register(Disconnect, si)
+    parser = cli.Parser()
+    args = parser.get_args()
+    serviceInstance = service_instance.connect(args)
 
     # Connect to SPBM Endpoint
-    pbmSi, pbmContent = GetPbmConnection(si._stub)
+    pbmSi, pbmContent = GetPbmConnection(serviceInstance._stub)
 
     pm = pbmContent.profileManager
     profileIds = pm.PbmQueryProfile(resourceType=pbm.profile.ResourceType(

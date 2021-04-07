@@ -10,37 +10,14 @@
 import atexit
 
 from pyVim import connect
+from tools import cli, service_instance
 
-from tools import cli
+parser = cli.Parser()
+parser.add_required_arguments(cli.Argument.UUID)
+args = parser.get_args()
+serviceInstance = service_instance.connect(args)
 
-
-def setup_args():
-    """
-    Adds additional args to allow the vm uuid to
-    be set.
-    """
-    parser = cli.build_arg_parser()
-    # using j here because -u is used for user
-    parser.add_argument('-j', '--uuid',
-                        required=True,
-                        help='UUID of the VirtualMachine you want to reboot.')
-    my_args = parser.parse_args()
-    return cli.prompt_for_password(my_args)
-
-args = setup_args()
-si = None
-try:
-    si = connect.SmartConnect(host=args.host,
-                              user=args.user,
-                              pwd=args.password,
-                              port=int(args.port))
-    atexit.register(connect.Disconnect, si)
-except IOError as e:
-    pass
-
-if not si:
-    raise SystemExit("Unable to connect to host with supplied info.")
-vm = si.content.searchIndex.FindByUuid(None, args.uuid, True, True)
+vm = serviceInstance.content.searchIndex.FindByUuid(datacenter=None, uuid=args.uuid, vmSearch=True)
 if not vm:
     raise SystemExit("Unable to locate VirtualMachine.")
 

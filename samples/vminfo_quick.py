@@ -13,11 +13,8 @@
 from __future__ import print_function
 import atexit
 from time import clock
-
-from pyVim import connect
 from pyVmomi import vim
-from tools import cli
-from tools import pchelper
+from tools import cli, service_instance, pchelper
 
 START = clock()
 
@@ -40,25 +37,15 @@ vm_properties = ["name", "config.uuid", "config.hardware.numCPU",
                  "config.guestFullName", "config.guestId",
                  "config.version"]
 
-args = cli.get_args()
-service_instance = None
-try:
-    service_instance = connect.SmartConnect(host=args.host,
-                                            user=args.user,
-                                            pwd=args.password,
-                                            port=int(args.port))
-    atexit.register(connect.Disconnect, service_instance)
-    atexit.register(endit)
-except IOError as e:
-    pass
+parser = cli.Parser()
+args = parser.get_args()
+serviceInstance = service_instance.connect(args)
+atexit.register(endit)
 
-if not service_instance:
-    raise SystemExit("Unable to connect to host with supplied info.")
-
-root_folder = service_instance.content.rootFolder
-view = pchelper.get_container_view(service_instance,
+root_folder = serviceInstance.content.rootFolder
+view = pchelper.get_container_view(serviceInstance,
                                    obj_type=[vim.VirtualMachine])
-vm_data = pchelper.collect_properties(service_instance, view_ref=view,
+vm_data = pchelper.collect_properties(serviceInstance, view_ref=view,
                                       obj_type=vim.VirtualMachine,
                                       path_set=vm_properties,
                                       include_mors=True)

@@ -17,43 +17,9 @@ Python program for detaching a disk from a VM without deleting the VMDK
 
 import atexit
 
-from tools import cli, tasks, disk
-from pyVim import connect
+from tools import cli, tasks, pchelper, service_instance
 from pyVmomi import vmodl
 from pyVmomi import vim
-
-
-def get_args():
-    """
-    Adds additional args for detaching a disk from a vm
-
-    -n vm_name
-    -i uuid
-    -d disknumber
-    -l language
-    """
-    parser = cli.build_arg_parser()
-
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('-n', '--vm_name',
-                       action='store',
-                       help='Virtual Machine name where disk is attached')
-
-    group.add_argument('-i', '--uuid',
-                       action='store',
-                       help='Virtual Machine UUID where disk is attached')
-
-    parser.add_argument('-d', '--disknumber',
-                        required=True,
-                        help='HDD number to detach.',
-                        type=int)
-
-    parser.add_argument('-l', '--language',
-                        default='English',
-                        help='Language your vcenter used.')
-
-    my_args = parser.parse_args()
-    return cli.prompt_for_password(my_args)
 
 
 def get_hdd_prefix_label(language):
@@ -97,24 +63,14 @@ def main():
     """
     Simple command-line program for detaching a disk from a virtual machine.
     """
-
-    args = get_args()
+    parser = cli.Parser()
+    parser.add_optional_arguments(cli.Argument.VM_NAME, cli.Argument.UUID, cli.Argument.LANGUAGE)
+    parser.add_custom_argument('--disk-number', required=True, help='HDD number to detach.')
+    args = parser.get_args()
+    serviceInstance = service_instance.connect(args)
 
     try:
-        if args.disable_ssl_verification:
-            service_instance = connect.SmartConnectNoSSL(host=args.host,
-                                                         user=args.user,
-                                                         pwd=args.password,
-                                                         port=int(args.port))
-        else:
-            service_instance = connect.SmartConnect(host=args.host,
-                                                    user=args.user,
-                                                    pwd=args.password,
-                                                    port=int(args.port))
-
-        atexit.register(connect.Disconnect, service_instance)
-
-        content = service_instance.RetrieveContent()
+        content = serviceInstance.RetrieveContent()
 
         # Retrieve VM
         vm = None
@@ -122,12 +78,12 @@ def main():
             search_index = content.searchIndex
             vm = search_index.FindByUuid(None, args.uuid, True)
         elif args.vm_name:
-            vm = disk.get_obj(content, [vim.VirtualMachine], args.vm_name)
+            vm = pchelper.get_obj(content, [vim.VirtualMachine], args.vm_name)
 
         # Detaching Disk from VM
         if vm:
-            task = detach_disk_from_vm(vm, args.disknumber, args.language)
-            tasks.wait_for_tasks(service_instance, [task])
+            task = detach_disk_from_vm(vm, args.disk_number, args.language)
+            tasks.wait_for_tasks(serviceInstance, [task])
         else:
             raise RuntimeError("VM not found.")
 

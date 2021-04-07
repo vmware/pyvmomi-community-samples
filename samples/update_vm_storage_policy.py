@@ -1,12 +1,8 @@
 #!/usr/bin/env python
-from pyVmomi import vim, pbm, VmomiSupport
-from pyVim.connect import SmartConnect, Disconnect
 
-import atexit
-import argparse
+from pyVmomi import vim, pbm, VmomiSupport
+from tools import cli, service_instance
 import ast
-import getpass
-import sys
 import ssl
 
 """
@@ -21,11 +17,11 @@ __author__ = 'William Lam'
 
 # retrieve SPBM API endpoint
 def GetPbmConnection(vpxdStub):
-    import Cookie
+    from http import cookies
     import pyVmomi
     sessionCookie = vpxdStub.cookie.split('"')[1]
     httpContext = VmomiSupport.GetHttpContext()
-    cookie = Cookie.SimpleCookie()
+    cookie = cookies.SimpleCookie()
     cookie["vmware_soap_session"] = sessionCookie
     httpContext["cookies"] = cookie
     VmomiSupport.GetRequestContext()["vcSessionCookie"] = sessionCookie
@@ -65,7 +61,7 @@ def _dictToCapability(d):
                 )
             ]
         )
-        for k, v in d.iteritems()
+        for k, v in d.items()
     ]
 
 
@@ -78,7 +74,7 @@ def UpdateProfile(pm, profile, rules):
             constraints=pbm.profile.SubProfileCapabilityConstraints(
                 subProfiles=[
                     pbm.profile.SubProfileCapabilityConstraints.SubProfile(
-                        name="Object",
+                        name="vSAN VMC Stretched sub-profile",
                         capability=_dictToCapability(rules)
                     )
                 ]
@@ -87,54 +83,21 @@ def UpdateProfile(pm, profile, rules):
     )
 
 
-def GetArgs():
-    """
-    Supports the command-line arguments listed below.
-    """
-    parser = argparse.ArgumentParser(
-        description='Process args for VSAN SDK sample application')
-    parser.add_argument('-s', '--host', required=True, action='store',
-                        help='Remote host to connect to')
-    parser.add_argument('-o', '--port', type=int, default=443, action='store',
-                        help='Port to connect on')
-    parser.add_argument('-u', '--user', required=True, action='store',
-                        help='User name to use when connecting to host')
-    parser.add_argument('-p', '--password', required=False, action='store',
-                        help='Password to use when connecting to host')
-    parser.add_argument('-n', '--policy-name', required=True, action='store',
-                        help='VM Storage Policy ID')
-    parser.add_argument('-r', '--policy-rule', required=True, action='store',
-                        help="VM Storage Policy Rule encoded as dictionary"
-                        "example:"
-                        " \"{\'VSAN.hostFailuresToTolerate\':1,"
-                        "    \'VSAN.stripeWidth\':2,"
-                        "    \'VSAN.forceProvisioning\':False}\"")
-    args = parser.parse_args()
-    return args
-
-
 # Start program
 def main():
-    args = GetArgs()
-    if args.password:
-        password = args.password
-    else:
-        password = getpass.getpass(prompt='Enter password for host %s and '
-                                   'user %s: ' % (args.host, args.user))
-
-    context = None
-    if hasattr(ssl, "_create_unverified_context"):
-        context = ssl._create_unverified_context()
-    si = SmartConnect(host=args.host,
-                      user=args.user,
-                      pwd=password,
-                      port=int(args.port),
-                      sslContext=context)
-
-    atexit.register(Disconnect, si)
+    parser = cli.Parser()
+    parser.add_custom_argument('--policy-name', required=True, action='store', help='VM Storage Policy ID')
+    parser.add_custom_argument('--policy-rule', required=True, action='store',
+                                        help="VM Storage Policy Rule encoded as dictionary"
+                                             "example:"
+                                             " \"{\'VSAN.hostFailuresToTolerate\':1,"
+                                             "    \'VSAN.stripeWidth\':2,"
+                                             "    \'VSAN.forceProvisioning\':False}\"")
+    args = parser.get_args()
+    serviceInstance = service_instance.connect(args)
 
     # Connect to SPBM Endpoint
-    pbmSi, pbmContent = GetPbmConnection(si._stub)
+    pbmSi, pbmContent = GetPbmConnection(serviceInstance._stub)
 
     pm = pbmContent.profileManager
     profileIds = pm.PbmQueryProfile(
@@ -147,6 +110,7 @@ def main():
         profiles = pm.PbmRetrieveContent(profileIds=profileIds)
 
     # Attempt to find profile name given by user
+    vmProfile = None
     for profile in profiles:
         if profile.name == args.policy_name:
             vmProfile = profile

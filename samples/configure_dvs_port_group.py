@@ -13,39 +13,8 @@
 
 import atexit
 
-from pyVim.connect import Disconnect, SmartConnectNoSSL, SmartConnect
 from pyVmomi import vim, vmodl
-
-from tools import cli
-
-
-def get_args():
-    """
-    Adds additional args for the Dvs portgroup configuration
-    """
-    parser = cli.build_arg_parser()
-
-    parser.add_argument('-ds', '--dvs-name',
-                        required=True,
-                        help=' Name of the distributed virtual switch')
-
-    parser.add_argument('-pg', '--dvs-pg-name',
-                        required=True,
-                        help="Name of the distributed port group")
-    my_args = parser.parse_args()
-    return cli.prompt_for_password(my_args)
-
-
-def get_obj(content, vimtype, name):
-    obj = None
-    container = content.viewManager.CreateContainerView(
-        content.rootFolder, vimtype, True
-    )
-    for c in container.view:
-        if c.name == name:
-            obj = c
-            break
-    return obj
+from tools import cli, service_instance, pchelper
 
 
 def configure_dvs_pg(service_instance, dvs_name, dv_pg_name):
@@ -59,8 +28,8 @@ def configure_dvs_pg(service_instance, dvs_name, dv_pg_name):
     content = service_instance.RetrieveContent()
 
     # get distributed Switch and its port group objects
-    dvs = get_obj(content, [vim.DistributedVirtualSwitch], dvs_name)
-    dv_pg = get_obj(content, [vim.dvs.DistributedVirtualPortgroup], dv_pg_name)
+    dvs = pchelper.get_obj(content, [vim.DistributedVirtualSwitch], dvs_name)
+    dv_pg = pchelper.get_obj(content, [vim.dvs.DistributedVirtualPortgroup], dv_pg_name)
     print("The distributed virtual Switch is {0}" .format(dvs))
     print("The distributed port group is {0}".format(dv_pg))
 
@@ -93,25 +62,14 @@ def configure_dvs_pg(service_instance, dvs_name, dv_pg_name):
 
 
 def main():
-
-    args = get_args()
+    parser = cli.Parser()
+    parser.add_required_arguments(cli.Argument.DVS_NAME, cli.Argument.DVS_PORT_GROUP_NAME)
+    args = parser.get_args()
+    serviceInstance = service_instance.connect(args)
 
     try:
-        if args.disable_ssl_verification:
-            service_instance = SmartConnectNoSSL(host=args.host,
-                                                 user=args.user,
-                                                 pwd=args.password,
-                                                 port=args.port)
-        else:
-            service_instance = SmartConnect(host=args.host,
-                                            user=args.user,
-                                            pwd=args.password,
-                                            port=args.port)
-
-        atexit.register(Disconnect, service_instance)
-
         # call configuration of dvs port group
-        configure_dvs_pg(service_instance, args.dvs_name, args.dvs_pg_name)
+        configure_dvs_pg(serviceInstance, args.dvs_name, args.dvs_pg_name)
 
     except vmodl.MethodFault as error:
         print("Caught vmodl fault : {0}".format(error.msg))

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # VMware vSphere Python SDK
-# Copyright (c) 2008-2014 VMware, Inc. All Rights Reserved.
+# Copyright (c) 2008-2021 VMware, Inc. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,64 +22,12 @@ or more types
 
 
 from tools import serviceutil
-from pyVim.connect import SmartConnect, Disconnect
 from pyVmomi import vim, vmodl
+from tools import cli, service_instance
 
-import argparse
 import atexit
 import collections
-import getpass
 import sys
-
-
-def get_args():
-    """
-    Supports the command-line arguments listed below.
-    """
-
-    parser = argparse.ArgumentParser(
-        description='Process args for streaming property changes',
-        epilog="""
-Example usage:
-waitforupdates.py -k -s vcenter -u root -p vmware -i 1 -P
-VirtualMachine:name,summary.config.numCpu,runtime.powerState,config.uuid -P
--P Datacenter:name -- This will fetch and print a few VM properties and the
-name of the datacenters
-""")
-
-    parser.add_argument('-s', '--host',
-                        required=True, action='store',
-                        help='Remote host to connect to')
-    parser.add_argument('-o', '--port', type=int, default=443, action='store',
-                        help='Port to connect on')
-    parser.add_argument('-u', '--user', required=True, action='store',
-                        help='User name to use when connecting to host')
-    parser.add_argument('-p', '--password', required=False, action='store',
-                        help='Password to use when connecting to host')
-    parser.add_argument('-i', '--iterations', type=int, default=None,
-                        action='store', help="""
-The number of updates to receive before exiting, default is no limit.Must be 1
-or more if specified.
-""")
-    parser.add_argument('-P'  '--propspec', dest='propspec', required=True,
-                        action='append',
-                        help='Property specifications to monitor, e.g. '
-                        'VirtualMachine:name,summary.config. Repetition '
-                        'permitted')
-    parser.add_argument('-k', '--disable_ssl_warnings', required=False,
-                        action='store_true',
-                        help='Disable ssl host certificate verification '
-                        'warnings')
-
-    args = parser.parse_args()
-
-    if args.iterations is not None and args.iterations < 1:
-        parser.print_help()
-        print >>sys.stderr, '\nInvalid argument: Iteration count must be' \
-                            ' omitted or greater than 0'
-        sys.exit(-1)
-
-    return args
 
 
 def parse_propspec(propspec):
@@ -162,7 +110,7 @@ def make_property_collector(pc, from_node, props):
         pcFilter = pc.CreateFilter(filterSpec, True)
         atexit.register(pcFilter.Destroy)
         return pcFilter
-    except vmodl.MethodFault, e:
+    except vmodl.MethodFault as e:
         if e._wsdlName == 'InvalidProperty':
             print >> sys.stderr, "InvalidProperty fault while creating " \
                                  "PropertyCollector filter : %s" % e.name
@@ -188,7 +136,7 @@ def monitor_property_changes(si, propspec, iterations=None):
     while True:
         if iterations is not None:
             if iterations <= 0:
-                print 'Iteration limit reached, monitoring stopped'
+                print('Iteration limit reached, monitoring stopped')
                 break
 
         result = pc.WaitForUpdatesEx(version, waitopts)
@@ -227,12 +175,12 @@ def monitor_property_changes(si, propspec, iterations=None):
                         val = getattr(change, 'val', None)
                         changes.append((name, val,))
 
-                    print "== %s ==" % moref
-                    print '\n'.join(['%s: %s' % (n, v,) for n, v in changes])
-                    print '\n'
+                    print("== %s ==" % moref)
+                    print('\n'.join(['%s: %s' % (n, v,) for n, v in changes]))
+                    print('\n')
                 elif kind == 'leave':
-                    print "== %s ==" % moref
-                    print '(removed)\n'
+                    print("== %s ==" % moref)
+                    print('(removed)\n')
 
         version = result.version
 
@@ -246,50 +194,53 @@ def main():
     one or more types to stdout
     """
 
-    args = get_args()
+    parser = cli.Parser()
+    parser.set_epilog("""
+        Example usage:
+        waitforupdates.py -k -s vcenter -u root -p vmware -i 1 -P
+        VirtualMachine:name,summary.config.numCpu,runtime.powerState,config.uuid -P
+        -P Datacenter:name -- This will fetch and print a few VM properties and the
+        name of the datacenters
+        """)
+    parser.add_custom_argument('--iterations', type=int, default=None,
+                                        action='store',
+                                        help="""
+                        The number of updates to receive before exiting, default is no limit.Must be 1
+                        or more if specified.
+                        """)
+    parser.add_custom_argument('--propspec', dest='propspec', required=True,
+                                        action='append',
+                                        help='Property specifications to monitor, e.g. '
+                                             'VirtualMachine:name,summary.config. Repetition '
+                                             'permitted')
+    args = parser.get_args()
 
-    if args.password:
-        password = args.password
-    else:
-        password = getpass.getpass(prompt='Enter password for host %s and '
-                                   'user %s: ' % (args.host, args.user))
+    if args.iterations is not None and args.iterations < 1:
+        parser.print_help()
+        print >>sys.stderr, '\nInvalid argument: Iteration count must be' \
+                            ' omitted or greater than 0'
+        sys.exit(-1)
 
     try:
-        if args.disable_ssl_warnings:
-            from requests.packages import urllib3
-            urllib3.disable_warnings()
-
-        si = SmartConnect(host=args.host, user=args.user, pwd=password,
-                          port=int(args.port))
-
-        if not si:
-            print >>sys.stderr, "Could not connect to the specified host ' \
-                                'using specified username and password"
-            raise
-
-        atexit.register(Disconnect, si)
-
+        serviceInstance = service_instance.connect(args)
         propspec = parse_propspec(args.propspec)
 
-        print "Monitoring property changes.  Press ^C to exit"
-        monitor_property_changes(si, propspec, args.iterations)
+        print("Monitoring property changes.  Press ^C to exit")
+        monitor_property_changes(serviceInstance, propspec, args.iterations)
 
-    except vmodl.MethodFault, e:
+    except vmodl.MethodFault as e:
         print >>sys.stderr, "Caught vmodl fault :\n%s" % str(e)
-        raise
-    except Exception, e:
+    except Exception as e:
         print >>sys.stderr, "Caught exception : " + str(e)
-        raise
 
 
 if __name__ == '__main__':
     try:
         main()
         sys.exit(0)
-    except Exception, e:
+    except Exception as e:
         print >>sys.stderr, "Caught exception : " + str(e)
-        raise
-    except KeyboardInterrupt, e:
+    except KeyboardInterrupt as e:
         print >>sys.stderr, "Exiting"
         sys.exit(0)
 

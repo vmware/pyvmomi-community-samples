@@ -11,14 +11,12 @@ import atexit
 import requests
 from tools import cli
 from pyVmomi import vim
-from pyVim.connect import SmartConnect, Disconnect
-from tools import tasks
+from tools import tasks, service_instance, pchelper
 
 
 # disable urllib3 warnings
 if hasattr(requests.packages.urllib3, 'disable_warnings'):
     requests.packages.urllib3.disable_warnings()
-
 
 def change_disk_mode(si, vm_obj, disk_number, mode,
                      disk_prefix_label='Hard disk '):
@@ -56,54 +54,24 @@ def change_disk_mode(si, vm_obj, disk_number, mode,
     return True
 
 
-def get_args():
-    parser = cli.build_arg_parser()
-    parser.add_argument('-v', '--vmname', required=True,
-                        help='Name of the VirtualMachine you want to change.')
-    parser.add_argument('-d', '--disk-number', required=True,
-                        help='Disk number to change mode.')
-    parser.add_argument('-m', '--mode', required=True,
-                        choices=['independent_persistent',
-                                 'persistent',
-                                 'independent_nonpersistent',
-                                 'nonpersistent',
-                                 'undoable',
-                                 'append'])
-    my_args = parser.parse_args()
-    return cli.prompt_for_password(my_args)
-
-
-def get_obj(content, vim_type, name):
-    obj = None
-    container = content.viewManager.CreateContainerView(
-        content.rootFolder, vim_type, True)
-    for c in container.view:
-        if c.name == name:
-            obj = c
-            break
-    return obj
-
-
 def main():
-    args = get_args()
+    parser = cli.Parser()
+    parser.add_required_arguments(cli.Argument.VM_NAME, cli.Argument.DISK_MODE)
+    parser.add_custom_argument('--disk-number', required=True, help='Disk number to change mode.')
+    args = parser.get_args()
+    serviceInstance = service_instance.connect(args)
 
-    si = SmartConnect(host=args.host,
-                      user=args.user,
-                      pwd=args.password,
-                      port=int(args.port))
-    atexit.register(Disconnect, si)
-
-    content = si.RetrieveContent()
-    print 'Searching for VM {}'.format(args.vmname)
-    vm_obj = get_obj(content, [vim.VirtualMachine], args.vmname)
+    content = serviceInstance.RetrieveContent()
+    print('Searching for VM {}'.format(args.vm_name))
+    vm_obj = pchelper.get_obj(content, [vim.VirtualMachine], args.vm_name)
 
     if vm_obj:
-        change_disk_mode(si, vm_obj, args.disk_number, args.mode)
-        print 'VM Disk {} successfully ' \
+        change_disk_mode(serviceInstance, vm_obj, args.disk_number, args.disk_mode)
+        print('VM Disk {} successfully ' \
               'changed to mode {}.'.format(args.disk_number,
-                                           args.mode)
+                                           args.disk_mode))
     else:
-        print "VM not found."
+        print("VM not found.")
 
 # start
 if __name__ == "__main__":

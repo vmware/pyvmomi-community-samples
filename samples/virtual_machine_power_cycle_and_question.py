@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright (c) 2014 VMware, Inc. All Rights Reserved.
+# Copyright (c) 2014-2021 VMware, Inc. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,55 +19,11 @@ of tasks in an asynchronous way. And how to answer virtual machine
 questions in the middle of power operations.
 """
 
-import atexit
-import argparse
-import getpass
 import sys
 import textwrap
 import time
-
-from pyVim import connect
 from pyVmomi import vim
-
-
-def get_args():
-    parser = argparse.ArgumentParser()
-
-    # because -h is reserved for 'help' we use -s for service
-    parser.add_argument('-s', '--host',
-                        required=True,
-                        action='store',
-                        help='vSphere service to connect to')
-
-    # because we want -p for password, we use -o for port
-    parser.add_argument('-o', '--port',
-                        type=int,
-                        default=443,
-                        action='store',
-                        help='Port to connect on')
-
-    parser.add_argument('-u', '--user',
-                        required=True,
-                        action='store',
-                        help='User name to use when connecting to host')
-
-    parser.add_argument('-p', '--password',
-                        required=False,
-                        action='store',
-                        help='Password to use when connecting to host')
-    parser.add_argument('-n', '--name',
-                        required=True,
-                        action='store',
-                        help='Name of the virtual_machine to look for.')
-
-    args = parser.parse_args()
-
-    if not args.password:
-        args.password = getpass.getpass(
-            prompt='Enter password for host %s and user %s: ' %
-                   (args.host, args.user))
-
-    return args
+from tools import cli, service_instance
 
 
 def _create_char_spinner():
@@ -87,12 +43,12 @@ def spinner(label=''):
     When called repeatedly from inside a loop this prints
     a one line CLI spinner.
     """
-    sys.stdout.write("\r\t%s %s" % (label, _spinner.next()))
+    sys.stdout.write("\r\t%s %s" % (label, next(_spinner)))
     sys.stdout.flush()
 
 
 def answer_vm_question(virtual_machine):
-    print "\n"
+    print("\n")
     choices = virtual_machine.runtime.question.choice.choiceInfo
     default_option = None
     if virtual_machine.runtime.question.choice.defaultIndex is not None:
@@ -100,34 +56,32 @@ def answer_vm_question(virtual_machine):
         default_option = choices[ii]
     choice = None
     while choice not in [o.key for o in choices]:
-        print "VM power on is paused by this question:\n\n"
-        print "\n".join(textwrap.wrap(
-            virtual_machine.runtime.question.text, 60))
+        print("VM power on is paused by this question:\n\n")
+        print("\n".join(textwrap.wrap(
+            virtual_machine.runtime.question.text, 60)))
         for option in choices:
-            print "\t %s: %s " % (option.key, option.label)
+            print("\t %s: %s " % (option.key, option.label))
         if default_option is not None:
-            print "default (%s): %s\n" % (default_option.label,
-                                          default_option.key)
+            print("default (%s): %s\n" % (default_option.label,
+                                          default_option.key))
         choice = raw_input("\nchoice number: ").strip()
-        print "..."
+        print("...")
     return choice
 
 
+parser = cli.Parser()
+parser.add_required_arguments(cli.Argument.VM_NAME)
+args = parser.get_args()
 # form a connection...
-args = get_args()
-si = connect.SmartConnect(host=args.host, user=args.user, pwd=args.password,
-                          port=args.port)
-
-# doing this means you don't need to remember to disconnect your script/objects
-atexit.register(connect.Disconnect, si)
+serviceInstance = service_instance.connect(args)
 
 # search the whole inventory tree recursively... a brutish but effective tactic
 vm = None
-entity_stack = si.content.rootFolder.childEntity
+entity_stack = serviceInstance.content.rootFolder.childEntity
 while entity_stack:
     entity = entity_stack.pop()
 
-    if entity.name == args.name:
+    if entity.name == args.vm_name:
         vm = entity
         del entity_stack[0:len(entity_stack)]
     elif hasattr(entity, 'childEntity'):
@@ -136,20 +90,20 @@ while entity_stack:
         entity_stack.append(entity.vmFolder)
 
 if not isinstance(vm, vim.VirtualMachine):
-    print "could not find a virtual machine with the name %s" % args.name
+    print("could not find a virtual machine with the name %s" % args.vm_name)
     sys.exit(-1)
 
-print "Found VirtualMachine: %s Name: %s" % (vm, vm.name)
+print("Found VirtualMachine: %s Name: %s" % (vm, vm.name))
 
 if vm.runtime.powerState == vim.VirtualMachinePowerState.poweredOn:
     # using time.sleep we just wait until the power off action
     # is complete. Nothing fancy here.
-    print "powering off..."
+    print("powering off...")
     task = vm.PowerOff()
     while task.info.state not in [vim.TaskInfo.State.success,
                                   vim.TaskInfo.State.error]:
         time.sleep(1)
-    print "power is off."
+    print("power is off.")
 
 
 # Sometimes we don't want a task to block execution completely
@@ -157,7 +111,7 @@ if vm.runtime.powerState == vim.VirtualMachinePowerState.poweredOn:
 # poll our task repeatedly and also check for any run-time issues. This
 # code deals with a common problem, what to do if a VM question pops up
 # and how do you handle it in the API?
-print "powering on VM %s" % vm.name
+print("powering on VM %s" % vm.name)
 if vm.runtime.powerState != vim.VirtualMachinePowerState.poweredOn:
 
     # now we get to work... calling the vSphere API generates a task...
@@ -183,11 +137,11 @@ if vm.runtime.powerState != vim.VirtualMachinePowerState.poweredOn:
 
     if task.info.state == vim.TaskInfo.State.error:
         # some vSphere errors only come with their class and no other message
-        print "error type: %s" % task.info.error.__class__.__name__
-        print "found cause: %s" % task.info.error.faultCause
+        print("error type: %s" % task.info.error.__class__.__name__)
+        print("found cause: %s" % task.info.error.faultCause)
         for fault_msg in task.info.error.faultMessage:
-            print fault_msg.key
-            print fault_msg.message
+            print(fault_msg.key)
+            print(fault_msg.message)
         sys.exit(-1)
 
 print

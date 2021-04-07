@@ -6,43 +6,12 @@ Example: Get guest info with folder and host placement
 
 """
 from __future__ import print_function
-
-from pyVmomi import vim
-
-from pyVim.connect import SmartConnectNoSSL, Disconnect
-
+from tools import cli, service_instance
 import argparse
-import atexit
-import getpass
 import json
 
 
 data = {}
-
-
-def GetArgs():
-    """
-    Supports the command-line arguments listed below.
-    """
-    parser = argparse.ArgumentParser(
-        description='Process args for retrieving all the Virtual Machines')
-    parser.add_argument('-s', '--host', required=True, action='store',
-                        help='Remote host to connect to')
-    parser.add_argument('-o', '--port', type=int, default=443, action='store',
-                        help='Port to connect on')
-    parser.add_argument('-u', '--user', required=True, action='store',
-                        help='User name to use when connecting to host')
-    parser.add_argument('-p', '--password', required=False, action='store',
-                        help='Password to use when connecting to host')
-    parser.add_argument('--json', required=False, action='store_true',
-                        help='Write out to json file')
-    parser.add_argument('--jsonfile', required=False, action='store',
-                        default='getvmsbycluster.json',
-                        help='Filename and path of json file')
-    parser.add_argument('--silent', required=False, action='store_true',
-                        help='supress output to screen')
-    args = parser.parse_args()
-    return args
 
 
 def getNICs(summary, guest):
@@ -103,27 +72,18 @@ def main():
     """
     Iterate through all datacenters and list VM info.
     """
-    args = GetArgs()
+    parser = cli.Parser()
+    parser.add_custom_argument('--json', required=False, action='store_true',
+                                        help='Write out to json file')
+    parser.add_custom_argument('--jsonfile', required=False, action='store', default='getvmsbycluster.json',
+                                        help='Filename and path of json file')
+    parser.add_custom_argument('--silent', required=False, action='store_true',
+                                        help='supress output to screen')
+    args = parser.get_args()
+    serviceInstance = service_instance.connect(args)
     outputjson = True if args.json else False
 
-    if args.password:
-        password = args.password
-    else:
-        password = getpass.getpass(prompt='Enter password for host %s and '
-                                   'user %s: ' % (args.host, args.user))
-
-    si = SmartConnectNoSSL(host=args.host,
-                           user=args.user,
-                           pwd=password,
-                           port=int(args.port))
-    if not si:
-        print("Could not connect to the specified host using specified "
-              "username and password")
-        return -1
-
-    atexit.register(Disconnect, si)
-
-    content = si.RetrieveContent()
+    content = serviceInstance.RetrieveContent()
     children = content.rootFolder.childEntity
     for child in children:  # Iterate though DataCenters
         dc = child

@@ -16,26 +16,6 @@ This module implements simple helper functions for working with:
 from pyVmomi import vim
 
 
-def get_obj(content, vimtype, name):
-    """
-    Retrieves the managed object for the name and type specified
-
-    Sample Usage:
-
-    get_obj(content, [vim.Datastore], "Datastore Name")
-    """
-    obj = None
-    container = content.viewManager.CreateContainerView(
-        content.rootFolder, vimtype, True)
-    for c in container.view:
-        if c.name == name:
-            obj = c
-            break
-    if not obj:
-        raise RuntimeError("Managed Object " + name + " not found.")
-    return obj
-
-
 def retrieve_fcd(content, datastore, vdisk):
     """
     Retrieves the managed object for the first class disk specified

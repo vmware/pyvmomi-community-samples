@@ -12,47 +12,9 @@ that includes NSX-T opeque switch
 """
 
 import atexit
-import ssl
-
-from tools import cli
-from tools import tasks
+from tools import tasks, pchelper, cli, service_instance
 from pyVim import connect
 from pyVmomi import vim, vmodl
-
-
-def get_args():
-    """Get command line args from the user.
-    """
-    parser = cli.build_arg_parser()
-
-    parser.add_argument('-v', '--vm_name',
-                        required=True,
-                        action='store',
-                        help='Virtual machine name')
-
-    parser.add_argument('-n', '--network_name',
-                        required=True,
-                        action='store',
-                        help='Name of the portgroup or NSX-T Logical Switch')
-
-    args = parser.parse_args()
-
-    cli.prompt_for_password(args)
-    return args
-
-
-def get_obj(content, vimtype, name):
-    """
-     Get the vsphere object associated with a given text name
-    """
-    obj = None
-    container = content.viewManager.CreateContainerView(content.rootFolder,
-                                                        vimtype, True)
-    for view in container.view:
-        if view.name == name:
-            obj = view
-            break
-    return obj
 
 
 def main():
@@ -61,27 +23,16 @@ def main():
     that includes NSX-T opeque switch.
     """
 
-    args = get_args()
-    sslContext = None
-
-    if args.disable_ssl_verification:
-        sslContext = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
-        sslContext.verify_mode = ssl.CERT_NONE
+    parser = cli.Parser()
+    # --port-group : 'Name of the portgroup or NSX-T Logical Switch'
+    parser.add_required_arguments(cli.Argument.VM_NAME, cli.Argument.PORT_GROUP)
+    args = parser.get_args()
+    serviceInstance = service_instance.connect(args)
 
     try:
-        service_instance = connect.SmartConnect(host=args.host,
-                                                user=args.user,
-                                                pwd=args.password,
-                                                port=int(args.port),
-                                                sslContext=sslContext)
-        if not service_instance:
-            print("Could not connect to the specified host using specified "
-                  "username and password")
-            return -1
-
-        atexit.register(connect.Disconnect, service_instance)
-        content = service_instance.RetrieveContent()
-        vm = get_obj(content, [vim.VirtualMachine], args.vm_name)
+        atexit.register(connect.Disconnect, serviceInstance)
+        content = serviceInstance.RetrieveContent()
+        vm = pchelper.get_obj(content, [vim.VirtualMachine], args.vm_name)
         # This code is for changing only one Interface. For multiple Interface
         # Iterate through a loop of network names.
         device_change = []
@@ -94,11 +45,11 @@ def main():
                 nicspec.device.wakeOnLanEnabled = True
 
                 # NSX-T Logical Switch
-                if isinstance(get_obj(content,
+                if isinstance(pchelper.get_obj(content,
                                       [vim.Network],
-                                      args.network_name), vim.OpaqueNetwork):
+                                      args.port_group), vim.OpaqueNetwork):
                     network = \
-                        get_obj(content, [vim.Network], args.network_name)
+                        pchelper.get_obj(content, [vim.Network], args.port_group)
                     nicspec.device.backing = \
                         vim.vm.device.VirtualEthernetCard. \
                         OpaqueNetworkBackingInfo()
@@ -108,12 +59,12 @@ def main():
                     nicspec.device.backing.opaqueNetworkId = network_id
 
                 # vSphere Distributed Virtual Switch
-                elif hasattr(get_obj(content,
+                elif hasattr(pchelper.get_obj(content,
                                      [vim.Network],
-                                     args.network_name), 'portKeys'):
-                    network = get_obj(content,
+                                     args.port_group), 'portKeys'):
+                    network = pchelper.get_obj(content,
                                       [vim.dvs.DistributedVirtualPortgroup],
-                                      args.network_name)
+                                      args.port_group)
                     dvs_port_connection = vim.dvs.PortConnection()
                     dvs_port_connection.portgroupKey = network.key
                     dvs_port_connection.switchUuid = \
@@ -128,8 +79,8 @@ def main():
                     nicspec.device.backing = \
                         vim.vm.device.VirtualEthernetCard.NetworkBackingInfo()
                     nicspec.device.backing.network = \
-                        get_obj(content, [vim.Network], args.network_name)
-                    nicspec.device.backing.deviceName = args.network_name
+                        pchelper.get_obj(content, [vim.Network], args.port_group)
+                    nicspec.device.backing.deviceName = args.port_group
 
                 nicspec.device.connectable = \
                     vim.vm.device.VirtualDevice.ConnectInfo()
@@ -141,7 +92,7 @@ def main():
 
         config_spec = vim.vm.ConfigSpec(deviceChange=device_change)
         task = vm.ReconfigVM_Task(config_spec)
-        tasks.wait_for_tasks(service_instance, [task])
+        tasks.wait_for_tasks(serviceInstance, [task])
         print("Successfully changed network")
 
     except vmodl.MethodFault as error:

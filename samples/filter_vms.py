@@ -23,28 +23,9 @@ may also be in sub-folders.
 """
 import sys
 from pyVmomi import vim, vmodl
-from pyVim.connect import SmartConnectNoSSL, Disconnect
-from pyVim.task import WaitForTask
-from tools import cli
+from tools import cli, service_instance, pchelper
 
 __author__ = 'prziborowski'
-
-
-def setup_args():
-    parser = cli.build_arg_parser()
-    parser.add_argument('-n', '--property', default='runtime.powerState',
-                        help='Name of the property to filter by')
-    parser.add_argument('-v', '--value', default='poweredOn',
-                        help='Value to filter with')
-    return cli.prompt_for_password(parser.parse_args())
-
-
-def get_obj(si, root, vim_type):
-    container = si.content.viewManager.CreateContainerView(root, vim_type,
-                                                           True)
-    view = container.view
-    container.Destroy()
-    return view
 
 
 def create_filter_spec(pc, vms, prop):
@@ -70,16 +51,18 @@ def filter_results(result, value):
 
 
 def main():
-    args = setup_args()
-    si = SmartConnectNoSSL(host=args.host,
-                           user=args.user,
-                           pwd=args.password,
-                           port=args.port)
+    parser = cli.Parser()
+    parser.add_custom_argument('--property', default='runtime.powerState',
+                                        help='Name of the property to filter by')
+    parser.add_custom_argument('--value', default='poweredOn', help='Value to filter with')
+    args = parser.get_args()
+    serviceInstance = service_instance.connect(args)
     # Start with all the VMs from container, which is easier to write than
     # PropertyCollector to retrieve them.
-    vms = get_obj(si, si.content.rootFolder, [vim.VirtualMachine])
+    content = serviceInstance.RetrieveContent()
+    vms = pchelper.get_all_obj(content, [vim.VirtualMachine])
 
-    pc = si.content.propertyCollector
+    pc = content.propertyCollector
     filter_spec = create_filter_spec(pc, vms, args.property)
     options = vmodl.query.PropertyCollector.RetrieveOptions()
     result = pc.RetrievePropertiesEx([filter_spec], options)
@@ -87,8 +70,6 @@ def main():
     print("VMs with %s = %s" % (args.property, args.value))
     for vm in vms:
         print(vm.name)
-
-    Disconnect(si)
 
 
 if __name__ == '__main__':

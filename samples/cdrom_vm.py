@@ -12,27 +12,13 @@ using a physical device and an iso path and removing the device.
 """
 import sys
 from pyVmomi import vim
-from pyVim.connect import SmartConnect
 from pyVim.task import WaitForTask
-from tools import cli
+from tools import cli, service_instance
 
 __author__ = 'prziborowski'
 
 # Prerequisite for VM (for simplicity sake)
 # is there is an existing IDE controller.
-
-
-def setup_args():
-    parser = cli.build_arg_parser()
-    parser.add_argument('-n', '--name',
-                        help='Name of the VM to test CD-rom on')
-    parser.add_argument('-i', '--iso',
-                        help='ISO to use in test. Use datastore path format. '
-                              'E.g. [datastore1] path/to/file.iso')
-    parser.add_argument('-d', '--datacenter',
-                        help='Name of datacenter to search on. '
-                             'Defaults to first.')
-    return cli.prompt_for_password(parser.parse_args())
 
 
 def get_dc(si, name):
@@ -81,17 +67,20 @@ def new_cdrom_spec(controller_key, backing):
 
 
 def main():
-    args = setup_args()
-    si = SmartConnect(host=args.host, user=args.user, pwd=args.password)
-    if args.datacenter:
-        dc = get_dc(si, args.datacenter)
+    parser = cli.Parser()
+    parser.add_required_arguments(cli.Argument.VM_NAME, cli.Argument.ISO)
+    parser.add_optional_arguments(cli.Argument.DATACENTER_NAME)
+    args = parser.get_args()
+    serviceInstance = service_instance.connect(args)
+    if args.datacenter_name:
+        dc = get_dc(serviceInstance, args.datacenter_name)
     else:
-        dc = si.content.rootFolder.childEntity[0]
+        dc = serviceInstance.content.rootFolder.childEntity[0]
 
-    vm = si.content.searchIndex.FindChild(dc.vmFolder, args.name)
+    vm = serviceInstance.content.searchIndex.FindChild(dc.vmFolder, args.vm_name)
     if vm is None:
         raise Exception('Failed to find VM %s in datacenter %s' %
-                        (dc.name, args.name))
+                        (args.vm_name, dc.name))
 
     controller = find_free_ide_controller(vm)
     if controller is None:
@@ -110,9 +99,9 @@ def main():
         WaitForTask(vm.Reconfigure(configSpec))
 
         cdroms = find_device(vm, vim.vm.device.VirtualCdrom)
-        cdrom = filter(lambda x: type(x.backing) == type(backing) and
+        cdrom = next(filter(lambda x: type(x.backing) == type(backing) and
                        x.backing.deviceName == cdrom_lun.deviceName,
-                       cdroms)[0]
+                       cdroms))
     else:
         print('Skipping physical CD-Rom test as no device present.')
 
@@ -133,8 +122,8 @@ def main():
         WaitForTask(vm.Reconfigure(configSpec))
 
         cdroms = find_device(vm, vim.vm.device.VirtualCdrom)
-        cdrom = filter(lambda x: type(x.backing) == type(backing) and
-                       x.backing.fileName == iso, cdroms)[0]
+        cdrom = next(filter(lambda x: type(x.backing) == type(backing) and
+                       x.backing.fileName == iso, cdroms))
     else:
         print('Skipping ISO test as no iso provided.')
 

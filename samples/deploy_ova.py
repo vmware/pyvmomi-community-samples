@@ -11,7 +11,6 @@ Most of the functionality is similar to ovf except that
 that an OVA file is a "tarball" so tarfile module is leveraged.
 
 """
-import atexit
 import os
 import os.path
 import ssl
@@ -20,64 +19,39 @@ import tarfile
 import time
 
 from threading import Timer
-from argparse import ArgumentParser
-from getpass import getpass
 from six.moves.urllib.request import Request, urlopen
 
-from tools import cli
+from tools import cli, service_instance
 
-from pyVim.connect import SmartConnectNoSSL, Disconnect
 from pyVmomi import vim, vmodl
 
 __author__ = 'prziborowski'
 
-
-def setup_args():
-    parser = cli.build_arg_parser()
-    parser.add_argument('--ova-path',
-                        help='Path to the OVA file, can be local or a URL.')
-    parser.add_argument('-d', '--datacenter',
-                        help='Name of datacenter to search on. '
-                             'Defaults to first.')
-    parser.add_argument('-r', '--resource-pool',
-                        help='Name of resource pool to use. '
-                             'Defaults to largest memory free.')
-    parser.add_argument('-ds', '--datastore',
-                        help='Name of datastore to use. '
-                             'Defaults to largest free space in datacenter.')
-    return cli.prompt_for_password(parser.parse_args())
-
-
 def main():
-    args = setup_args()
-    try:
-        si = SmartConnectNoSSL(host=args.host,
-                               user=args.user,
-                               pwd=args.password,
-                               port=args.port)
-        atexit.register(Disconnect, si)
-    except:
-        print("Unable to connect to %s" % args.host)
-        return 1
+    parser = cli.Parser()
+    parser.add_optional_arguments(
+        cli.Argument.OVA_PATH, cli.Argument.DATACENTER_NAME, cli.Argument.RESOURCE_POOL, cli.Argument.DATASTORE_NAME)
+    args = parser.get_args()
+    serviceInstance = service_instance.connect(args)
 
-    if args.datacenter:
-        dc = get_dc(si, args.datacenter)
+    if args.datacenter_name:
+        dc = get_dc(serviceInstance, args.datacenter_name)
     else:
-        dc = si.content.rootFolder.childEntity[0]
+        dc = serviceInstance.content.rootFolder.childEntity[0]
 
     if args.resource_pool:
-        rp = get_rp(si, dc, args.resource_pool)
+        rp = get_rp(serviceInstance, dc, args.resource_pool)
     else:
-        rp = get_largest_free_rp(si, dc)
+        rp = get_largest_free_rp(serviceInstance, dc)
 
-    if args.datastore:
-        ds = get_ds(dc, args.datastore)
+    if args.datastore_name:
+        ds = get_ds(dc, args.datastore_name)
     else:
         ds = get_largest_free_ds(dc)
 
     ovf_handle = OvfHandler(args.ova_path)
 
-    ovfManager = si.content.ovfManager
+    ovfManager = serviceInstance.content.ovfManager
     # CreateImportSpecParams can specify many useful things such as
     # diskProvisioning (thin/thick/sparse/etc)
     # networkMapping (to map to networks)
@@ -275,7 +249,6 @@ class OvfHandler(object):
             print("Lease: %s" % lease.info)
             print("Hit an error in upload: %s" % e)
             lease.Abort(vmodl.fault.SystemError(reason=str(e)))
-            raise
         return 1
 
     def upload_disk(self, fileItem, lease, host):

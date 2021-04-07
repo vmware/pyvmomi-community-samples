@@ -18,20 +18,16 @@ Python port of William Lam's generateHTML5VMConsole.pl
 Also ported SHA fingerprint fetching to Python OpenSSL library
 """
 
-import atexit
 import OpenSSL
 import ssl
-import sys
 import time
-
-from pyVim.connect import SmartConnect, Disconnect
 from pyVmomi import vim
-from tools import cli
+from tools import cli, service_instance
 
 
 def get_vm(content, name):
     try:
-        name = unicode(name, 'utf-8')
+        name = str(name)
     except TypeError:
         pass
 
@@ -46,44 +42,20 @@ def get_vm(content, name):
     return vm
 
 
-def get_args():
-    """
-    Add VM name to args
-    """
-    parser = cli.build_arg_parser()
-
-    parser.add_argument('-n', '--name',
-                        required=True,
-                        help='Name of Virtual Machine.')
-
-    args = parser.parse_args()
-
-    return cli.prompt_for_password(args)
-
-
 def main():
     """
     Simple command-line program to generate a URL
     to open HTML5 Console in Web browser
     """
 
-    args = get_args()
+    parser = cli.Parser()
+    parser.add_required_arguments(cli.Argument.VM_NAME)
+    args = parser.get_args()
+    serviceInstance = service_instance.connect(args)
 
-    try:
-        si = SmartConnect(host=args.host,
-                          user=args.user,
-                          pwd=args.password,
-                          port=int(args.port))
-    except Exception as e:
-        print 'Could not connect to vCenter host'
-        print repr(e)
-        sys.exit(1)
+    content = serviceInstance.RetrieveContent()
 
-    atexit.register(Disconnect, si)
-
-    content = si.RetrieveContent()
-
-    vm = get_vm(content, args.name)
+    vm = get_vm(content, args.vm_name)
     vm_moid = vm._moId
 
     vcenter_data = content.setting
@@ -103,14 +75,14 @@ def main():
                                              vc_cert)
     vc_fingerprint = vc_pem.digest('sha1')
 
-    print "Open the following URL in your browser to access the " \
+    print("Open the following URL in your browser to access the " \
           "Remote Console.\n" \
           "You have 60 seconds to open the URL, or the session" \
-          "will be terminated.\n"
-    print "http://" + args.host + ":" + console_port + "/console/?vmId=" \
-          + str(vm_moid) + "&vmName=" + args.name + "&host=" + vcenter_fqdn \
-          + "&sessionTicket=" + session + "&thumbprint=" + vc_fingerprint
-    print "Waiting for 60 seconds, then exit"
+          "will be terminated.\n")
+    print("http://" + args.host + ":" + console_port + "/console/?vmId=" \
+          + str(vm_moid) + "&vmName=" + args.vm_name + "&host=" + vcenter_fqdn \
+          + "&sessionTicket=" + session + "&thumbprint=" + str(vc_fingerprint))
+    print("Waiting for 60 seconds, then exit")
     time.sleep(60)
 
 # Start program

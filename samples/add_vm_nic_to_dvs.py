@@ -7,13 +7,11 @@ Email: laujunbupt0913@163.com
 # Note: Example code For testing purposes only
 """
 
-from pyVim.connect import SmartConnect, Disconnect
-import atexit
 from pyVmomi import vim
+from tools import cli, service_instance, pchelper
 import sys
 import argparse
 import getpass
-import ssl
 
 
 def add_nic(vm, mac, port):
@@ -49,18 +47,6 @@ def add_nic(vm, mac, port):
     print("Nic card added success ...")
 
 
-def get_obj(content, vimtype, name):
-    obj = None
-    container = content.viewManager.CreateContainerView(
-        content.rootFolder, vimtype, True
-    )
-    for c in container.view:
-        if c.name == name:
-            obj = c
-            break
-    return obj
-
-
 def search_port(dvs, portgroupkey):
     search_portkey = []
     criteria = vim.dvs.PortCriteria()
@@ -74,55 +60,6 @@ def search_port(dvs, portgroupkey):
     return search_portkey[0]
 
 
-def get_args():
-    parser = argparse.ArgumentParser(
-        description='Arguments for talking to vCenter')
-
-    parser.add_argument('-s', '--host',
-                        required=True,
-                        action='store',
-                        help='vSphere service to connect to')
-
-    parser.add_argument('-o', '--port',
-                        type=int,
-                        default=443,
-                        action='store',
-                        help='Port to connect on')
-
-    parser.add_argument('-u', '--user',
-                        required=True,
-                        action='store',
-                        help='User name to use')
-
-    parser.add_argument('-p', '--password',
-                        required=False,
-                        action='store',
-                        help='Password to use')
-
-    parser.add_argument('-v', '--vm-name',
-                        required=True,
-                        action='store',
-                        help='Name of the vm')
-
-    parser.add_argument('-pg', '--portgroup',
-                        required=True,
-                        action='store',
-                        help='Port group to connect on')
-
-    parser.add_argument('-mac', '--macaddress',
-                        required=True,
-                        action='store',
-                        help='Macadress of vm')
-
-    args = parser.parse_args()
-
-    if not args.password:
-        args.password = getpass.getpass(
-            prompt='Enter password')
-
-    return args
-
-
 def port_find(dvs, key):
     obj = None
     ports = dvs.FetchDVPorts()
@@ -133,22 +70,15 @@ def port_find(dvs, key):
 
 
 def main():
-    args = get_args()
-    context = None
-    if hasattr(ssl, "_create_unverified_context"):
-        context = ssl._create_unverified_context()
-    serviceInstance = SmartConnect(host=args.host,
-                                   user=args.user,
-                                   pwd=args.password,
-                                   port=args.port,
-                                   sslContext=context)
-    atexit.register(Disconnect, serviceInstance)
+    parser = cli.Parser()
+    parser.add_required_arguments(cli.Argument.VM_NAME, cli.Argument.PORT_GROUP, cli.Argument.VM_MAC)
+    args = parser.get_args()
+    serviceInstance = service_instance.connect(args)
 
     content = serviceInstance.RetrieveContent()
     print("Search VDS PortGroup by Name ...")
-    portgroup = None
-    portgroup = get_obj(content,
-                        [vim.dvs.DistributedVirtualPortgroup], args.portgroup)
+    portgroup = pchelper.get_obj(content,
+                        [vim.dvs.DistributedVirtualPortgroup], args.port_group)
     if portgroup is None:
         print("Portgroup not Found in DVS ...")
         exit(0)
@@ -158,10 +88,10 @@ def main():
     port = port_find(dvs, portKey)
     print("Search VM by Name ...")
     vm = None
-    vm = get_obj(content, [vim.VirtualMachine], args.vm_name)
+    vm = pchelper.get_obj(content, [vim.VirtualMachine], args.vm_name)
     if vm:
         print("Find Vm , Add Nic Card ...")
-        add_nic(vm, args.macaddress, port)
+        add_nic(vm, args.vm_mac, port)
     else:
         print("Vm not Found ...")
 

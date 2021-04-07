@@ -15,122 +15,36 @@ Error handling
 
 
 from __future__ import print_function
-from pyVim.connect import SmartConnect, SmartConnectNoSSL, Disconnect
 from pyVmomi import vim
-import atexit
-import argparse
-import getpass
-
-
-def get_args():
-    parser = argparse.ArgumentParser(
-        description='Arguments for talking to vCenter')
-
-    parser.add_argument('-s', '--host',
-                        required=True,
-                        action='store',
-                        help='vSpehre service to connect to')
-
-    parser.add_argument('-o', '--port',
-                        type=int,
-                        default=443,
-                        action='store',
-                        help='Port to connect on')
-
-    parser.add_argument('-u', '--user',
-                        required=True,
-                        action='store',
-                        help='User name to use')
-
-    parser.add_argument('-p', '--password',
-                        required=False,
-                        action='store',
-                        help='Password to use')
-
-    parser.add_argument('-d', '--datacenter',
-                        required=True,
-                        help='name of the datacenter')
-
-    parser.add_argument('-dvs', '--dvswitch',
-                        required=False,
-                        help='name of the dvswitch',
-                        default='all')
-
-    parser.add_argument('-S', '--disable_ssl_verification',
-                        required=False,
-                        action='store_true',
-                        help='Disable ssl host certificate verification')
-
-    args = parser.parse_args()
-    return args
-
-
-def get_obj(content, vimtype, name=None, folder=None, recurse=True):
-    if not folder:
-        folder = content.rootFolder
-
-    obj = None
-    container = content.viewManager.CreateContainerView(folder,
-                                                        vimtype, recurse)
-    if not name:
-        obj = {}
-        for managed_object_ref in container.view:
-            obj.update({managed_object_ref: managed_object_ref.name})
-    else:
-        obj = None
-        for c in container.view:
-            if c.name == name:
-                obj = c
-                break
-
-    return obj
+from tools import cli, service_instance, pchelper
 
 
 def main():
-    args = get_args()
-    if args.password:
-        password = args.password
-    else:
-        password = getpass.getpass(prompt='Enter password for host %s and '
-                                   'user %s: ' % (args.host, args.user))
-    if args.disable_ssl_verification:
-        si = SmartConnectNoSSL(host=args.host,
-                               user=args.user,
-                               pwd=password,
-                               port=int(args.port))
-    else:
-        si = SmartConnect(host=args.host,
-                          user=args.user,
-                          pwd=password,
-                          port=int(args.port))
+    parser = cli.Parser()
+    parser.add_required_arguments(cli.Argument.DATACENTER_NAME)
+    parser.add_custom_argument('--dvswitch-name', required=False, help='name of the dvswitch', default='all')
+    args = parser.get_args()
+    serviceInstance = service_instance.connect(args)
 
-    if not si:
-        print("Could not connect to the specified host using specified "
-              "username and password")
-        return -1
+    content = serviceInstance.RetrieveContent()
 
-    atexit.register(Disconnect, si)
-
-    content = si.RetrieveContent()
-
-    dc = get_obj(content, [vim.Datacenter], args.datacenter)
+    dc = pchelper.get_obj(content, [vim.Datacenter], args.datacenter_name)
 
     if dc is None:
-        print("Failed to find the datacenter %s" % args.datacenter)
+        print("Failed to find the datacenter %s" % args.datacenter_name)
         return 0
 
-    if args.dvswitch == 'all':
-        dvs_lists = get_obj(content, [vim.DistributedVirtualSwitch],
-                            folder=dc.networkFolder)
+    if args.dvswitch_name == 'all':
+        dvs_lists = pchelper.get_all_obj(content, [vim.DistributedVirtualSwitch], folder=dc.networkFolder)
     else:
-        dvsn = get_obj(content, [vim.DistributedVirtualSwitch], args.dvswitch)
+        dvsn = pchelper.search_for_obj(content, [vim.DistributedVirtualSwitch], args.dvswitch_name)
         if dvsn is None:
-            print("Failed to find the dvswitch %s" % args.dvswitch)
+            print("Failed to find the dvswitch %s" % args.dvswitch_name)
             return 0
         else:
             dvs_lists = [dvsn]
 
-    print('Datacenter Name'.ljust(40)+' :', args.datacenter)
+    print('Datacenter Name'.ljust(40)+' :', args.datacenter_name)
     for dvs in dvs_lists:
         print(40*'#')
         print('Dvswitch Name'.ljust(40)+' :', dvs.name)

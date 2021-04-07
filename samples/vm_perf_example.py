@@ -14,32 +14,17 @@
 """
 
 from pyVmomi import vim
-from tools import cli
-from pyVim.connect import SmartConnectNoSSL, Disconnect
-import atexit
+from tools import cli, service_instance
 import sys
 
 
 def main():
 
-    args = cli.get_args()
+    parser = cli.Parser()
+    args = parser.get_args()
+    serviceInstance = service_instance.connect(args)
 
-    # Connect to the host without SSL signing
-    try:
-        si = SmartConnectNoSSL(
-            host=args.host,
-            user=args.user,
-            pwd=args.password,
-            port=int(args.port))
-        atexit.register(Disconnect, si)
-
-    except IOError as e:
-        pass
-
-    if not si:
-        raise SystemExit("Unable to connect to host with supplied info.")
-
-    content = si.RetrieveContent()
+    content = serviceInstance.RetrieveContent()
     perfManager = content.perfManager
 
     # create a mapping from performance stats to their counterIDs

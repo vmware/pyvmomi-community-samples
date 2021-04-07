@@ -15,47 +15,9 @@ Thanks to William Lam (https://github.com/lamw) for ideas from
 the script list_vm_storage_policy.py
 """
 
-import atexit
 import re
-import tools.cli as cli
-
+from tools import cli, service_instance
 from pyVmomi import pbm, vim, VmomiSupport, SoapStubAdapter
-from pyVim.connect import SmartConnect, SmartConnectNoSSL, Disconnect
-
-
-def get_args():
-    """Supports the command-line arguments listed below.
-    """
-    parser = cli.build_arg_parser()
-    parser.description = 'Set VM Home or Virtual Disk Storage Policies'
-    parser.add_argument('-v', '--vm_name',
-                        required=True,
-                        action='store',
-                        metavar='string',
-                        help='Get virtual machine by name')
-    parser.add_argument('--strict',
-                        required=False,
-                        action='store_true',
-                        help='Search strict virtual machine name matches')
-    parser.add_argument('--set_vm_home',
-                        required=False,
-                        action='store_true',
-                        help='Set the specified policy for vm home.')
-    parser.add_argument('--virtual_disk_number',
-                        required=False,
-                        nargs='+',
-                        metavar='int',
-                        help='The sequence numbers of the virtual disks for which \
-                              the specified policy should be set. \
-                              Space as delimiter.')
-    parser.add_argument('--storage_policy_name',
-                        required=True,
-                        action='store',
-                        metavar='string',
-                        help='The name of the storage policy to be set for VM \
-                              Home or Virtual Disk')
-    args = parser.parse_args()
-    return cli.prompt_for_password(args)
 
 
 class bcolors(object):
@@ -240,25 +202,16 @@ def main():
     """Main program.
     """
 
-    args = get_args()
-    serviceInstance = None
-    try:
-        if args.disable_ssl_verification:
-            serviceInstance = SmartConnectNoSSL(host=args.host,
-                                                user=args.user,
-                                                pwd=args.password,
-                                                port=int(args.port))
-        else:
-            serviceInstance = SmartConnect(host=args.host,
-                                           user=args.user,
-                                           pwd=args.password,
-                                           port=int(args.port))
-        atexit.register(Disconnect, serviceInstance)
-    except IOError as e:
-        print(e)
-        pass
-    if not serviceInstance:
-        raise SystemExit('Unable to connect to host with supplied info.')
+    parser = cli.Parser()
+    parser.add_required_arguments(cli.Argument.VM_NAME, cli.Argument.STORAGE_POLICY_NAME)
+    parser.add_custom_argument('--strict', required=False, action='store_true',
+                                        help='Search strict virtual machine name matches')
+    parser.add_custom_argument('--set_vm_home', required=False, action='store_true',
+                                        help='Set the specified policy for vm home.')
+    parser.add_custom_argument('--virtual_disk_number', required=False, nargs='+', metavar='int',
+                                        help='The sequence numbers of the virtual disks for which the specified policy should be set. Space as delimiter.')
+    args = parser.get_args()
+    serviceInstance = service_instance.connect(args)
 
     vdNumber = args.virtual_disk_number
     policyName = args.storage_policy_name

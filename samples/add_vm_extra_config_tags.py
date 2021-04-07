@@ -18,42 +18,21 @@ import atexit
 
 import requests
 
-from pyVim import connect
 from pyVmomi import vim
-from tools import cli
-from tools import tasks
+from tools import cli, service_instance,pchelper, tasks
 
 requests.packages.urllib3.disable_warnings()
 
+parser = cli.Parser()
+parser.add_optional_arguments(cli.Argument.UUID, cli.Argument.VM_NAME)
+args = parser.get_args()
+serviceInstance = service_instance.connect(args)
 
-def setup_args():
-    """
-    Adds additional args to allow the vm uuid to
-    be set.
-    """
-    parser = cli.build_arg_parser()
-    # using j here because -u is used for user
-    parser.add_argument('-j', '--uuid',
-                        required=True,
-                        help='UUID of the VirtualMachine you want to add '
-                             'metadata to.')
-    my_args = parser.parse_args()
-    return cli.prompt_for_password(my_args)
-
-args = setup_args()
-si = None
-try:
-    si = connect.SmartConnect(host=args.host,
-                              user=args.user,
-                              pwd=args.password,
-                              port=int(args.port))
-    atexit.register(connect.Disconnect, si)
-except IOError:
-    pass
-
-if not si:
-    raise SystemExit("Unable to connect to host with supplied info.")
-vm = si.content.searchIndex.FindByUuid(None, args.uuid, True)
+vm = None
+if args.uuid:
+    vm = serviceInstance.content.searchIndex.FindByUuid(None, args.uuid, True)
+elif args.vm_name:
+    vm = pchelper.get_obj(serviceInstance.RetrieveContent(), [vim.VirtualMachine], args.vm_name)
 if not vm:
     raise SystemExit("Unable to locate VirtualMachine.")
 
@@ -74,14 +53,14 @@ options_values = {
                    " and they work"
 }
 
-for k, v in options_values.iteritems():
+for k, v in options_values.items():
     opt.key = k
     opt.value = v
     spec.extraConfig.append(opt)
     opt = vim.option.OptionValue()
 
 task = vm.ReconfigVM_Task(spec)
-tasks.wait_for_tasks(si, [task])
+tasks.wait_for_tasks(serviceInstance, [task])
 print("Done setting values.")
 print("time to get them")
 keys_and_vals = vm.config.extraConfig

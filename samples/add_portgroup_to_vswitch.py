@@ -8,67 +8,10 @@ This code has been released under the terms of the Apache-2.0 license
 http://opensource.org/licenses/Apache-2.0
 """
 from __future__ import print_function
-from pyVim.connect import SmartConnect, SmartConnectNoSSL, Disconnect
 from pyVmomi import vim
-import atexit
+from tools import cli, service_instance
 import sys
-import argparse
 import re
-
-
-def get_args():
-    parser = argparse.ArgumentParser(
-        description='Arguments for talking to vCenter')
-
-    parser.add_argument('-s', '--host',
-                        required=True,
-                        action='store',
-                        help='vSpehre service to connect to')
-
-    parser.add_argument('-o', '--port',
-                        type=int,
-                        default=443,
-                        action='store',
-                        help='Port to connect on')
-
-    parser.add_argument('-u', '--user',
-                        required=True,
-                        action='store',
-                        help='User name to use')
-
-    parser.add_argument('-p', '--password',
-                        required=True,
-                        action='store',
-                        help='Password to use')
-
-    parser.add_argument('-v', '--vswitch',
-                        required=True,
-                        action='store',
-                        help='vSwitch')
-
-    parser.add_argument('-g', '--portgroup',
-                        required=True,
-                        action='store',
-                        help='Portgroup to create')
-
-    parser.add_argument('-i', '--vlanid',
-                        required=True,
-                        action='store',
-                        help='Vlan ID')
-
-    parser.add_argument('-c', '--skip_verification',
-                        required=False,
-                        action='store_true',
-                        help='Skip SSL verification')
-
-    parser.add_argument('-r', '--regex_esxi',
-                        required=False,
-                        default=None,
-                        action='store',
-                        help='Regex esxi name')
-
-    args = parser.parse_args()
-    return args
 
 
 def GetVMHosts(content, regex_esxi=None):
@@ -93,6 +36,7 @@ def GetVMHosts(content, regex_esxi=None):
 def AddHostsPortgroup(hosts, vswitchName, portgroupName, vlanId):
     for host in hosts:
         AddHostPortgroup(host, vswitchName, portgroupName, vlanId)
+    return True
 
 
 def AddHostPortgroup(host, vswitchName, portgroupName, vlanId):
@@ -111,22 +55,16 @@ def AddHostPortgroup(host, vswitchName, portgroupName, vlanId):
 
 
 def main():
-    args = get_args()
-    if args.skip_verification:
-        serviceInstance = SmartConnectNoSSL(host=args.host,
-                                            user=args.user,
-                                            pwd=args.password,
-                                            port=443)
-    else:
-        serviceInstance = SmartConnect(host=args.host,
-                                       user=args.user,
-                                       pwd=args.password,
-                                       port=443)
-    atexit.register(Disconnect, serviceInstance)
+    parser = cli.Parser()
+    parser.add_required_arguments(cli.Argument.VSWITCH_NAME, cli.Argument.PORT_GROUP, cli.Argument.VLAN_ID)
+    parser.add_optional_arguments(cli.Argument.ESX_NAME_REGEX)
+    args = parser.get_args()
+    serviceInstance = service_instance.connect(args)
     content = serviceInstance.RetrieveContent()
 
-    hosts = GetVMHosts(content, args.regex_esxi)
-    AddHostsPortgroup(hosts, args.vswitch, args.portgroup, args.vlanid)
+    hosts = GetVMHosts(content, args.esx_name_regex)
+    if AddHostsPortgroup(hosts, args.vswitch_name, args.port_group, args.vlan_id):
+        print("Added Port group to vSwitch")
 
 
 # Main section

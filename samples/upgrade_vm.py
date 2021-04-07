@@ -30,96 +30,37 @@ import atexit
 
 from pyVim import connect, task
 from pyVmomi import vim
-
-from tools import cli
-
-
-def get_args():
-    """ Get commandline arguments from the user. """
-    parser = cli.build_arg_parser()
-
-    parser.add_argument('-v', '--version',
-                        required=False,
-                        action='store',
-                        default=None,
-                        help='Virtual machine hardware version')
-    parser.add_argument('-n', '--name',
-                        required=True,
-                        action='store',
-                        help='Name of the virtual machine to upgrade '
-                             '(case sensitive!)')
-    parser.add_argument('-S', '--use-ssl',
-                        required=False,
-                        action='store_true',
-                        default=False,  # Test setups are usually self-signed
-                        help='Enable SSL host certificate verification')
-
-    args = parser.parse_args()
-    cli.prompt_for_password(args)
-    return args
-
-
-def get_vm(content, name):
-    """ Gets a named virtual machine. """
-    virtual_machine = None
-    container = content.viewManager.CreateContainerView(content.rootFolder,
-                                                        [vim.VirtualMachine],
-                                                        True)
-    for item in container.view:
-        if item.name == name:
-            virtual_machine = item
-            break
-    container.Destroy()  # Best practice. Frees up resources on host.
-    return virtual_machine
-
-
-def connect_vsphere(username, password, hostname, port, use_ssl):
-    """ Connects to a ESXi host or vCenter server. """
-    server = None
-    try:
-        if use_ssl:  # Connect to server using SSL certificate verification
-            server = connect.SmartConnect(host=hostname, user=username,
-                                          pwd=password, port=port)
-        else:
-            server = connect.SmartConnectNoSSL(host=hostname, user=username,
-                                               pwd=password, port=port)
-    except vim.fault.InvalidLogin:
-        print("ERROR: Invalid login credentials for user '%s'" % username)
-        exit(1)
-    except vim.fault as message:
-        print("Error connecting to vSphere: %s" % str(message))
-        exit(1)
-
-    # Ensures clean disconnect upon program termination
-    atexit.register(connect.Disconnect, server)
-
-    return server
+from tools import cli, service_instance, pchelper
 
 
 def main():
     """ Upgrades the hardware version of a Virtual Machine. """
-    args = get_args()
-    service_instance = connect_vsphere(args.user, args.password,
-                                       args.host, int(args.port), args.use_ssl)
+    parser = cli.Parser()
+    parser.add_required_arguments(cli.Argument.VM_NAME)
+    parser.add_custom_argument('--release', required=False, action='store', default=None,
+                                        help='Version/release number of the Virtual machine hardware')
+    args = parser.get_args()
+    serviceInstance = service_instance.connect(args)
 
-    content = service_instance.RetrieveContent()
-    virtual_machine = get_vm(content, args.name)
-    if not virtual_machine:
-        print("Could not find VM %s" % args.name)
+    content = serviceInstance.RetrieveContent()
+    vm = pchelper.get_obj(content, [vim.VirtualMachine], args.vm_name)
+    if not vm:
+        print("Could not find VM %s" % args.vm_name)
     else:
-        print("Upgrading VM %s" % args.name)
+        print("Upgrading VM %s" % args.vm_name)
 
         # Set the hardware version to use if specified
-        if args.version is not None:
-            print("New version will be %s" % args.version)
-            version = "vmx-{:02d}".format(args.version)
+        if args.release is not None:
+            print("New version will be %s" % args.release)
+            version = "vmx-{:02d}".format(args.release)
         else:
             version = None
 
         # Upgrade the VM
         try:
-            task.WaitForTask(task=virtual_machine.UpgradeVM_Task(version),
-                             si=service_instance)
+            task.WaitForTask(task=vm.UpgradeVM_Task(version),
+                             si=serviceInstance)
+            print("Upgrade complete")
         except vim.fault.AlreadyUpgraded:
             print("VM is already upgraded")
 
