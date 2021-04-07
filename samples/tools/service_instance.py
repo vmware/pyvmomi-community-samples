@@ -23,7 +23,7 @@ def connect(args):
                                             user=args.user,
                                             pwd=args.password,
                                             port=args.port,
-                                            sslValidation=False)
+                                            disableSslCertValidation=True)
         else:
             service_instance = SmartConnect(host=args.host,
                                             user=args.user,
