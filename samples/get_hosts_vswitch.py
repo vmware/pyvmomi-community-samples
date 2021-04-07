@@ -38,7 +38,8 @@ def main():
 
     hosts = GetVMHosts(content)
     hostSwitchesDict = GetHostsSwitches(hosts)
-
+    if hostSwitchesDict is not None:
+        print("The vSwitches are:\n")
     for host, vswithes in hostSwitchesDict.items():
         for v in vswithes:
             print(v.name)

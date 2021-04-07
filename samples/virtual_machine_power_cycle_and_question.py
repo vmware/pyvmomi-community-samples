@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright (c) 2014-2021 VMware, Inc. All Rights Reserved.
+# Copyright (c) 2014 VMware, Inc. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -47,14 +47,13 @@ def spinner(label=''):
     sys.stdout.flush()
 
 
-def answer_vm_question(virtual_machine):
+def answer_vm_question(virtual_machine, choice = None):
     print("\n")
     choices = virtual_machine.runtime.question.choice.choiceInfo
     default_option = None
     if virtual_machine.runtime.question.choice.defaultIndex is not None:
         ii = virtual_machine.runtime.question.choice.defaultIndex
         default_option = choices[ii]
-    choice = None
     while choice not in [o.key for o in choices]:
         print("VM power on is paused by this question:\n\n")
         print("\n".join(textwrap.wrap(
@@ -64,13 +63,15 @@ def answer_vm_question(virtual_machine):
         if default_option is not None:
             print("default (%s): %s\n" % (default_option.label,
                                           default_option.key))
-        choice = raw_input("\nchoice number: ").strip()
+        if choice is None:
+            choice = raw_input("\nchoice number: ").strip()
         print("...")
     return choice
 
 
 parser = cli.Parser()
 parser.add_required_arguments(cli.Argument.VM_NAME)
+parser.add_optional_arguments(cli.Argument.ASSUME_INPUT)
 args = parser.get_args()
 # form a connection...
 serviceInstance = service_instance.connect(args)
@@ -129,7 +130,7 @@ if vm.runtime.powerState != vim.VirtualMachinePowerState.poweredOn:
         if vm.runtime.question is not None:
             question_id = vm.runtime.question.id
             if question_id not in answers.keys():
-                answers[question_id] = answer_vm_question(vm)
+                answers[question_id] = answer_vm_question(vm, args.assume_input)
                 vm.AnswerVM(question_id, answers[question_id])
 
         # create a spinning cursor so people don't kill the script...

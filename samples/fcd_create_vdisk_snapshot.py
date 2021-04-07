@@ -46,6 +46,7 @@ def main():
         task = storage.VStorageObjectCreateSnapshot_Task(
             vdisk.config.id, datastore, args.snapshot_name)
         tasks.wait_for_tasks(serviceInstance, [task])
+        print("FCD snapshot created!")
 
     except vmodl.MethodFault as error:
         print("Caught vmodl fault : " + error.msg)

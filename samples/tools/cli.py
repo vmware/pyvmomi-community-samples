@@ -79,7 +79,8 @@ class Parser:
         args = self._parser.parse_args()
         return self._prompt_for_password(args)
 
-    def _add_sample_specific_arguments(self, isRequired, *args):
+
+    def _add_sample_specific_arguments(self, is_required: bool, *args):
         """
         Add an argument to the "sample specific arguments" group
         Requires a predefined argument from the Argument class.
@@ -87,22 +88,25 @@ class Parser:
         for arg in args:
             name_or_flags = arg["name_or_flags"]
             options = arg["options"]
-            options["required"] = isRequired
+            options["required"] = is_required
             self._specific_args_group.add_argument(*name_or_flags, **options)
+
 
     def add_required_arguments(self, *args):
         """
         Add a required argument to the "sample specific arguments" group
         Requires a predefined argument from the Argument class.
         """
-        self._add_sample_specific_arguments(self, True, *args)
+        self._add_sample_specific_arguments(True, *args)
+
 
     def add_optional_arguments(self, *args):
         """
         Add an optional argument to the "sample specific arguments" group.
         Requires a predefined argument from the Argument class.
         """
-        self._add_sample_specific_arguments(self, False, *args)
+        self._add_sample_specific_arguments(False, *args)
+
 
     def add_custom_argument(self, *name_or_flags, **options):
         """
@@ -112,8 +116,10 @@ class Parser:
         """
         self._specific_args_group.add_argument(*name_or_flags, **options)
 
+
     def set_epilog(self, epilog):
         self._parser.epilog = epilog
+
 
     def _prompt_for_password(self, args):
         """
@@ -359,6 +365,18 @@ class Argument:
     STORAGE_POLICY_NAME = {
         'name_or_flags': ['--storage-policy-name'],
         'options': {'action': 'store', 'metavar': 'string', 'help': 'Storage policy name'}
+    }
+    ASSUME_INPUT = {
+        'name_or_flags': ['--assume-input'],
+        'options': {'action': 'store', 'help': 'Assume user input'}
+    }
+    SSL_KEY = {
+        'name_or_flags': ['--ssl-key'],
+        'options': {'action': 'store', 'help': 'absolute location of the private key file'}
+    }
+    SSL_CERT = {
+        'name_or_flags': ['--ssl-cert'],
+        'options': {'action': 'store', 'help': 'absolute location of the certificate file'}
     }
 
 

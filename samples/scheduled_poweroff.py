@@ -17,7 +17,8 @@ from pyVim import connect
 
 def main():
     parser = cli.Parser()
-    parser.add_required_arguments(cli.Argument.MINUTES, cli.Argument.VM_NAME, cli.Argument.POWER_ON)
+    parser.add_required_arguments(cli.Argument.MINUTES, cli.Argument.VM_NAME)
+    parser.add_optional_arguments(cli.Argument.POWER_ON)
     args = parser.get_args()
     try:
         dt = datetime.now() + timedelta(minutes= int(args.minutes))

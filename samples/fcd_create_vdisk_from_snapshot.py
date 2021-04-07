@@ -87,6 +87,7 @@ def main():
                 snapshot,
                 args.dest_vdisk)
         tasks.wait_for_tasks(serviceInstance, [task])
+        print("FCD created from snapshot!")
 
     except vmodl.MethodFault as error:
         print("Caught vmodl fault : " + error.msg)

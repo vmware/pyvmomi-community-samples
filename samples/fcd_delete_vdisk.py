@@ -56,6 +56,7 @@ def main():
         storage = content.vStorageObjectManager
         task = storage.DeleteVStorageObject_Task(vdisk.config.id, datastore)
         tasks.wait_for_tasks(serviceInstance, [task])
+        print("FCD deleted!")
 
     except vmodl.MethodFault as error:
         print("Caught vmodl fault : " + error.msg)

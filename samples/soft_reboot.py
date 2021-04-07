@@ -7,17 +7,21 @@
 # http://www.apache.org/licenses/LICENSE-2.0.html
 
 
-import atexit
-
-from pyVim import connect
-from tools import cli, service_instance
+from tools import cli, service_instance, pchelper
+from pyVmomi import vim
 
 parser = cli.Parser()
-parser.add_required_arguments(cli.Argument.UUID)
+parser.add_optional_arguments(cli.Argument.UUID, cli.Argument.VM_NAME)
 args = parser.get_args()
 serviceInstance = service_instance.connect(args)
 
-vm = serviceInstance.content.searchIndex.FindByUuid(datacenter=None, uuid=args.uuid, vmSearch=True)
+vm = None
+if args.uuid:
+    vm = serviceInstance.content.searchIndex.FindByUuid(datacenter=None, uuid=args.uuid, vmSearch=True)
+elif args.vm_name:
+    content = serviceInstance.RetrieveContent()
+    vm = pchelper.get_obj(content, [vim.VirtualMachine], args.vm_name)
+
 if not vm:
     raise SystemExit("Unable to locate VirtualMachine.")
 

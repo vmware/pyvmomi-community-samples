@@ -28,8 +28,8 @@ def main():
     """
 
     parser = cli.Parser()
-    parser.add_required_arguments(
-    cli.Argument.DATASTORE_NAME, cli.Argument.FIRST_CLASS_DISK_NAME, cli.Argument.SNAPSHOT_NAME)
+    parser.add_required_arguments(cli.Argument.DATASTORE_NAME, cli.Argument.FIRST_CLASS_DISK_NAME,
+                                  cli.Argument.SNAPSHOT_NAME)
     parser.add_custom_argument('--yes', action='store_true', help='Confirm disk deletion.')
     args = parser.get_args()
     serviceInstance = service_instance.connect(args)
@@ -62,6 +62,7 @@ def main():
         task = storage.DeleteSnapshot_Task(
             vdisk.config.id, datastore, snapshot)
         tasks.wait_for_tasks(serviceInstance, [task])
+        print("FCD snapshot deleted!")
 
     except vmodl.MethodFault as error:
         print("Caught vmodl fault : " + error.msg)

@@ -71,6 +71,7 @@ def main():
         storage = content.vStorageObjectManager
         task = storage.CreateDisk_Task(spec)
         tasks.wait_for_tasks(serviceInstance, [task])
+        print("FCD created!")
 
     except vmodl.MethodFault as error:
         print("Caught vmodl fault : " + error.msg)

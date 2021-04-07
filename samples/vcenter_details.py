@@ -15,7 +15,7 @@
 # limitations under the License.
 
 """
-Python program for listing the vms on an ESX / vCenter host
+Python program for listing the VMs on an ESX / vCenter host
 """
 
 from pyVmomi import vmodl
@@ -23,13 +23,14 @@ from pyVmomi import vim
 
 from tools import cli, service_instance, vm
 
-def parse_service_instance(service_instance):
+
+def parse_service_instance(si):
     """
     Print some basic knowledge about your environment as a Hello World
     equivalent for pyVmomi
     """
 
-    content = service_instance.RetrieveContent()
+    content = si.RetrieveContent()
     object_view = content.viewManager.CreateContainerView(content.rootFolder,
                                                           [], True)
     for obj in object_view.view:
@@ -60,6 +61,7 @@ def main():
         return -1
 
     return 0
+
 
 # Start program
 if __name__ == "__main__":

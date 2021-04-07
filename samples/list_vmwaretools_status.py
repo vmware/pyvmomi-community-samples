@@ -15,7 +15,7 @@ import requests
 from tools import cli, pchelper, service_instance
 from pyVmomi import vim
 
-_columns_four = "{0:<20} {1:<30} {2:<30} {3:<20}"
+_columns_four = "{0!s:<20} {1!s:<30} {2!s:<30} {3!s:<20}"
 
 # disable  urllib3 warnings
 if hasattr(requests.packages.urllib3, 'disable_warnings'):

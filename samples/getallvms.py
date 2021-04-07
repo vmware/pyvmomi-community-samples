@@ -15,7 +15,7 @@
 # limitations under the License.
 
 """
-Python program for listing the vms on an ESX / vCenter host
+Python program for listing the VMs on an ESX / vCenter host
 """
 
 import re
@@ -70,12 +70,12 @@ def main():
         content = serviceInstance.RetrieveContent()
 
         container = content.rootFolder  # starting point to look into
-        viewType = [vim.VirtualMachine]  # object types to look for
+        view_type = [vim.VirtualMachine]  # object types to look for
         recursive = True  # whether we should look into it recursively
-        containerView = content.viewManager.CreateContainerView(
-            container, viewType, recursive)
+        container_view = content.viewManager.CreateContainerView(
+            container, view_type, recursive)
 
-        children = containerView.view
+        children = container_view.view
         if args.find is not None:
             pat = re.compile(args.find, re.IGNORECASE)
         for child in children:
