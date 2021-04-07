@@ -21,6 +21,7 @@ from tools import tasks, pchelper, service_instance
 if hasattr(requests.packages.urllib3, 'disable_warnings'):
     requests.packages.urllib3.disable_warnings()
 
+
 def get_hdd_prefix_label(language):
     language_prefix_label_mapper = {
         'English': 'Hard disk ',
@@ -70,9 +71,9 @@ def main():
     parser.add_custom_argument('--yes', help='Confirm disk deletion.', action='store_true')
     parser.add_custom_argument('--language', default='English', help='Language your vcenter used.')
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
 
-    content = serviceInstance.RetrieveContent()
+    content = si.RetrieveContent()
     print('Searching for VM {}'.format(args.vm_name))
     vm_obj = pchelper.get_obj(content, [vim.VirtualMachine], args.vm_name)
 
@@ -82,7 +83,7 @@ def main():
                                     "to delete HDD "
                                     "{}?".format(args.unitnumber),
                                     default='no')
-        delete_virtual_disk(serviceInstance, vm_obj, args.unitnumber, args.language)
+        delete_virtual_disk(si, vm_obj, args.unitnumber, args.language)
         print('VM HDD "{}" successfully deleted.'.format(args.unitnumber))
     else:
         print('VM not found')

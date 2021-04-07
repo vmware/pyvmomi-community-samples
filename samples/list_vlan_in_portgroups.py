@@ -24,9 +24,9 @@ def main():
     parser.add_required_arguments(cli.Argument.DATACENTER_NAME)
     parser.add_custom_argument('--dvswitch-name', required=False, help='name of the dvswitch', default='all')
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
 
-    content = serviceInstance.RetrieveContent()
+    content = si.RetrieveContent()
 
     dc = pchelper.get_obj(content, [vim.Datacenter], args.datacenter_name)
 
@@ -50,18 +50,18 @@ def main():
         print('Dvswitch Name'.ljust(40)+' :', dvs.name)
         print(40*'#')
         for dvs_pg in dvs.portgroup:
-            vlanInfo = dvs_pg.config.defaultPortConfig.vlan
+            vlan_info = dvs_pg.config.defaultPortConfig.vlan
             cl = vim.dvs.VmwareDistributedVirtualSwitch.TrunkVlanSpec
-            if isinstance(vlanInfo, cl):
+            if isinstance(vlan_info, cl):
                 vlanlist = []
-                for item in vlanInfo.vlanId:
+                for item in vlan_info.vlanId:
                     if item.start == item.end:
                         vlanlist.append(str(item.start))
                     else:
                         vlanlist.append(str(item.start)+'-'+str(item.end))
                 wd = " | Trunk | vlan id: " + ','.join(vlanlist)
             else:
-                wd = " | vlan id: " + str(vlanInfo.vlanId)
+                wd = " | vlan id: " + str(vlan_info.vlanId)
             print(dvs_pg.name.ljust(40) + wd)
 
 

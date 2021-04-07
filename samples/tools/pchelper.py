@@ -7,7 +7,7 @@ import pyVmomi
 
 # Shamelessly borrowed from:
 # https://github.com/dnaeon/py-vconnector/blob/master/src/vconnector/core.py
-def collect_properties(service_instance, view_ref, obj_type, path_set=None,
+def collect_properties(si, view_ref, obj_type, path_set=None,
                        include_mors=False):
     """
     Collect properties for managed objects from a view ref
@@ -29,7 +29,7 @@ def collect_properties(service_instance, view_ref, obj_type, path_set=None,
         A list of properties for the managed objects
 
     """
-    collector = service_instance.content.propertyCollector
+    collector = si.content.propertyCollector
 
     # Create object specification to define the starting point of
     # inventory navigation
@@ -76,7 +76,7 @@ def collect_properties(service_instance, view_ref, obj_type, path_set=None,
     return data
 
 
-def get_container_view(service_instance, obj_type, container=None):
+def get_container_view(si, obj_type, container=None):
     """
     Get a vSphere Container View reference to all objects of type 'obj_type'
 
@@ -90,9 +90,9 @@ def get_container_view(service_instance, obj_type, container=None):
         A container view ref to the discovered managed objects
     """
     if not container:
-        container = service_instance.content.rootFolder
+        container = si.content.rootFolder
 
-    view_ref = service_instance.content.viewManager.CreateContainerView(
+    view_ref = si.content.viewManager.CreateContainerView(
         container=container,
         type=obj_type,
         recursive=True

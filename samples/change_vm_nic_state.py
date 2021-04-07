@@ -12,7 +12,7 @@
 #
 
 import requests
-from tools import cli, service_instance,pchelper
+from tools import cli, service_instance, pchelper
 from pyVmomi import vim
 from tools import tasks
 
@@ -61,8 +61,7 @@ def update_virtual_nic_state(si, vm_obj, nic_number, new_nic_state):
     else:
         connectable = virtual_nic_device.connectable
     virtual_nic_spec.device.connectable = connectable
-    dev_changes = []
-    dev_changes.append(virtual_nic_spec)
+    dev_changes = [virtual_nic_spec]
     spec = vim.vm.ConfigSpec()
     spec.deviceChange = dev_changes
     task = vm_obj.ReconfigVM_Task(spec=spec)
@@ -75,18 +74,18 @@ def main():
     parser.add_required_arguments(cli.Argument.VM_NAME, cli.Argument.NIC_STATE)
     parser.add_custom_argument('--unitnumber', required=True, help='NIC number.', type=int)
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
 
-    content = serviceInstance.RetrieveContent()
+    content = si.RetrieveContent()
     print('Searching for VM {}'.format(args.vm_name))
     vm_obj = pchelper.get_obj(content, [vim.VirtualMachine], args.vm_name)
 
     if vm_obj:
-        update_virtual_nic_state(serviceInstance, vm_obj, args.unitnumber, args.nic_state)
-        print('VM NIC {} successfully' \
-              ' state changed to {}'.format(args.unitnumber, args.nic_state))
+        update_virtual_nic_state(si, vm_obj, args.unitnumber, args.nic_state)
+        print('VM NIC {} successfully state changed to {}'.format(args.unitnumber, args.nic_state))
     else:
         print("VM not found")
+
 
 # start
 if __name__ == "__main__":

@@ -51,9 +51,9 @@ def main():
     parser = cli.Parser()
     parser.add_required_arguments(cli.Argument.VM_NAME)
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
 
-    content = serviceInstance.RetrieveContent()
+    content = si.RetrieveContent()
 
     vm = get_vm(content, args.vm_name)
     vm_moid = vm._moId
@@ -75,15 +75,16 @@ def main():
                                              vc_cert)
     vc_fingerprint = vc_pem.digest('sha1')
 
-    print("Open the following URL in your browser to access the " \
-          "Remote Console.\n" \
-          "You have 60 seconds to open the URL, or the session" \
+    print("Open the following URL in your browser to access the "
+          "Remote Console.\n"
+          "You have 60 seconds to open the URL, or the session"
           "will be terminated.\n")
-    print("http://" + args.host + ":" + console_port + "/console/?vmId=" \
-          + str(vm_moid) + "&vmName=" + args.vm_name + "&host=" + vcenter_fqdn \
+    print("http://" + args.host + ":" + console_port + "/console/?vmId="
+          + str(vm_moid) + "&vmName=" + args.vm_name + "&host=" + vcenter_fqdn
           + "&sessionTicket=" + session + "&thumbprint=" + str(vc_fingerprint))
     print("Waiting for 60 seconds, then exit")
     time.sleep(60)
+
 
 # Start program
 if __name__ == "__main__":

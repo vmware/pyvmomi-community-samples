@@ -21,9 +21,14 @@ from pyVim.task import WaitForTask
 from tools import cli, pchelper, service_instance
 
 
-def create_vm(si, vm_name, datacenter_name, datastore_name, host_ip):
+def create_vm(si, vm_name, datacenter_name, host_ip, datastore_name = None):
 
     content = si.RetrieveContent()
+    destination_host = pchelper.get_obj(content, [vim.HostSystem], host_ip)
+    source_pool = destination_host.parent.resourcePool
+    if datastore_name is None:
+        datastore_name = destination_host.datastore[0].name
+
     config = create_config_spec(datastore_name=datastore_name, name=vm_name)
     for child in content.rootFolder.childEntity:
         if child.name == datacenter_name:
@@ -32,9 +37,6 @@ def create_vm(si, vm_name, datacenter_name, datastore_name, host_ip):
     else:
         print("Datacenter %s not found!" % datacenter_name)
         exit(1)
-
-    destination_host = pchelper.get_obj(content, [vim.HostSystem], host_ip)
-    source_pool = destination_host.parent.resourcePool
 
     try:
         WaitForTask(vm_folder.CreateVm(config, pool=source_pool, host=destination_host))
@@ -63,8 +65,8 @@ def main():
     parser.add_optional_arguments(cli.Argument.VM_NAME, cli.Argument.DATACENTER_NAME,
                                   cli.Argument.DATASTORE_NAME, cli.Argument.ESX_IP)
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
-    create_vm(serviceInstance, args.vm_name, args.datacenter_name, args.datastore_name, args.esx_ip)
+    si = service_instance.connect(args)
+    create_vm(si, args.vm_name, args.datacenter_name, args.esx_ip, args.datastore_name)
 
 
 # start this thing

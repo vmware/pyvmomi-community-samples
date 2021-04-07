@@ -23,9 +23,9 @@ def main():
     parser = cli.Parser()
     parser.add_required_arguments(cli.Argument.DATACENTER_NAME, cli.Argument.FOLDER_NAME)
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
 
-    content = serviceInstance.RetrieveContent()
+    content = si.RetrieveContent()
     dc = pchelper.get_obj(content, [vim.Datacenter], args.datacenter_name)
     if (pchelper.search_for_obj(content, [vim.Folder], args.folder_name)):
         print("Folder '%s' already exists" % args.folder_name)
@@ -35,6 +35,7 @@ def main():
     create_folder(dc.vmFolder, args.folder_name)
     print("Successfully created the VM folder '%s'" % args.folder_name)
     return 0
+
 
 # Start program
 if __name__ == "__main__":

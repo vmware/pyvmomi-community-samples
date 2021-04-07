@@ -34,7 +34,7 @@ def main():
                                help='Names of the Virtual Machines to power on')
     args = parser.get_args()
     # form a connection...
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
 
     try:
         vmnames = args.vm_name
@@ -43,7 +43,7 @@ def main():
 
         # Retreive the list of Virtual Machines from the inventory objects
         # under the rootFolder
-        content = serviceInstance.content
+        content = si.content
         obj_view = content.viewManager.CreateContainerView(content.rootFolder, [vim.VirtualMachine], True)
         vm_list = obj_view.view
         obj_view.Destroy()
@@ -52,7 +52,7 @@ def main():
         tasks = [vm.PowerOn() for vm in vm_list if vm.name in vmnames]
 
         # Wait for power on to complete
-        wait_for_tasks(serviceInstance, tasks)
+        wait_for_tasks(si, tasks)
 
         print("Virtual Machine(s) have been powered on successfully")
     except vmodl.MethodFault as e:

@@ -27,9 +27,9 @@ def get_hosts(conn):
     return obj
 
 
-def action_hosts(commaList, connection, defstartdelay):
+def action_hosts(comma_list, connection, defstartdelay):
     print("Actioning the Provided Hosts")
-    acthosts = commaList.split(",")
+    acthosts = comma_list.split(",")
     allhosts = get_hosts(connection)
     host_names = [h.name for h in allhosts]
     for a in acthosts:
@@ -45,14 +45,14 @@ def enable_autorestart(host, defstartdelay):
     print("Enabling Auto Restart for Host")
     print("The Selected Host is \n" + host.name)
     print("Setting the Selected Host default AutoStartManager")
-    hostDefSettings = vim.host.AutoStartManager.SystemDefaults()
-    hostDefSettings.enabled = True
-    hostDefSettings.startDelay = int(defstartdelay)
+    host_def_settings = vim.host.AutoStartManager.SystemDefaults()
+    host_def_settings.enabled = True
+    host_def_settings.startDelay = int(defstartdelay)
     print("virtual machines and applying Auto Start settings")
     order = 1
     for vhost in host.vm:
         spec = host.configManager.autoStartManager.config
-        spec.defaults = hostDefSettings
+        spec.defaults = host_def_settings
         auto_power_info = vim.host.AutoStartManager.AutoPowerInfo()
         auto_power_info.key = vhost
         print("The VM   is updated if On" + vhost.name)
@@ -77,26 +77,27 @@ def enable_autorestart(host, defstartdelay):
             print("Apply Setting to Host")
             host.configManager.autoStartManager.ReconfigureAutostart(spec)
 
+
 # MAIN
 parser = cli.Parser()
 parser.add_custom_argument('--listallhosts', required=False, action='store_true')
 parser.add_custom_argument('--actionhosts',
-                                    help='Comma delimeted list of VHosts which needs to be actioned',
-                                    required=False, action='store')
+                           help='Comma delimeted list of VHosts which needs to be actioned',
+                           required=False, action='store')
 parser.add_custom_argument('--defstartdelay', help='Default Startup Delay',
-                                    default=10, required=False, action='store')
+                           default=10, required=False, action='store')
 args = parser.get_args()
 print("Starting")
 print("Getting Config")
 print("Connecting to vSphere")
-serviceInstance = service_instance.connect(args)
+si = service_instance.connect(args)
 
 if args.listallhosts is True:
-    vSpherehosts = get_hosts(serviceInstance)
+    vSpherehosts = get_hosts(si)
     print("All the Hosts Attached are :\n")
     for hosts in vSpherehosts:
         print("\n" + hosts.name)
 
 if args.actionhosts is not None:
     action_hosts(
-        args.actionhosts, serviceInstance, args.defstartdelay)
+        args.actionhosts, si, args.defstartdelay)

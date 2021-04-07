@@ -15,8 +15,6 @@
 Python program for listing all snapshots of a first class disk (fcd)
 """
 
-import atexit
-
 from tools import cli, disk, pchelper, service_instance
 from pyVmomi import vmodl
 from pyVmomi import vim
@@ -52,10 +50,10 @@ def main():
     parser = cli.Parser()
     parser.add_required_arguments(cli.Argument.DATASTORE_NAME, cli.Argument.FIRST_CLASS_DISK_NAME)
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
 
     try:
-        content = serviceInstance.RetrieveContent()
+        content = si.RetrieveContent()
 
         # Retrieve Datastore Object
         datastore = pchelper.get_obj(content, [vim.Datastore], args.datastore_name)

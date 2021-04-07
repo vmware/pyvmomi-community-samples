@@ -22,7 +22,7 @@ def create_datacenter(dcname=None, service_instance=None, folder=None):
     any other characters in this name parameter.
 
     An entity name must be a non-empty string of
-    less than 80 characters. The slash (/), backslash (\) and percent (%)
+    less than 80 characters. The slash (/), backslash (\\) and percent (%)
     will be escaped using the URL syntax. For example, %2F
 
     This can raise the following exceptions:
@@ -51,6 +51,7 @@ def create_datacenter(dcname=None, service_instance=None, folder=None):
     if folder is not None and isinstance(folder, vim.Folder):
         dc_moref = folder.CreateDatacenter(name=dcname)
         return dc_moref
+
 
 if __name__ == "__main__":
     import atexit

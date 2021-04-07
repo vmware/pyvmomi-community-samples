@@ -31,12 +31,12 @@ requests.packages.urllib3.disable_warnings()
 parser = cli.Parser()
 parser.add_required_arguments(cli.Argument.MESSAGE)
 args = parser.get_args()
-serviceInstance = service_instance.connect(args)
+si = service_instance.connect(args)
 
 print("logged in to %s" % args.host)
 
 print("Setting vCenter Server MOTD to \"%s\"" % args.message)
-serviceInstance.content.sessionManager.UpdateServiceMessage(message=args.message)
+si.content.sessionManager.UpdateServiceMessage(message=args.message)
 
 print("logout")
-serviceInstance.content.sessionManager.Logout()
+si.content.sessionManager.Logout()

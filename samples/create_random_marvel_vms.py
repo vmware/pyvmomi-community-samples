@@ -64,12 +64,12 @@ def get_marvel_characters(number_of_characters, marvel_public_key,
     return characters
 
 
-def create_dummy_vm(vm_name, service_instance, vm_folder, resource_pool,
+def create_dummy_vm(vm_name, si, vm_folder, resource_pool,
                     datastore):
     """Creates a dummy VirtualMachine with 1 vCpu, 128MB of RAM.
 
     :param name: String Name for the VirtualMachine
-    :param service_instance: ServiceInstance connection
+    :param si: ServiceInstance connection
     :param vm_folder: Folder to place the VirtualMachine in
     :param resource_pool: ResourcePool to place the VirtualMachine in
     :param datastore: DataStrore to place the VirtualMachine on
@@ -88,7 +88,7 @@ def create_dummy_vm(vm_name, service_instance, vm_folder, resource_pool,
 
     print("Creating VM {}...".format(vm_name))
     task = vm_folder.CreateVM_Task(config=config, pool=resource_pool)
-    tasks.wait_for_tasks(service_instance, [task])
+    tasks.wait_for_tasks(si, [task])
 
 
 def main():
@@ -98,34 +98,34 @@ def main():
     """
 
     parser = cli.Parser()
-    parser.add_required_arguments(
-    cli.Argument.DATASTORE_NAME, cli.Argument.FOLDER_NAME, cli.Argument.RESOURCE_POOL, cli.Argument.OPAQUE_NETWORK_NAME)
+    parser.add_required_arguments(cli.Argument.DATASTORE_NAME, cli.Argument.FOLDER_NAME,
+                                  cli.Argument.RESOURCE_POOL, cli.Argument.OPAQUE_NETWORK_NAME)
     parser.add_custom_argument('--count',
-                                        type=int,
-                                        required=True,
-                                        action='store',
-                                        help='Number of VMs to create')
+                               type=int,
+                               required=True,
+                               action='store',
+                               help='Number of VMs to create')
     # NOTE (hartsock): as a matter of good security practice, never ever
     # save a credential of any kind in the source code of a file. As a
     # matter of policy we want to show people good programming practice in
     # these samples so that we don't encourage security audit problems for
     # people in the future.
     parser.add_custom_argument('--public_key_file',
-                                        required=False,
-                                        action='store',
-                                        help='Name of the file holding your marvel public key,'
-                                             ' the key should be the first only of the file. '
-                                             'Set one up at developer.marvel.com/account')
+                               required=False,
+                               action='store',
+                               help='Name of the file holding your marvel public key,'
+                                    ' the key should be the first only of the file. '
+                                    'Set one up at developer.marvel.com/account')
     parser.add_custom_argument('--private_key_file',
-                                        required=False,
-                                        action='store',
-                                        help='Name of the file holding your marvel private '
-                                             'key, the key should be the only line of the '
-                                             'file. '
-                                             'Set one up at developer.marvel.com/account')
+                               required=False,
+                               action='store',
+                               help='Name of the file holding your marvel private '
+                                    'key, the key should be the only line of the '
+                                    'file. '
+                                    'Set one up at developer.marvel.com/account')
 
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
 
     if args.public_key_file:
         with open(args.public_key_file) as key_file:
@@ -139,7 +139,7 @@ def main():
     else:
         marvel_private_key = input('Marvel private key: ').strip()
 
-    content = serviceInstance.RetrieveContent()
+    content = si.RetrieveContent()
     vmfolder = get_obj(content, [vim.Folder], args.folder_name)
     resource_pool = get_obj(content, [vim.ResourcePool], args.resource_pool)
 
@@ -152,11 +152,11 @@ def main():
 
     for name in characters:
         vm_name = 'MARVEL-' + name
-        create_dummy_vm(vm_name, serviceInstance, vmfolder, resource_pool,
+        create_dummy_vm(vm_name, si, vmfolder, resource_pool,
                         args.datastore_name)
         if args.opaque_network_name:
             vm = get_obj(content, [vim.VirtualMachine], vm_name)
-            add_nic(serviceInstance, vm, args.opaque_network_name)
+            add_nic(si, vm, args.opaque_network_name)
     return 0
 
 

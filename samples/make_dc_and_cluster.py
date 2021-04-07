@@ -15,12 +15,12 @@ from pyVmomi import vim
 parser = cli.Parser()
 parser.add_required_arguments(cli.Argument.DATACENTER_NAME, cli.Argument.CLUSTER_NAME)
 args = parser.get_args()
-serviceInstance = service_instance.connect(args)
+si = service_instance.connect(args)
 
-content = serviceInstance.RetrieveContent()
+content = si.RetrieveContent()
 if(pchelper.search_for_obj(content, [vim.Datacenter], args.datacenter_name)):
     print("Datacenter '%s' already exists" % args.datacenter_name)
 else:
-    dc = datacenter.create_datacenter(dcname=args.datacenter_name, service_instance=serviceInstance)
+    dc = datacenter.create_datacenter(dcname=args.datacenter_name, service_instance=si)
     cluster.create_cluster(datacenter=dc, name=args.cluster_name)
     print("created DC and cluster")

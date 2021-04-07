@@ -47,7 +47,7 @@ def spinner(label=''):
     sys.stdout.flush()
 
 
-def answer_vm_question(virtual_machine, choice = None):
+def answer_vm_question(virtual_machine, choice=None):
     print("\n")
     choices = virtual_machine.runtime.question.choice.choiceInfo
     default_option = None
@@ -74,11 +74,11 @@ parser.add_required_arguments(cli.Argument.VM_NAME)
 parser.add_optional_arguments(cli.Argument.ASSUME_INPUT)
 args = parser.get_args()
 # form a connection...
-serviceInstance = service_instance.connect(args)
+si = service_instance.connect(args)
 
 # search the whole inventory tree recursively... a brutish but effective tactic
 vm = None
-entity_stack = serviceInstance.content.rootFolder.childEntity
+entity_stack = si.content.rootFolder.childEntity
 while entity_stack:
     entity = entity_stack.pop()
 

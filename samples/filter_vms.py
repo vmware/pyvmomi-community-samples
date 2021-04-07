@@ -28,18 +28,18 @@ from tools import cli, service_instance, pchelper
 __author__ = 'prziborowski'
 
 
-def create_filter_spec(pc, vms, prop):
-    objSpecs = []
+def create_filter_spec(vms, prop):
+    obj_specs = []
     for vm in vms:
-        objSpec = vmodl.query.PropertyCollector.ObjectSpec(obj=vm)
-        objSpecs.append(objSpec)
-    filterSpec = vmodl.query.PropertyCollector.FilterSpec()
-    filterSpec.objectSet = objSpecs
-    propSet = vmodl.query.PropertyCollector.PropertySpec(all=False)
-    propSet.type = vim.VirtualMachine
-    propSet.pathSet = [prop]
-    filterSpec.propSet = [propSet]
-    return filterSpec
+        obj_spec = vmodl.query.PropertyCollector.ObjectSpec(obj=vm)
+        obj_specs.append(obj_spec)
+    filter_spec = vmodl.query.PropertyCollector.FilterSpec()
+    filter_spec.objectSet = obj_specs
+    prop_set = vmodl.query.PropertyCollector.PropertySpec(all=False)
+    prop_set.type = vim.VirtualMachine
+    prop_set.pathSet = [prop]
+    filter_spec.propSet = [prop_set]
+    return filter_spec
 
 
 def filter_results(result, value):
@@ -53,17 +53,17 @@ def filter_results(result, value):
 def main():
     parser = cli.Parser()
     parser.add_custom_argument('--property', default='runtime.powerState',
-                                        help='Name of the property to filter by')
+                               help='Name of the property to filter by')
     parser.add_custom_argument('--value', default='poweredOn', help='Value to filter with')
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
     # Start with all the VMs from container, which is easier to write than
     # PropertyCollector to retrieve them.
-    content = serviceInstance.RetrieveContent()
+    content = si.RetrieveContent()
     vms = pchelper.get_all_obj(content, [vim.VirtualMachine])
 
     pc = content.propertyCollector
-    filter_spec = create_filter_spec(pc, vms, args.property)
+    filter_spec = create_filter_spec(vms, args.property)
     options = vmodl.query.PropertyCollector.RetrieveOptions()
     result = pc.RetrievePropertiesEx([filter_spec], options)
     vms = filter_results(result, args.value)

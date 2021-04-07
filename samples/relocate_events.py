@@ -17,6 +17,7 @@ from tools import cli, service_instance
 
 __author__ = 'prziborowski'
 
+
 def get_dc(si, name):
     """
     Get a datacenter by its name.
@@ -26,38 +27,39 @@ def get_dc(si, name):
             return dc
     raise Exception('Failed to find datacenter named %s' % name)
 
+
 def main():
     parser = cli.Parser()
     parser.add_required_arguments(cli.Argument.VM_NAME, cli.Argument.DATACENTER_NAME)
     parser.add_custom_argument('--filterUsers', help="Comma-separated list of users to filter on")
     parser.add_custom_argument('--filterSystemUser', action='store_true',
-                                        help="Filter system user, defaults to false.")
+                               help="Filter system user, defaults to false.")
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
 
     if args.datacenter_name:
-        dc = get_dc(serviceInstance, args.datacenter_name)
+        dc = get_dc(si, args.datacenter_name)
     else:
-        dc = serviceInstance.content.rootFolder.childEntity[0]
+        dc = si.content.rootFolder.childEntity[0]
 
-    vm = serviceInstance.content.searchIndex.FindChild(dc.vmFolder, args.vm_name)
+    vm = si.content.searchIndex.FindChild(dc.vmFolder, args.vm_name)
     if vm is None:
         raise Exception('Failed to find VM %s in datacenter %s' %
                         (dc.name, args.vm_name))
-    byEntity = vim.event.EventFilterSpec.ByEntity(entity=vm, recursion="self")
+    by_entity = vim.event.EventFilterSpec.ByEntity(entity=vm, recursion="self")
     ids = ['VmRelocatedEvent', 'DrsVmMigratedEvent', 'VmMigratedEvent']
-    filterSpec = vim.event.EventFilterSpec(entity=byEntity, eventTypeId=ids)
+    filter_spec = vim.event.EventFilterSpec(entity=by_entity, eventTypeId=ids)
 
     # Optionally filter by users
-    userList = []
+    user_list = []
     if args.filterUsers:
-        userList = re.split('.*,.*', args.filterUsers)
-    if len(userList) > 0 or args.filterSystemUser:
-        byUser = vim.event.EventFilterSpec.ByUsername(userList=userList)
-        byUser.systemUser = args.filterSystemUser
-        filterSpec.userName = byUser
-    eventManager = serviceInstance.content.eventManager
-    events = eventManager.QueryEvent(filterSpec)
+        user_list = re.split('.*,.*', args.filterUsers)
+    if len(user_list) > 0 or args.filterSystemUser:
+        by_user = vim.event.EventFilterSpec.ByUsername(userList=user_list)
+        by_user.systemUser = args.filterSystemUser
+        filter_spec.userName = by_user
+    event_manager = si.content.eventManager
+    events = event_manager.QueryEvent(filter_spec)
 
     for event in events:
         print("%s" % event._wsdlName)
@@ -69,6 +71,7 @@ def main():
         print("Datastore: %s -> %s" % (event.sourceDatastore.name,
                                        event.ds.name))
     print("%s" % events)
+
 
 if __name__ == '__main__':
     main()

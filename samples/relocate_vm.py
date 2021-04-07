@@ -19,6 +19,7 @@ def get_object(content, vimtype, name, disp=False):
     :param content:
     :param vimtype:
     :param name:
+    :param disp:
     :return: Object
     """
     obj = None
@@ -79,18 +80,16 @@ def construct_locator(template_disks, datastore_dest_id):
     return ds_disk
 
 
-def relocate_vm(vm_name, content, host_dest, datastore_dest=None, **kwargs):
+def relocate_vm(vm_name, content, host_dest, datastore_dest=None):
     """
     This method relocates vm to the host_dest across
     datacenters, clusters, datastores managed by a Vcenter
 
     Args:
         vm_name:
-        vcenter:
+        content:
         host_dest:
-        datastore_src
         datastore_dest:
-        **kwargs:
 
     Returns:
 
@@ -148,10 +147,10 @@ def main():
     parser = cli.Parser()
     parser.add_required_arguments(cli.Argument.VM_NAME, cli.Argument.DATASTORE_NAME, cli.Argument.ESX_NAME)
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
 
     try:
-        content = serviceInstance.RetrieveContent()
+        content = si.RetrieveContent()
 
         # Assigning destination datastores
         datastore_dest = args.datastore_name

@@ -22,9 +22,9 @@ def main():
     parser = cli.Parser()
     parser.add_required_arguments(cli.Argument.ESX_IP)
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
 
-    content = serviceInstance.RetrieveContent()
+    content = si.RetrieveContent()
     object_view = content.viewManager.CreateContainerView(content.rootFolder,
                                                           [vim.HostSystem],
                                                           True)
@@ -39,10 +39,11 @@ def main():
     print("Proceeding to execute operation 'Reconfigure for HA' in host %s" % esx.name)
     reconf_ha = esx.ReconfigureHostForDAS_Task()
     task = reconf_ha
-    tasks.wait_for_tasks(serviceInstance, [task])
+    tasks.wait_for_tasks(si, [task])
     print("Operation complete")
 
     return 0
+
 
 # Main execution
 if __name__ == "__main__":

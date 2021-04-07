@@ -41,9 +41,9 @@ def main():
     parser = cli.Parser()
     parser.add_optional_arguments(cli.Argument.VM_NAME)
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
 
-    content = serviceInstance.RetrieveContent()
+    content = si.RetrieveContent()
 
     if args.vm_name:
         print('Searching for VM {}'.format(args.vm_name))
@@ -58,6 +58,7 @@ def main():
         print(_columns_four.format('Name', 'Status', 'Version', 'Version Status'))
         for vm_obj in get_vms(content):
             print_vmwareware_tools_status(vm_obj)
+
 
 # start
 if __name__ == "__main__":

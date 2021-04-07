@@ -53,11 +53,11 @@ def main():
     parser = cli.Parser()
     parser.add_custom_argument('--json', default=False, action='store_true', help='Output to JSON')
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
 
     try:
 
-        content = serviceInstance.RetrieveContent()
+        content = si.RetrieveContent()
         # Search for all ESXi hosts
         objview = content.viewManager.CreateContainerView(content.rootFolder,
                                                           [vim.HostSystem],
@@ -124,6 +124,7 @@ def main():
         return -1
 
     return 0
+
 
 # Start program
 if __name__ == "__main__":

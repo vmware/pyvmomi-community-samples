@@ -27,7 +27,8 @@ python execute_program_in_vm.py
 from __future__ import with_statement
 from tools import cli, service_instance, pchelper
 from pyVmomi import vim, vmodl
-import time, re
+import time
+import re
 
 
 def main():
@@ -40,13 +41,13 @@ def main():
     parser.add_optional_arguments(
         cli.Argument.VM_NAME, cli.Argument.UUID, cli.Argument.VM_USER, cli.Argument.VM_PASS)
     parser.add_custom_argument('--path_to_program', required=False, action='store',
-                                        help='Path inside VM to the program. e.g. "/bin/cat"')
+                               help='Path inside VM to the program. e.g. "/bin/cat"')
     parser.add_custom_argument('--program_arguments', required=False, action='store',
-                                        help='Program command line options. e.g. "/etc/network/interfaces > /tmp/plop"')
+                               help='Program command line options. e.g. "/etc/network/interfaces > /tmp/plop"')
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
     try:
-        content = serviceInstance.RetrieveContent()
+        content = si.RetrieveContent()
 
         vm = None
         if args.uuid:
@@ -100,8 +101,7 @@ def main():
                     # Look for non-zero code to fail
                     elif (re.match('[1-9]+', str(pid_exitcode))):
                         print("ERROR: Program %d completed with Failute" % res)
-                        print("  tip: Try running this on guest %r to debug" \
-                            % summary.guest.ipAddress)
+                        print("  tip: Try running this on guest %r to debug" % summary.guest.ipAddress)
                         print("ERROR: More info on process")
                         print(pm.ListProcessesInGuest(vm, creds, [res]))
                         break
@@ -113,6 +113,7 @@ def main():
         return -1
 
     return 0
+
 
 # Start program
 if __name__ == "__main__":

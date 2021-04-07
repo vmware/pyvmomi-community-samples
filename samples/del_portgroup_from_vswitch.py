@@ -7,12 +7,12 @@ Note: Example code For testing purposes only
 This code has been released under the terms of the Apache-2.0 license
 http://opensource.org/licenses/Apache-2.0
 """
-from pyVmomi import vim
-from tools import service_instance,cli
 import sys
+from pyVmomi import vim
+from tools import service_instance, cli
 
 
-def GetVMHosts(content):
+def get_vm_hosts(content):
     host_view = content.viewManager.CreateContainerView(content.rootFolder,
                                                         [vim.HostSystem],
                                                         True)
@@ -21,25 +21,25 @@ def GetVMHosts(content):
     return obj
 
 
-def DelHostsPortgroup(hosts, portgroupName):
+def del_hosts_portgroup(hosts, portgroup_name):
     for host in hosts:
-        host.configManager.networkSystem.RemovePortGroup(portgroupName)
+        host.configManager.networkSystem.RemovePortGroup(portgroup_name)
     return True
 
 
-def DelHostPortgroup(host, portgroupName):
-    host.configManager.networkSystem.RemovePortGroup(portgroupName)
+def del_host_portgroup(host, portgroup_name):
+    host.configManager.networkSystem.RemovePortGroup(portgroup_name)
 
 
 def main():
     parser = cli.Parser()
     parser.add_required_arguments(cli.Argument.PORT_GROUP)
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
-    content = serviceInstance.RetrieveContent()
+    si = service_instance.connect(args)
+    content = si.RetrieveContent()
 
-    hosts = GetVMHosts(content)
-    if DelHostsPortgroup(hosts, args.port_group):
+    hosts = get_vm_hosts(content)
+    if del_hosts_portgroup(hosts, args.port_group):
         print('Deleted Port Group')
 
 

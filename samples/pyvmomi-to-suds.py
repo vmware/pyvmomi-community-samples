@@ -54,11 +54,11 @@ def get_current_session(client):
 
 print("pyVmomi login... ")
 
-serviceInstance = service_instance.connect(args)
+si = service_instance.connect(args)
 
 
-print("current session id: %s" % serviceInstance.content.sessionManager.currentSession.key)
-pyvmomi_cookie = serviceInstance._stub.cookie
+print("current session id: %s" % si.content.sessionManager.currentSession.key)
+pyvmomi_cookie = si._stub.cookie
 print("current cookie contents: %s" % pyvmomi_cookie)
 
 VMWARE_COOKIE_NAME = 'vmware_soap_session'
@@ -90,7 +90,7 @@ client.__class__.set_vmware_cookie = inject_vmware_cookie_suds
 print("=" * 80)
 print("pyvmomi to suds")
 
-serviceInstance._stub.cookie = pyvmomi_cookie
+si._stub.cookie = pyvmomi_cookie
 
 # extracting the cookie value:
 start_of_value = pyvmomi_cookie.index("=") + 1
@@ -98,7 +98,7 @@ end_of_value = pyvmomi_cookie.index(";")
 
 cookie_value = pyvmomi_cookie[start_of_value:end_of_value]
 
-session_id = serviceInstance.content.sessionManager.currentSession.key
+session_id = si.content.sessionManager.currentSession.key
 print("current pyVmomi session id: %s" % session_id)
 
 # injecting the cookie value:

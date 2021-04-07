@@ -13,13 +13,13 @@ from pyVmomi import vim
 parser = cli.Parser()
 parser.add_optional_arguments(cli.Argument.UUID, cli.Argument.VM_NAME)
 args = parser.get_args()
-serviceInstance = service_instance.connect(args)
+si = service_instance.connect(args)
 
 vm = None
 if args.uuid:
-    vm = serviceInstance.content.searchIndex.FindByUuid(datacenter=None, uuid=args.uuid, vmSearch=True)
+    vm = si.content.searchIndex.FindByUuid(datacenter=None, uuid=args.uuid, vmSearch=True)
 elif args.vm_name:
-    content = serviceInstance.RetrieveContent()
+    content = si.RetrieveContent()
     vm = pchelper.get_obj(content, [vim.VirtualMachine], args.vm_name)
 
 if not vm:

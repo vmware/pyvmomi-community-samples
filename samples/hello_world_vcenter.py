@@ -22,6 +22,7 @@ a friendly encouragement to joining the community!
 from pyVmomi import vmodl
 from tools import cli, service_instance
 
+
 def main():
     """
     Simple command-line program for listing the virtual machines on a system.
@@ -29,7 +30,7 @@ def main():
 
     parser = cli.Parser()
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
 
     try:
         print("\nHello World!\n")
@@ -37,7 +38,7 @@ def main():
         print("The server is {}!".format(args.host))
         # NOTE (hartsock): only a successfully authenticated session has a
         # session key aka session id.
-        session_id = serviceInstance.content.sessionManager.currentSession.key
+        session_id = si.content.sessionManager.currentSession.key
         print("current session id: {}".format(session_id))
         print("Well done!")
         print("\n")
@@ -50,6 +51,7 @@ def main():
         return -1
 
     return 0
+
 
 # Start program
 if __name__ == "__main__":

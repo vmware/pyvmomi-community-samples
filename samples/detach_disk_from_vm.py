@@ -67,10 +67,10 @@ def main():
     parser.add_optional_arguments(cli.Argument.VM_NAME, cli.Argument.UUID, cli.Argument.LANGUAGE)
     parser.add_custom_argument('--disk-number', required=True, help='HDD number to detach.')
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
 
     try:
-        content = serviceInstance.RetrieveContent()
+        content = si.RetrieveContent()
 
         # Retrieve VM
         vm = None
@@ -83,7 +83,7 @@ def main():
         # Detaching Disk from VM
         if vm:
             task = detach_disk_from_vm(vm, args.disk_number, args.language)
-            tasks.wait_for_tasks(serviceInstance, [task])
+            tasks.wait_for_tasks(si, [task])
         else:
             raise RuntimeError("VM not found.")
 

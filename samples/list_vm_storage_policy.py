@@ -13,34 +13,35 @@ Required Prviledge: Profile-driven storage view
 
 __author__ = 'William Lam'
 
+
 # retrieve SPBM API endpoint
-def GetPbmConnection(vpxdStub):
-    import http.cookies as Cookie
+def get_pbm_connection(vpxd_stub):
+    import http.cookies as http_cookies
     import pyVmomi
-    sessionCookie = vpxdStub.cookie.split('"')[1]
-    httpContext = VmomiSupport.GetHttpContext()
-    cookie = Cookie.SimpleCookie()
-    cookie["vmware_soap_session"] = sessionCookie
-    httpContext["cookies"] = cookie
-    VmomiSupport.GetRequestContext()["vcSessionCookie"] = sessionCookie
-    hostname = vpxdStub.host.split(":")[0]
+    session_cookie = vpxd_stub.cookie.split('"')[1]
+    http_context = VmomiSupport.GetHttpContext()
+    cookie = http_cookies.SimpleCookie()
+    cookie["vmware_soap_session"] = session_cookie
+    http_context["cookies"] = cookie
+    VmomiSupport.GetRequestContext()["vcSessionCookie"] = session_cookie
+    hostname = vpxd_stub.host.split(":")[0]
 
     context = None
     if hasattr(ssl, "_create_unverified_context"):
         context = ssl._create_unverified_context()
-    pbmStub = pyVmomi.SoapStubAdapter(
+    pbm_stub = pyVmomi.SoapStubAdapter(
         host=hostname,
         version="pbm.version.version1",
         path="/pbm/sdk",
         poolSize=0,
         sslContext=context)
-    pbmSi = pbm.ServiceInstance("ServiceInstance", pbmStub)
-    pbmContent = pbmSi.RetrieveContent()
+    pbm_si = pbm.ServiceInstance("ServiceInstance", pbm_stub)
+    pbm_content = pbm_si.RetrieveContent()
 
-    return (pbmSi, pbmContent)
+    return pbm_si, pbm_content
 
 
-def showCapabilities(capabilities):
+def show_capabilities(capabilities):
     for capability in capabilities:
         for constraint in capability.constraint:
             if hasattr(constraint, 'propertyInstance'):
@@ -53,19 +54,19 @@ def showCapabilities(capabilities):
 def main():
     parser = cli.Parser()
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
 
     # Connect to SPBM Endpoint
-    pbmSi, pbmContent = GetPbmConnection(serviceInstance._stub)
+    pbm_si, pbm_content = get_pbm_connection(si._stub)
 
-    pm = pbmContent.profileManager
-    profileIds = pm.PbmQueryProfile(resourceType=pbm.profile.ResourceType(
+    pm = pbm_content.profileManager
+    profile_ids = pm.PbmQueryProfile(resourceType=pbm.profile.ResourceType(
         resourceType="STORAGE"), profileCategory="REQUIREMENT"
     )
 
     profiles = []
-    if len(profileIds) > 0:
-        profiles = pm.PbmRetrieveContent(profileIds=profileIds)
+    if len(profile_ids) > 0:
+        profiles = pm.PbmRetrieveContent(profileIds=profile_ids)
 
     for profile in profiles:
         print("Name: %s " % profile.name)
@@ -76,7 +77,7 @@ def main():
             for subprofile in subprofiles:
                 print("RuleSetName: %s " % subprofile.name)
                 capabilities = subprofile.capability
-                showCapabilities(capabilities)
+                show_capabilities(capabilities)
         print("")
 
 

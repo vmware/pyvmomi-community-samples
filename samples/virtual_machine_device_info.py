@@ -154,10 +154,10 @@ parser.add_optional_arguments(cli.Argument.UUID, cli.Argument.VM_IP, cli.Argumen
 args = parser.get_args()
 
 # form a connection...
-serviceInstance = service_instance.connect(args)
+si = service_instance.connect(args)
 
 # http://pubs.vmware.com/vsphere-55/topic/com.vmware.wssdk.apiref.doc/vim.SearchIndex.html
-search_index = serviceInstance.content.searchIndex
+search_index = si.content.searchIndex
 
 # without exception find managed objects using durable identifiers that the
 # search index can find easily. This is much better than caching information
@@ -169,7 +169,7 @@ if args.uuid:
 elif args.vm_ip:
     vm = search_index.FindByIp(None, args.vm_ip, True)
 elif args.vm_name:
-    content = serviceInstance.RetrieveContent()
+    content = si.RetrieveContent()
     vm = pchelper.get_obj(content, [vim.VirtualMachine], args.vm_name)
 
 if not vm:
@@ -213,25 +213,25 @@ for device in vm.config.hardware.device:
     # backing type has a file name we *know* it's sitting on a datastore
     # and will have to have all of the following attributes.
     if hasattr(device.backing, 'fileName'):
-            datastore = device.backing.datastore
-            if datastore:
-                print(u"    datastore")
-                print(u"        name: {0}".format(datastore.name))
-                # there may be multiple hosts, the host property
-                # is a host mount info type not a host system type
-                # but we can navigate to the host system from there
-                for host_mount in datastore.host:
-                    host_system = host_mount.key
-                    print(u"        host: {0}".format(host_system.name))
-                print(u"        summary")
-                summary = {'capacity': datastore.summary.capacity,
-                           'freeSpace': datastore.summary.freeSpace,
-                           'file system': datastore.summary.type,
-                           'url': datastore.summary.url}
-                for key, val in summary.items():
-                    print(u"            {0}: {1}".format(key, val))
-            print(u"    fileName: {0}".format(device.backing.fileName))
-            print(u"    device ID: {0}".format(device.backing.backingObjectId))
+        datastore = device.backing.datastore
+        if datastore:
+            print(u"    datastore")
+            print(u"        name: {0}".format(datastore.name))
+            # there may be multiple hosts, the host property
+            # is a host mount info type not a host system type
+            # but we can navigate to the host system from there
+            for host_mount in datastore.host:
+                host_system = host_mount.key
+                print(u"        host: {0}".format(host_system.name))
+            print(u"        summary")
+            summary = {'capacity': datastore.summary.capacity,
+                       'freeSpace': datastore.summary.freeSpace,
+                       'file system': datastore.summary.type,
+                       'url': datastore.summary.url}
+            for key, val in summary.items():
+                print(u"            {0}: {1}".format(key, val))
+        print(u"    fileName: {0}".format(device.backing.fileName))
+        print(u"    device ID: {0}".format(device.backing.backingObjectId))
 
     print(u"  ------------------")
 

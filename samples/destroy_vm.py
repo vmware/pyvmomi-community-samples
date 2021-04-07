@@ -23,20 +23,20 @@ parser = cli.Parser()
 parser.add_optional_arguments(
     cli.Argument.UUID, cli.Argument.VM_NAME, cli.Argument.VM_IP, cli.Argument.DNS_NAME)
 args = parser.get_args()
-serviceInstance = service_instance.connect(args)
+si = service_instance.connect(args)
 
 VM = None
 if args.vm_name:
-    VM = pchelper.get_obj(serviceInstance.content, [vim.VirtualMachine], args.vm_name)
+    VM = pchelper.get_obj(si.content, [vim.VirtualMachine], args.vm_name)
 elif args.uuid:
-    VM = serviceInstance.content.searchIndex.FindByUuid(None, args.uuid,
+    VM = si.content.searchIndex.FindByUuid(None, args.uuid,
                                            True,
                                            False)
 elif args.dns_name:
-    VM = serviceInstance.content.searchIndex.FindByDnsName(None, args.dns_name,
+    VM = si.content.searchIndex.FindByDnsName(None, args.dns_name,
                                               True)
 elif args.vm_ip:
-    VM = serviceInstance.content.searchIndex.FindByIp(None, args.vm_ip, True)
+    VM = si.content.searchIndex.FindByIp(None, args.vm_ip, True)
 
 if VM is None:
     raise SystemExit(
@@ -50,10 +50,10 @@ print("The current powerState is: {0}".format(VM.runtime.powerState))
 if format(VM.runtime.powerState) == "poweredOn":
     print("Attempting to power off {0}".format(VM.name))
     TASK = VM.PowerOffVM_Task()
-    tasks.wait_for_tasks(serviceInstance, [TASK])
+    tasks.wait_for_tasks(si, [TASK])
     print("{0}".format(TASK.info.state))
 
 print("Destroying VM from vSphere.")
 TASK = VM.Destroy_Task()
-tasks.wait_for_tasks(serviceInstance, [TASK])
+tasks.wait_for_tasks(si, [TASK])
 print("Done.")

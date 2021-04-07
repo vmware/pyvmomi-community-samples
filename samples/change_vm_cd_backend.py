@@ -63,8 +63,7 @@ def update_virtual_cd_backend_by_obj(si, vm_obj, cdrom_number,
     # Allowing guest control
     virtual_cd_spec.device.connectable.allowGuestControl = True
 
-    dev_changes = []
-    dev_changes.append(virtual_cd_spec)
+    dev_changes = [virtual_cd_spec]
     spec = vim.vm.ConfigSpec()
     spec.deviceChange = dev_changes
     task = vm_obj.ReconfigVM_Task(spec=spec)
@@ -79,19 +78,19 @@ def main():
     parser.add_optional_arguments(cli.Argument.ISO)
     parser.add_custom_argument('--unitnumber', required=True, help='CD/DVD unit number.', type=int)
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
 
-    content = serviceInstance.RetrieveContent()
+    content = si.RetrieveContent()
     print('Searching for VM {}'.format(args.vm_name))
     vm_obj = pchelper.get_obj(content, [vim.VirtualMachine], args.vm_name)
 
     if vm_obj:
-        update_virtual_cd_backend_by_obj(serviceInstance, vm_obj, args.unitnumber, args.iso)
+        update_virtual_cd_backend_by_obj(si, vm_obj, args.unitnumber, args.iso)
         device_change = args.iso if args.iso else 'Client Device'
-        print('VM CD/DVD {} successfully' \
-              ' state changed to {}'.format(args.unitnumber, device_change))
+        print('VM CD/DVD {} successfully state changed to {}'.format(args.unitnumber, device_change))
     else:
         print("VM not found")
+
 
 # start
 if __name__ == "__main__":

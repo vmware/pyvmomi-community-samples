@@ -27,11 +27,11 @@ def main():
     # --port-group : 'Name of the portgroup or NSX-T Logical Switch'
     parser.add_required_arguments(cli.Argument.VM_NAME, cli.Argument.PORT_GROUP)
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
 
     try:
-        atexit.register(connect.Disconnect, serviceInstance)
-        content = serviceInstance.RetrieveContent()
+        atexit.register(connect.Disconnect, si)
+        content = si.RetrieveContent()
         vm = pchelper.get_obj(content, [vim.VirtualMachine], args.vm_name)
         # This code is for changing only one Interface. For multiple Interface
         # Iterate through a loop of network names.
@@ -45,9 +45,7 @@ def main():
                 nicspec.device.wakeOnLanEnabled = True
 
                 # NSX-T Logical Switch
-                if isinstance(pchelper.get_obj(content,
-                                      [vim.Network],
-                                      args.port_group), vim.OpaqueNetwork):
+                if isinstance(pchelper.get_obj(content, [vim.Network], args.port_group), vim.OpaqueNetwork):
                     network = \
                         pchelper.get_obj(content, [vim.Network], args.port_group)
                     nicspec.device.backing = \
@@ -59,12 +57,8 @@ def main():
                     nicspec.device.backing.opaqueNetworkId = network_id
 
                 # vSphere Distributed Virtual Switch
-                elif hasattr(pchelper.get_obj(content,
-                                     [vim.Network],
-                                     args.port_group), 'portKeys'):
-                    network = pchelper.get_obj(content,
-                                      [vim.dvs.DistributedVirtualPortgroup],
-                                      args.port_group)
+                elif hasattr(pchelper.get_obj(content, [vim.Network], args.port_group), 'portKeys'):
+                    network = pchelper.get_obj(content, [vim.dvs.DistributedVirtualPortgroup], args.port_group)
                     dvs_port_connection = vim.dvs.PortConnection()
                     dvs_port_connection.portgroupKey = network.key
                     dvs_port_connection.switchUuid = \
@@ -92,7 +86,7 @@ def main():
 
         config_spec = vim.vm.ConfigSpec(deviceChange=device_change)
         task = vm.ReconfigVM_Task(config_spec)
-        tasks.wait_for_tasks(serviceInstance, [task])
+        tasks.wait_for_tasks(si, [task])
         print("Successfully changed network")
 
     except vmodl.MethodFault as error:

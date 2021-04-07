@@ -16,17 +16,17 @@ def main():
 
     verify_cert = None
     if args.disable_ssl_verification:
-        sslContext = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
-        sslContext.verify_mode = ssl.CERT_NONE
+        ssl_context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+        ssl_context.verify_mode = ssl.CERT_NONE
         verify_cert = False
         # disable urllib3 warnings
         if hasattr(requests.packages.urllib3, 'disable_warnings'):
             requests.packages.urllib3.disable_warnings()
 
     try:
-        serviceInstance = service_instance.connect(args)
-        content = serviceInstance.RetrieveContent()
-        #session_manager = content.sessionManager
+        si = service_instance.connect(args)
+        content = si.RetrieveContent()
+        # session_manager = content.sessionManager
 
         # Get the list of all datacenters we have available to us
         datacenters_object_view = content.viewManager.CreateContainerView(
@@ -64,7 +64,7 @@ def main():
         http_url = "https://" + args.host + ":443" + resource
 
         # Get the cookie built from the current session
-        client_cookie = serviceInstance._stub.cookie
+        client_cookie = si._stub.cookie
         # Break apart the cookie into it's component parts - This is more than
         # is needed, but a good example of how to break apart the cookie
         # anyways. The verbosity makes it clear what is happening.
@@ -84,12 +84,12 @@ def main():
         # leaving open threads
         with open(args.local_file_path, "rb") as f:
             # Connect and upload the file
-            request = requests.put(http_url,
-                                   params=params,
-                                   data=f,
-                                   headers=headers,
-                                   cookies=cookie,
-                                   verify=verify_cert)
+            requests.put(http_url,
+                         params=params,
+                         data=f,
+                         headers=headers,
+                         cookies=cookie,
+                         verify=verify_cert)
         print("uploaded the file")
 
     except vmodl.MethodFault as e:

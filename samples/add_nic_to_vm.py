@@ -55,7 +55,7 @@ def add_nic(si, vm, network_name):
 
     nic_changes.append(nic_spec)
     spec.deviceChange = nic_changes
-    e = vm.ReconfigVM_Task(spec=spec)
+    vm.ReconfigVM_Task(spec=spec)
     print("NIC CARD ADDED")
 
 
@@ -64,18 +64,18 @@ def main():
     parser.add_required_arguments(cli.Argument.PORT_GROUP)
     parser.add_optional_arguments(cli.Argument.VM_NAME, cli.Argument.UUID)
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
 
     vm = None
     if args.uuid:
-        search_index = serviceInstance.content.searchIndex
+        search_index = si.content.searchIndex
         vm = search_index.FindByUuid(None, args.uuid, True)
     elif args.vm_name:
-        content = serviceInstance.RetrieveContent()
+        content = si.RetrieveContent()
         vm = pchelper.get_obj(content, [vim.VirtualMachine], args.vm_name)
 
     if vm:
-        add_nic(serviceInstance, vm, args.port_group)
+        add_nic(si, vm, args.port_group)
     else:
         print("VM not found")
 

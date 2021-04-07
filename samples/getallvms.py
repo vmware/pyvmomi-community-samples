@@ -64,10 +64,10 @@ def main():
     parser = cli.Parser()
     parser.add_custom_argument('-f', '--find', required=False, action='store', help='String to match VM names')
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
 
     try:
-        content = serviceInstance.RetrieveContent()
+        content = si.RetrieveContent()
 
         container = content.rootFolder  # starting point to look into
         view_type = [vim.VirtualMachine]  # object types to look for

@@ -15,12 +15,12 @@ def main():
     parser = cli.Parser()
     parser.add_optional_arguments(cli.Argument.ESX_IP)
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
 
     # "vmware.host." prefix is required when using VC
     location = "vmware.host." + args.esx_ip
 
-    services = serviceInstance.content.serviceManager.QueryServiceList(
+    services = si.content.serviceManager.QueryServiceList(
         location=[location])
 
     if services:

@@ -18,6 +18,7 @@ from tools import tasks, service_instance, pchelper
 if hasattr(requests.packages.urllib3, 'disable_warnings'):
     requests.packages.urllib3.disable_warnings()
 
+
 def change_disk_mode(si, vm_obj, disk_number, mode,
                      disk_prefix_label='Hard disk '):
     """Change the disk mode on a virtual hard disk.
@@ -45,8 +46,7 @@ def change_disk_mode(si, vm_obj, disk_number, mode,
     virtual_disk_spec.device = virtual_disk_device
     virtual_disk_spec.device.backing.diskMode = mode
 
-    dev_changes = []
-    dev_changes.append(virtual_disk_spec)
+    dev_changes = [virtual_disk_spec]
     spec = vim.vm.ConfigSpec()
     spec.deviceChange = dev_changes
     task = vm_obj.ReconfigVM_Task(spec=spec)
@@ -59,19 +59,18 @@ def main():
     parser.add_required_arguments(cli.Argument.VM_NAME, cli.Argument.DISK_MODE)
     parser.add_custom_argument('--disk-number', required=True, help='Disk number to change mode.')
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
 
-    content = serviceInstance.RetrieveContent()
+    content = si.RetrieveContent()
     print('Searching for VM {}'.format(args.vm_name))
     vm_obj = pchelper.get_obj(content, [vim.VirtualMachine], args.vm_name)
 
     if vm_obj:
-        change_disk_mode(serviceInstance, vm_obj, args.disk_number, args.disk_mode)
-        print('VM Disk {} successfully ' \
-              'changed to mode {}.'.format(args.disk_number,
-                                           args.disk_mode))
+        change_disk_mode(si, vm_obj, args.disk_number, args.disk_mode)
+        print('VM Disk {} successfully changed to mode {}.'.format(args.disk_number, args.disk_mode))
     else:
         print("VM not found.")
+
 
 # start
 if __name__ == "__main__":

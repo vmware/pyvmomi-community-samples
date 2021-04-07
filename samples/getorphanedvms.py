@@ -205,9 +205,9 @@ def main():
     parser = cli.Parser()
     parser.add_optional_arguments(cli.Argument.VM_NAME, cli.Argument.UUID, cli.Argument.PORT_GROUP)
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
     try:
-        content = serviceInstance.RetrieveContent()
+        content = si.RetrieveContent()
         datacenter = content.rootFolder.childEntity[0]
         datastores = datacenter.datastore
         vmfolder = datacenter.vmFolder
@@ -239,12 +239,12 @@ def main():
         # each uuid in the dsvmkey list is passed to the find_match
         # function to look for a match
 
-        print("The following virtual machine(s) do not exist in the " \
-              "inventory, but exist on a datastore " \
+        print("The following virtual machine(s) do not exist in the "
+              "inventory, but exist on a datastore "
               "(Display Name, Datastore/Folder name):")
         for match in dsvmkey:
             find_match(match)
-        Disconnect(serviceInstance)
+        Disconnect(si)
     except vmodl.MethodFault as e:
         print("Caught vmodl fault : " + e.msg)
         return -1
@@ -253,6 +253,7 @@ def main():
         return -1
 
     return 0
+
 
 # Start program
 if __name__ == "__main__":

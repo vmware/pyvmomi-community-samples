@@ -16,34 +16,34 @@ __author__ = 'William Lam'
 
 
 # retrieve SPBM API endpoint
-def GetPbmConnection(vpxdStub):
+def get_pbm_connection(vpxd_stub):
     from http import cookies
     import pyVmomi
-    sessionCookie = vpxdStub.cookie.split('"')[1]
-    httpContext = VmomiSupport.GetHttpContext()
+    session_cookie = vpxd_stub.cookie.split('"')[1]
+    http_context = VmomiSupport.GetHttpContext()
     cookie = cookies.SimpleCookie()
-    cookie["vmware_soap_session"] = sessionCookie
-    httpContext["cookies"] = cookie
-    VmomiSupport.GetRequestContext()["vcSessionCookie"] = sessionCookie
-    hostname = vpxdStub.host.split(":")[0]
+    cookie["vmware_soap_session"] = session_cookie
+    http_context["cookies"] = cookie
+    VmomiSupport.GetRequestContext()["vcSessionCookie"] = session_cookie
+    hostname = vpxd_stub.host.split(":")[0]
 
     context = None
     if hasattr(ssl, "_create_unverified_context"):
         context = ssl._create_unverified_context()
-    pbmStub = pyVmomi.SoapStubAdapter(
+    pbm_stub = pyVmomi.SoapStubAdapter(
         host=hostname,
         version="pbm.version.version1",
         path="/pbm/sdk",
         poolSize=0,
         sslContext=context)
-    pbmSi = pbm.ServiceInstance("ServiceInstance", pbmStub)
-    pbmContent = pbmSi.RetrieveContent()
+    pbm_si = pbm.ServiceInstance("ServiceInstance", pbm_stub)
+    pbm_content = pbm_si.RetrieveContent()
 
-    return (pbmSi, pbmContent)
+    return pbm_si, pbm_content
 
 
 # Create required SPBM Capability object from python dict
-def _dictToCapability(d):
+def _dict_to_capability(d):
     return [
         pbm.capability.CapabilityInstance(
             id=pbm.capability.CapabilityMetadata.UniqueId(
@@ -66,7 +66,7 @@ def _dictToCapability(d):
 
 
 # Update existing VM Storage Policy
-def UpdateProfile(pm, profile, rules):
+def update_profile(pm, profile, rules):
     pm.PbmUpdate(
         profileId=profile.profileId,
         updateSpec=pbm.profile.CapabilityBasedProfileUpdateSpec(
@@ -75,7 +75,7 @@ def UpdateProfile(pm, profile, rules):
                 subProfiles=[
                     pbm.profile.SubProfileCapabilityConstraints.SubProfile(
                         name="vSAN VMC Stretched sub-profile",
-                        capability=_dictToCapability(rules)
+                        capability=_dict_to_capability(rules)
                     )
                 ]
             )
@@ -88,41 +88,41 @@ def main():
     parser = cli.Parser()
     parser.add_custom_argument('--policy-name', required=True, action='store', help='VM Storage Policy ID')
     parser.add_custom_argument('--policy-rule', required=True, action='store',
-                                        help="VM Storage Policy Rule encoded as dictionary"
-                                             "example:"
-                                             " \"{\'VSAN.hostFailuresToTolerate\':1,"
-                                             "    \'VSAN.stripeWidth\':2,"
-                                             "    \'VSAN.forceProvisioning\':False}\"")
+                               help="VM Storage Policy Rule encoded as dictionary"
+                               "example:"
+                               " \"{\'VSAN.hostFailuresToTolerate\':1,"
+                               "    \'VSAN.stripeWidth\':2,"
+                               "    \'VSAN.forceProvisioning\':False}\"")
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
 
     # Connect to SPBM Endpoint
-    pbmSi, pbmContent = GetPbmConnection(serviceInstance._stub)
+    pbm_si, pbm_content = get_pbm_connection(si._stub)
 
-    pm = pbmContent.profileManager
-    profileIds = pm.PbmQueryProfile(
+    pm = pbm_content.profileManager
+    profile_ids = pm.PbmQueryProfile(
         resourceType=pbm.profile.ResourceType(resourceType="STORAGE"),
         profileCategory="REQUIREMENT"
     )
 
     profiles = []
-    if len(profileIds) > 0:
-        profiles = pm.PbmRetrieveContent(profileIds=profileIds)
+    if len(profile_ids) > 0:
+        profiles = pm.PbmRetrieveContent(profileIds=profile_ids)
 
     # Attempt to find profile name given by user
-    vmProfile = None
+    vm_profile = None
     for profile in profiles:
         if profile.name == args.policy_name:
-            vmProfile = profile
+            vm_profile = profile
             break
 
-    if vmProfile:
+    if vm_profile:
         # Convert string to dict
-        vmPolicyRules = ast.literal_eval(args.policy_rule)
+        vm_policy_rules = ast.literal_eval(args.policy_rule)
 
         print("Updating VM Storage Policy %s with %s ..." % (
             args.policy_name, args.policy_rule))
-        UpdateProfile(pm, vmProfile, vmPolicyRules)
+        update_profile(pm, vm_profile, vm_policy_rules)
     else:
         print("Unable to find VM Storage Policy %s " % args.policy_name)
 

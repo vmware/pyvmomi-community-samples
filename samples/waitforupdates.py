@@ -85,38 +85,35 @@ def make_property_collector(pc, from_node, props):
     """
 
     # Make the filter spec
-    filterSpec = vmodl.query.PropertyCollector.FilterSpec()
+    filter_spec = vmodl.query.PropertyCollector.FilterSpec()
 
     # Make the object spec
     traversal = serviceutil.build_full_traversal()
 
-    objSpec = vmodl.query.PropertyCollector.ObjectSpec(obj=from_node,
-                                                       selectSet=traversal)
-    objSpecs = [objSpec]
+    obj_spec = vmodl.query.PropertyCollector.ObjectSpec(obj=from_node, selectSet=traversal)
+    obj_specs = [obj_spec]
 
-    filterSpec.objectSet = objSpecs
+    filter_spec.objectSet = obj_specs
 
     # Add the property specs
-    propSet = []
+    prop_set = []
     for motype, proplist in props:
-        propSpec = \
+        prop_spec = \
             vmodl.query.PropertyCollector.PropertySpec(type=motype, all=False)
-        propSpec.pathSet.extend(proplist)
-        propSet.append(propSpec)
+        prop_spec.pathSet.extend(proplist)
+        prop_set.append(prop_spec)
 
-    filterSpec.propSet = propSet
+    filter_spec.propSet = prop_set
 
     try:
-        pcFilter = pc.CreateFilter(filterSpec, True)
-        atexit.register(pcFilter.Destroy)
-        return pcFilter
-    except vmodl.MethodFault as e:
-        if e._wsdlName == 'InvalidProperty':
-            print >> sys.stderr, "InvalidProperty fault while creating " \
-                                 "PropertyCollector filter : %s" % e.name
+        pc_filter = pc.CreateFilter(filter_spec, True)
+        atexit.register(pc_filter.Destroy)
+        return pc_filter
+    except vmodl.MethodFault as ex:
+        if ex._wsdlName == 'InvalidProperty':
+            print("InvalidProperty fault while creating PropertyCollector filter : %s" % ex.name, file=sys.stderr)
         else:
-            print >> sys.stderr, "Problem creating PropertyCollector " \
-                                 "filter : %s" % str(e.faultMessage)
+            print("Problem creating PropertyCollector filter : %s" % str(ex.faultMessage), file=sys.stderr)
         raise
 
 
@@ -149,26 +146,26 @@ def monitor_property_changes(si, propspec, iterations=None):
         for filterSet in result.filterSet:
             for objectSet in filterSet.objectSet:
                 moref = getattr(objectSet, 'obj', None)
-                assert moref is not None, 'object moref should always be ' \
-                                          'present in objectSet'
+                assert moref is not None, \
+                    'object moref should always be present in objectSet'
 
                 moref = str(moref).strip('\'')
 
                 kind = getattr(objectSet, 'kind', None)
                 assert (
-                    kind is not None and kind in ('enter', 'modify', 'leave',)
-                ), 'objectSet kind must be valid'
+                        kind is not None
+                        and kind in ('enter', 'modify', 'leave',)), \
+                    'objectSet kind must be valid'
 
-                if kind == 'enter' or kind == 'modify':
-                    changeSet = getattr(objectSet, 'changeSet', None)
-                    assert (changeSet is not None and isinstance(
-                        changeSet, collections.Sequence
-                    ) and len(changeSet) > 0), \
-                        'enter or modify objectSet should have non-empty' \
-                        ' changeSet'
+                if kind in ('enter', 'modify'):
+                    change_set = getattr(objectSet, 'changeSet', None)
+                    assert (change_set is not None
+                            and isinstance(change_set, collections.Sequence)
+                            and len(change_set) > 0), \
+                        'enter or modify objectSet should have non-empty changeSet'
 
                     changes = []
-                    for change in changeSet:
+                    for change in change_set:
                         name = getattr(change, 'name', None)
                         assert (name is not None), \
                             'changeset should contain property name'
@@ -203,35 +200,34 @@ def main():
         name of the datacenters
         """)
     parser.add_custom_argument('--iterations', type=int, default=None,
-                                        action='store',
-                                        help="""
-                        The number of updates to receive before exiting, default is no limit.Must be 1
-                        or more if specified.
-                        """)
+                               action='store',
+                               help="""
+                               The number of updates to receive before exiting, default is no limit.Must be 1
+                               or more if specified.
+                               """)
     parser.add_custom_argument('--propspec', dest='propspec', required=True,
-                                        action='append',
-                                        help='Property specifications to monitor, e.g. '
-                                             'VirtualMachine:name,summary.config. Repetition '
-                                             'permitted')
+                               action='append',
+                               help='Property specifications to monitor, e.g. '
+                               'VirtualMachine:name,summary.config. Repetition '
+                               'permitted')
     args = parser.get_args()
 
     if args.iterations is not None and args.iterations < 1:
         parser.print_help()
-        print >>sys.stderr, '\nInvalid argument: Iteration count must be' \
-                            ' omitted or greater than 0'
+        print('\nInvalid argument: Iteration count must be omitted or greater than 0', file=sys.stderr)
         sys.exit(-1)
 
     try:
-        serviceInstance = service_instance.connect(args)
+        si = service_instance.connect(args)
         propspec = parse_propspec(args.propspec)
 
         print("Monitoring property changes.  Press ^C to exit")
-        monitor_property_changes(serviceInstance, propspec, args.iterations)
+        monitor_property_changes(si, propspec, args.iterations)
 
-    except vmodl.MethodFault as e:
-        print >>sys.stderr, "Caught vmodl fault :\n%s" % str(e)
-    except Exception as e:
-        print >>sys.stderr, "Caught exception : " + str(e)
+    except vmodl.MethodFault as ex:
+        print("Caught vmodl fault :\n%s" % str(ex), file=sys.stderr)
+    except Exception as ex:
+        print("Caught exception : " + str(ex), file=sys.stderr)
 
 
 if __name__ == '__main__':
@@ -239,9 +235,9 @@ if __name__ == '__main__':
         main()
         sys.exit(0)
     except Exception as e:
-        print >>sys.stderr, "Caught exception : " + str(e)
+        print("Caught exception : " + str(e), file=sys.stderr)
     except KeyboardInterrupt as e:
-        print >>sys.stderr, "Exiting"
+        print("Exiting", file=sys.stderr)
         sys.exit(0)
 
 

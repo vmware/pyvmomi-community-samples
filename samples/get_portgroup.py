@@ -30,10 +30,10 @@ def main():
     parser = cli.Parser()
     parser.add_required_arguments(cli.Argument.PORT_GROUP)
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
 
     try:
-        content = serviceInstance.RetrieveContent()
+        content = si.RetrieveContent()
 
         # searching for port group
         pg = pchelper.get_obj(content, [vim.Network], args.port_group)

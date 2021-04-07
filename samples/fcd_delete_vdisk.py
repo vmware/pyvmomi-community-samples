@@ -15,8 +15,6 @@
 Python program for deleting a first class disk (fcd)
 """
 
-import atexit
-
 from tools import cli, tasks, disk, pchelper, service_instance
 from pyVmomi import vmodl
 from pyVmomi import vim
@@ -28,13 +26,13 @@ def main():
     """
 
     parser = cli.Parser()
-    parser.add_required_arguments(cli.Argument.DATASTORE_NAME,cli.Argument.FIRST_CLASS_DISK_NAME)
+    parser.add_required_arguments(cli.Argument.DATASTORE_NAME, cli.Argument.FIRST_CLASS_DISK_NAME)
     parser.add_custom_argument('--yes', action='store_true', help='Confirm disk deletion.')
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
 
     try:
-        content = serviceInstance.RetrieveContent()
+        content = si.RetrieveContent()
 
         # Retrieve Datastore Object
         datastore = pchelper.get_obj(content, [vim.Datastore], args.datastore_name)
@@ -55,7 +53,7 @@ def main():
         # Delete FCD
         storage = content.vStorageObjectManager
         task = storage.DeleteVStorageObject_Task(vdisk.config.id, datastore)
-        tasks.wait_for_tasks(serviceInstance, [task])
+        tasks.wait_for_tasks(si, [task])
         print("FCD deleted!")
 
     except vmodl.MethodFault as error:

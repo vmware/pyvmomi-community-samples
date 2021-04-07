@@ -108,24 +108,24 @@ def main():
     parser.add_required_arguments(cli.Argument.VM_NAME, cli.Argument.TEMPLATE)
     # if no locationis provided, thefirst available datacenter, datastore, etc. will be used
     parser.add_optional_arguments(cli.Argument.DATACENTER_NAME, cli.Argument.VMFOLDER,
-                                           cli.Argument.DATASTORE_NAME, cli.Argument.DATASTORECLUSTER_NAME,
-                                           cli.Argument.CLUSTER_NAME, cli.Argument.RESOURCE_POOL,
-                                           cli.Argument.POWER_ON, cli.Argument.OPAQUE_NETWORK_NAME)
+                                  cli.Argument.DATASTORE_NAME, cli.Argument.DATASTORECLUSTER_NAME,
+                                  cli.Argument.CLUSTER_NAME, cli.Argument.RESOURCE_POOL,
+                                  cli.Argument.POWER_ON, cli.Argument.OPAQUE_NETWORK_NAME)
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
 
-    content = serviceInstance.RetrieveContent()
+    content = si.RetrieveContent()
     template = pchelper.get_obj(content, [vim.VirtualMachine], args.template)
 
     if template:
         clone_vm(
-            content, template, args.vm_name, serviceInstance,
+            content, template, args.vm_name, si,
             args.datacenter_name, args.vm_folder,
             args.datastore_name, args.cluster_name,
             args.resource_pool, args.power_on, args.datastorecluster_name)
         if args.opaque_network_name:
             vm = pchelper.get_obj(content, [vim.VirtualMachine], args.vm_name)
-            add_nic(serviceInstance, vm, args.opaque_network_name)
+            add_nic(si, vm, args.opaque_network_name)
     else:
         print("template not found")
 

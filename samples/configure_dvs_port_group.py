@@ -65,11 +65,11 @@ def main():
     parser = cli.Parser()
     parser.add_required_arguments(cli.Argument.DVS_NAME, cli.Argument.DVS_PORT_GROUP_NAME)
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
 
     try:
         # call configuration of dvs port group
-        configure_dvs_pg(serviceInstance, args.dvs_name, args.dvs_pg_name)
+        configure_dvs_pg(si, args.dvs_name, args.dvs_pg_name)
 
     except vmodl.MethodFault as error:
         print("Caught vmodl fault : {0}".format(error.msg))

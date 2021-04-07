@@ -31,10 +31,10 @@ parser.add_optional_arguments(cli.Argument.NEW_NAME)
 args = parser.get_args()
 
 # form a connection...
-serviceInstance = service_instance.connect(args)
+si = service_instance.connect(args)
 
 # search the whole inventory tree recursively... a brutish but effective tactic
-root_folder = serviceInstance.content.rootFolder
+root_folder = si.content.rootFolder
 entity_stack = root_folder.childEntity
 name = args.name
 obj = None

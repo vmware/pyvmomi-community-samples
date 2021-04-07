@@ -36,14 +36,14 @@ def main():
         my_vcr = vcr.VCR()
         # use the vcr instance to setup an instance of service_instance
         with my_vcr.use_cassette('hello_world_vcenter.yaml', record_mode='all'):
-            serviceInstance = service_instance.connect(args)
+            si = service_instance.connect(args)
 
         print("\nHello World!\n")
         print("If you got here, you authenticted into vCenter.")
         print("The server is {0}!".format(args.host))
         # NOTE (hartsock): only a successfully authenticated session has a
         # session key aka session id.
-        session_id = serviceInstance.content.sessionManager.currentSession.key
+        session_id = si.content.sessionManager.currentSession.key
         print("current session id: {0}".format(session_id))
         print("Well done!")
         print("\n")
@@ -56,6 +56,7 @@ def main():
         return -1
 
     return 0
+
 
 # Start program
 if __name__ == "__main__":

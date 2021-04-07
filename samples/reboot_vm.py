@@ -17,17 +17,17 @@ from pyVmomi import vim
 parser = cli.Parser()
 parser.add_optional_arguments(cli.Argument.VM_NAME, cli.Argument.DNS_NAME, cli.Argument.UUID, cli.Argument.VM_IP)
 args = parser.get_args()
-serviceInstance = service_instance.connect(args)
+si = service_instance.connect(args)
 
 VM = None
 if args.uuid:
-    VM = serviceInstance.content.searchIndex.FindByUuid(None, args.uuid, True, True)
+    VM = si.content.searchIndex.FindByUuid(None, args.uuid, True, True)
 elif args.dns_name:
-    VM = serviceInstance.content.searchIndex.FindByDnsName(None, args.dns_name, True)
+    VM = si.content.searchIndex.FindByDnsName(None, args.dns_name, True)
 elif args.vm_ip:
-    VM = serviceInstance.content.searchIndex.FindByIp(None, args.vm_ip, True)
+    VM = si.content.searchIndex.FindByIp(None, args.vm_ip, True)
 elif args.vm_name:
-    content = serviceInstance.RetrieveContent()
+    content = si.RetrieveContent()
     VM = pchelper.get_obj(content, [vim.VirtualMachine], args.vm_name)
 
 if VM is None:
@@ -36,5 +36,5 @@ if VM is None:
 print("Found: {0}".format(VM.name))
 print("The current powerState is: {0}".format(VM.runtime.powerState))
 TASK = VM.ResetVM_Task()
-tasks.wait_for_tasks(serviceInstance, [TASK])
+tasks.wait_for_tasks(si, [TASK])
 print("its done.")

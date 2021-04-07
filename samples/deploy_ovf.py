@@ -104,10 +104,10 @@ def main():
     parser.add_optional_arguments(
         cli.Argument.DATACENTER_NAME, cli.Argument.DATASTORE_NAME, cli.Argument.CLUSTER_NAME)
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
     ovfd = get_ovf_descriptor(args.ovf_path)
-    objs = get_objects(serviceInstance, args)
-    manager = serviceInstance.content.ovfManager
+    objs = get_objects(si, args)
+    manager = si.content.ovfManager
     spec_params = vim.OvfManager.CreateImportSpecParams()
     import_spec = manager.CreateImportSpec(ovfd,
                                            objs["resource pool"],
@@ -137,6 +137,7 @@ def main():
             print("Lease error: " + lease.state.error)
             exit(1)
     connect.Disconnect(si)
+
 
 if __name__ == "__main__":
     exit(main())

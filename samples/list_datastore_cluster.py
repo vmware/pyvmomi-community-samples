@@ -19,10 +19,10 @@ def main():
     parser = cli.Parser()
     parser.add_required_arguments(cli.Argument.DATASTORECLUSTER_NAME)
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
 
     try:
-        content = serviceInstance.RetrieveContent()
+        content = si.RetrieveContent()
         # Search for all Datastore Clusters aka StoragePod
         obj_view = content.viewManager.CreateContainerView(content.rootFolder,
                                                            [vim.StoragePod],
@@ -42,6 +42,7 @@ def main():
         return -1
 
     return 0
+
 
 # Start program
 if __name__ == "__main__":

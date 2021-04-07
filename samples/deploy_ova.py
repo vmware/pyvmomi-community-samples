@@ -27,22 +27,23 @@ from pyVmomi import vim, vmodl
 
 __author__ = 'prziborowski'
 
+
 def main():
     parser = cli.Parser()
     parser.add_optional_arguments(
         cli.Argument.OVA_PATH, cli.Argument.DATACENTER_NAME, cli.Argument.RESOURCE_POOL, cli.Argument.DATASTORE_NAME)
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
 
     if args.datacenter_name:
-        dc = get_dc(serviceInstance, args.datacenter_name)
+        dc = get_dc(si, args.datacenter_name)
     else:
-        dc = serviceInstance.content.rootFolder.childEntity[0]
+        dc = si.content.rootFolder.childEntity[0]
 
     if args.resource_pool:
-        rp = get_rp(serviceInstance, dc, args.resource_pool)
+        rp = get_rp(si, dc, args.resource_pool)
     else:
-        rp = get_largest_free_rp(serviceInstance, dc)
+        rp = get_largest_free_rp(si, dc)
 
     if args.datastore_name:
         ds = get_ds(dc, args.datastore_name)
@@ -51,14 +52,13 @@ def main():
 
     ovf_handle = OvfHandler(args.ova_path)
 
-    ovfManager = serviceInstance.content.ovfManager
+    ovf_manager = si.content.ovfManager
     # CreateImportSpecParams can specify many useful things such as
     # diskProvisioning (thin/thick/sparse/etc)
     # networkMapping (to map to networks)
     # propertyMapping (descriptor specific properties)
     cisp = vim.OvfManager.CreateImportSpecParams()
-    cisr = ovfManager.CreateImportSpec(ovf_handle.get_descriptor(),
-                                       rp, ds, cisp)
+    cisr = ovf_manager.CreateImportSpec(ovf_handle.get_descriptor(), rp, ds, cisp)
 
     # These errors might be handleable by supporting the parameters in
     # CreateImportSpecParams
@@ -99,15 +99,14 @@ def get_rp(si, dc, name):
     """
     Get a resource pool in the datacenter by its names.
     """
-    viewManager = si.content.viewManager
-    containerView = viewManager.CreateContainerView(dc, [vim.ResourcePool],
-                                                    True)
+    view_manager = si.content.viewManager
+    container_view = view_manager.CreateContainerView(dc, [vim.ResourcePool], True)
     try:
-        for rp in containerView.view:
+        for rp in container_view.view:
             if rp.name == name:
                 return rp
     finally:
-        containerView.Destroy()
+        container_view.Destroy()
     raise Exception("Failed to find resource pool %s in datacenter %s" %
                     (name, dc.name))
 
@@ -116,21 +115,20 @@ def get_largest_free_rp(si, dc):
     """
     Get the resource pool with the largest unreserved memory for VMs.
     """
-    viewManager = si.content.viewManager
-    containerView = viewManager.CreateContainerView(dc, [vim.ResourcePool],
-                                                    True)
-    largestRp = None
-    unreservedForVm = 0
+    view_manager = si.content.viewManager
+    container_view = view_manager.CreateContainerView(dc, [vim.ResourcePool], True)
+    largest_rp = None
+    unreserved_for_vm = 0
     try:
-        for rp in containerView.view:
-            if rp.runtime.memory.unreservedForVm > unreservedForVm:
-                largestRp = rp
-                unreservedForVm = rp.runtime.memory.unreservedForVm
+        for rp in container_view.view:
+            if rp.runtime.memory.unreservedForVm > unreserved_for_vm:
+                largest_rp = rp
+                unreserved_for_vm = rp.runtime.memory.unreservedForVm
     finally:
-        containerView.Destroy()
-    if largestRp is None:
+        container_view.Destroy()
+    if largest_rp is None:
         raise Exception("Failed to find a resource pool in dc %s" % dc.name)
-    return largestRp
+    return largest_rp
 
 
 def get_ds(dc, name):
@@ -151,12 +149,12 @@ def get_largest_free_ds(dc):
     Pick the datastore that is accessible with the largest free space.
     """
     largest = None
-    largestFree = 0
+    largest_free = 0
     for ds in dc.datastore:
         try:
-            freeSpace = ds.summary.freeSpace
-            if freeSpace > largestFree and ds.summary.accessible:
-                largestFree = freeSpace
+            free_space = ds.summary.freeSpace
+            if free_space > largest_free and ds.summary.accessible:
+                largest_free = free_space
                 largest = ds
         except:  # Ignore datastores that have issues
             pass
@@ -216,19 +214,19 @@ class OvfHandler(object):
         """
         self.spec = spec
 
-    def get_disk(self, fileItem, lease):
+    def get_disk(self, file_item, lease):
         """
         Does translation for disk key to file name, returning a file handle.
         """
-        ovffilename = list(filter(lambda x: x == fileItem.path,
+        ovffilename = list(filter(lambda x: x == file_item.path,
                                   self.tarfile.getnames()))[0]
         return self.tarfile.extractfile(ovffilename)
 
-    def get_device_url(self, fileItem, lease):
-        for deviceUrl in lease.info.deviceUrl:
-            if deviceUrl.importKey == fileItem.deviceId:
-                return deviceUrl
-        raise Exception("Failed to find deviceUrl for file %s" % fileItem.path)
+    def get_device_url(self, file_item, lease):
+        for device_url in lease.info.deviceUrl:
+            if device_url.importKey == file_item.deviceId:
+                return device_url
+        raise Exception("Failed to find deviceUrl for file %s" % file_item.path)
 
     def upload_disks(self, lease, host):
         """
@@ -251,23 +249,23 @@ class OvfHandler(object):
             lease.Abort(vmodl.fault.SystemError(reason=str(e)))
         return 1
 
-    def upload_disk(self, fileItem, lease, host):
+    def upload_disk(self, file_item, lease, host):
         """
         Upload an individual disk. Passes the file handle of the
         disk directly to the urlopen request.
         """
-        ovffile = self.get_disk(fileItem, lease)
+        ovffile = self.get_disk(file_item, lease)
         if ovffile is None:
             return
-        deviceUrl = self.get_device_url(fileItem, lease)
-        url = deviceUrl.url.replace('*', host)
+        device_url = self.get_device_url(file_item, lease)
+        url = device_url.url.replace('*', host)
         headers = {'Content-length': get_tarfile_size(ovffile)}
         if hasattr(ssl, '_create_unverified_context'):
-            sslContext = ssl._create_unverified_context()
+            ssl_context = ssl._create_unverified_context()
         else:
-            sslContext = None
+            ssl_context = None
         req = Request(url, ovffile, headers)
-        urlopen(req, context=sslContext)
+        urlopen(req, context=ssl_context)
 
     def start_timer(self):
         """

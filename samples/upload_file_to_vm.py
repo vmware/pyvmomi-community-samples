@@ -23,21 +23,22 @@ def main():
 
     parser = cli.Parser()
 
-    parser.add_required_arguments(cli.Argument.VM_USER, cli.Argument.VM_PASS, cli.Argument.REMOTE_FILE_PATH, cli.Argument.LOCAL_FILE_PATH)
+    parser.add_required_arguments(cli.Argument.VM_USER, cli.Argument.VM_PASS,
+                                  cli.Argument.REMOTE_FILE_PATH, cli.Argument.LOCAL_FILE_PATH)
     parser.add_optional_arguments(cli.Argument.VM_NAME, cli.Argument.UUID)
     args = parser.get_args()
 
     vm_path = args.remote_file_path
     try:
-        serviceInstance = service_instance.connect(args)
-        content = serviceInstance.RetrieveContent()
+        si = service_instance.connect(args)
+        content = si.RetrieveContent()
 
         vm = None
         if args.uuid:
-            search_index = serviceInstance.content.searchIndex
+            search_index = si.content.searchIndex
             vm = search_index.FindByUuid(None, args.uuid, True)
         elif args.vm_name:
-            content = serviceInstance.RetrieveContent()
+            content = si.RetrieveContent()
             vm = pchelper.get_obj(content, [vim.VirtualMachine], args.vm_name)
 
         if not vm:
@@ -82,6 +83,7 @@ def main():
         return -1
 
     return 0
+
 
 # Start program
 if __name__ == "__main__":

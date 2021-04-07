@@ -21,22 +21,22 @@ def main():
     parser.add_optional_arguments(cli.Argument.POWER_ON)
     args = parser.get_args()
     try:
-        dt = datetime.now() + timedelta(minutes= int(args.minutes))
-        #dt = datetime.strptime(args.date, '%d/%m/%Y %H:%M')
+        dt = datetime.now() + timedelta(minutes=int(args.minutes))
+        # dt = datetime.strptime(args.date, '%d/%m/%Y %H:%M')
     except ValueError:
         print('Unrecognized date format')
         return -1
 
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
 
-    view = serviceInstance.content.viewManager.CreateContainerView(serviceInstance.content.rootFolder,
+    view = si.content.viewManager.CreateContainerView(si.content.rootFolder,
                                                       [vim.VirtualMachine],
                                                       True)
     vms = [vm for vm in view.view if vm.name == args.vm_name]
 
     if not vms:
         print('VM not found')
-        connect.Disconnect(serviceInstance)
+        connect.Disconnect(si)
         return -1
     vm = vms[0]
 
@@ -46,7 +46,7 @@ def main():
     spec.scheduler = vim.scheduler.OnceTaskScheduler()
     spec.scheduler.runAt = dt
     spec.action = vim.action.MethodAction()
-    if(args.power_on):
+    if args.power_on:
         spec.action.name = vim.VirtualMachine.PowerOn
         spec.name = 'PowerOn vm %s' % args.vm_name + str(datetime.now())
     else:
@@ -54,7 +54,7 @@ def main():
         spec.name = 'PowerOff vm %s' % args.vm_name + str(datetime.now())
     spec.enabled = True
 
-    if(serviceInstance.content.scheduledTaskManager.CreateScheduledTask(vm, spec) is not None):
+    if si.content.scheduledTaskManager.CreateScheduledTask(vm, spec) is not None:
         print('Scheduled Task Successfully')
 
 

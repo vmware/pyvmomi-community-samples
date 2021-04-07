@@ -79,7 +79,6 @@ class Parser:
         args = self._parser.parse_args()
         return self._prompt_for_password(args)
 
-
     def _add_sample_specific_arguments(self, is_required: bool, *args):
         """
         Add an argument to the "sample specific arguments" group
@@ -91,7 +90,6 @@ class Parser:
             options["required"] = is_required
             self._specific_args_group.add_argument(*name_or_flags, **options)
 
-
     def add_required_arguments(self, *args):
         """
         Add a required argument to the "sample specific arguments" group
@@ -99,14 +97,12 @@ class Parser:
         """
         self._add_sample_specific_arguments(True, *args)
 
-
     def add_optional_arguments(self, *args):
         """
         Add an optional argument to the "sample specific arguments" group.
         Requires a predefined argument from the Argument class.
         """
         self._add_sample_specific_arguments(False, *args)
-
 
     def add_custom_argument(self, *name_or_flags, **options):
         """
@@ -116,10 +112,8 @@ class Parser:
         """
         self._specific_args_group.add_argument(*name_or_flags, **options)
 
-
     def set_epilog(self, epilog):
         self._parser.epilog = epilog
-
 
     def _prompt_for_password(self, args):
         """
@@ -287,33 +281,33 @@ class Argument:
     DEVICE_NAME = {
         'name_or_flags': ['--device-name'],
         'options': {'action': 'store', 'help': 'The device name. Might look like '
-                                                   '"/vmfs/devices/disks/naa.*". '
-                                                   'See vim.vm.device.VirtualDisk.'
-                                                   'RawDiskMappingVer1BackingInfo documentation.'}}
+                                               '"/vmfs/devices/disks/naa.*". '
+                                               'See vim.vm.device.VirtualDisk.'
+                                               'RawDiskMappingVer1BackingInfo documentation.'}}
     DISK_MODE = {
         'name_or_flags': ['--disk-mode'],
         'options': {'action': 'store',
-                        'default': 'independent_persistent',
-                        'choices': [
-                            'append',
-                            'independent_nonpersistent',
-                            'independent_persistent',
-                            'nonpersistent',
-                            'persistent',
-                            'undoable'],
-                        'help': 'See vim.vm.device.VirtualDiskOption.DiskMode documentation.'}}
+                    'default': 'independent_persistent',
+                    'choices': [
+                        'append',
+                        'independent_nonpersistent',
+                        'independent_persistent',
+                        'nonpersistent',
+                        'persistent',
+                        'undoable'],
+                    'help': 'See vim.vm.device.VirtualDiskOption.DiskMode documentation.'}}
 
     COMPATIBILITY_MODE = {
         'name_or_flags': ['--disk-compatibility-mode'],
         'options': {'action': 'store',
-                        'default': 'virtualMode',
-                        'choices': ['physicalMode', 'virtualMode'],
-                        'help': 'See vim.vm.device.VirtualDiskOption.CompatibilityMode documentation.'}}
+                    'default': 'virtualMode',
+                    'choices': ['physicalMode', 'virtualMode'],
+                    'help': 'See vim.vm.device.VirtualDiskOption.CompatibilityMode documentation.'}}
 
     ISO = {
         'name_or_flags': ['--iso'],
         'options': {'action': 'store',
-                        'help': 'ISO to use in test. Use datastore path format. E.g. [datastore1] path/to/file.iso'}
+                    'help': 'ISO to use in test. Use datastore path format. E.g. [datastore1] path/to/file.iso'}
     }
     NIC_NAME = {
         'name_or_flags': ['--nic-name'],
@@ -355,8 +349,8 @@ class Argument:
     SNAPSHOT_OPERATION = {
         'name_or_flags': ['-op', '--snapshot-operation'],
         'options': {'action': 'store',
-                        'choices': ['create', 'remove', 'revert', 'list_all', 'list_current', 'remove_all'],
-                        'help': 'Snapshot operation'}
+                    'choices': ['create', 'remove', 'revert', 'list_all', 'list_current', 'remove_all'],
+                    'help': 'Snapshot operation'}
     }
     SNAPSHOT_NAME = {
         'name_or_flags': ['--snapshot-name'],

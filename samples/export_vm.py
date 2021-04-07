@@ -33,7 +33,7 @@ def print_http_nfc_lease_info(info):
     :type info: vim.HttpNfcLease.Info
     :return:
     """
-    print('Lease timeout: {0.leaseTimeout}\n' \
+    print('Lease timeout: {0.leaseTimeout}\n'
           'Disk Capacity KB: {0.totalDiskCapacityInKB}'.format(info))
     device_number = 1
     if info.deviceUrl:
@@ -43,8 +43,7 @@ def print_http_nfc_lease_info(info):
                   Device URL Key: {0.key}\n \
                   Device URL: {0.url}\n \
                   Device URL Size: {0.fileSize}\n \
-                  SSL Thumbprint: {0.sslThumbprint}\n'.format(device_url,
-                                                               device_number))
+                  SSL Thumbprint: {0.sslThumbprint}\n'.format(device_url, device_number))
             device_number += 1
     else:
         print('No devices were found.')
@@ -86,8 +85,7 @@ class LeaseProgressUpdater(threading.Thread):
             try:
                 if self.httpNfcLease.state == vim.HttpNfcLease.State.done:
                     return
-                print('Updating HTTP NFC Lease ' \
-                      'Progress to {}%'.format(self.progressPercent))
+                print('Updating HTTP NFC Lease Progress to {}%'.format(self.progressPercent))
                 self.httpNfcLease.HttpNfcLeaseProgress(self.progressPercent)
                 sleep(self.updateInterval)
             except Exception as ex:
@@ -144,19 +142,19 @@ def main():
     parser = cli.Parser()
     parser.add_optional_arguments(cli.Argument.VM_NAME, cli.Argument.UUID)
     parser.add_custom_argument('--name', required=False, action='store',
-                                        help='The ovf:id to use for the top-level OVF Entity.')
+                               help='The ovf:id to use for the top-level OVF Entity.')
     parser.add_custom_argument('--workdir', required=True, action='store',
-                                        help='Working directory. Must have write permission.')
+                               help='Working directory. Must have write permission.')
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
 
     # Getting VM data
     vm_obj = None
     if args.uuid:
         # if instanceUuid(last argument) is false it will search for VM BIOS UUID instead
-        vm_obj = serviceInstance.content.searchIndex.FindByUuid(None, args.uuid, True)
+        vm_obj = si.content.searchIndex.FindByUuid(None, args.uuid, True)
     elif args.vm_name:
-        vm_obj = pchelper.get_obj(serviceInstance.content, [vim.VirtualMachine], args.vm_name)
+        vm_obj = pchelper.get_obj(si.content, [vim.VirtualMachine], args.vm_name)
 
     # VM does exist
     if not vm_obj:
@@ -171,7 +169,7 @@ def main():
 
     # Breaking down SOAP Cookie &
     # creating Header
-    soap_cookie = serviceInstance._stub.cookie
+    soap_cookie = si._stub.cookie
     cookies = break_down_cookie(soap_cookie)
     headers = {'Accept': 'application/x-vnd.vmware-streamVmdk'}  # not required
 
@@ -209,10 +207,9 @@ def main():
 
                 for deviceUrl in http_nfc_lease.info.deviceUrl:
                     if not deviceUrl.targetId:
-                        print("No targetId found for url: {}."\
-                            .format(deviceUrl.url))
-                        print("Device is not eligible for export. This " \
-                              "could be a mounted iso or img of some sort")
+                        print("No targetId found for url: {}.".format(deviceUrl.url))
+                        print("Device is not eligible for export. "
+                              "This could be a mounted iso or img of some sort")
                         print("Skipping...")
                         continue
 
@@ -245,7 +242,7 @@ def main():
                 sys.exit(1)
             sleep(2)
         print('Getting OVF Manager')
-        ovf_manager = serviceInstance.content.ovfManager
+        ovf_manager = si.content.ovfManager
         print('Creating OVF Descriptor')
         vm_descriptor_name = args.name if args.name else vm_obj.name
         ovf_parameters = vim.OvfManager.CreateDescriptorParams()
@@ -274,6 +271,7 @@ def main():
         # Complete lease upon exception
         http_nfc_lease.HttpNfcLeaseComplete()
         sys.exit(1)
+
 
 if __name__ == '__main__':
     main()

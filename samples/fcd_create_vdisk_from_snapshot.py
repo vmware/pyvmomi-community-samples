@@ -15,8 +15,6 @@
 Python program for creating a first class disk (fcd) from a snapshot
 """
 
-import atexit
-
 from tools import cli, tasks, disk, pbmhelper, pchelper, service_instance
 from pyVmomi import vmodl, vim, pbm
 
@@ -30,26 +28,26 @@ def main():
     parser.add_required_arguments(cli.Argument.SNAPSHOT_NAME)
     parser.add_optional_arguments(cli.Argument.STORAGE_POLICY_NAME)
     parser.add_custom_argument('--source_datastore', required=True, action='store',
-                                        help='Datastore name where source disk is located')
+                               help='Datastore name where source disk is located')
     parser.add_custom_argument('--source_vdisk', required=True, action='store',
-                                        help='First Class Disk name with specified snapshot')
+                               help='First Class Disk name with specified snapshot')
     parser.add_custom_argument('--dest_datastore', required=True, action='store',
-                                        help='Datastore name where new disk is located')
+                               help='Datastore name where new disk is located')
     parser.add_custom_argument('--dest_vdisk', required=True, action='store',
-                                        help='First Class Disk name to be created')
+                               help='First Class Disk name to be created')
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
 
     try:
-        content = serviceInstance.RetrieveContent()
+        content = si.RetrieveContent()
 
         # Connect to SPBM Endpoint
-        pbmSi = pbmhelper.create_pbm_session(serviceInstance._stub)
-        pbmContent = pbmSi.RetrieveContent()
+        pbm_si = pbmhelper.create_pbm_session(si._stub)
+        pbm_content = pbm_si.RetrieveContent()
 
         # Retrieving Storage Policy
         if args.storage_policy_name:
-            p = pbmhelper.retrieve_storage_policy(pbmContent, args.storage_policy_name)
+            p = pbmhelper.retrieve_storage_policy(pbm_content, args.storage_policy_name)
             policy = [vim.vm.DefinedProfileSpec(
                 profileId=p.profileId.uniqueId)]
         else:
@@ -86,7 +84,7 @@ def main():
                 dest_datastore,
                 snapshot,
                 args.dest_vdisk)
-        tasks.wait_for_tasks(serviceInstance, [task])
+        tasks.wait_for_tasks(si, [task])
         print("FCD created from snapshot!")
 
     except vmodl.MethodFault as error:

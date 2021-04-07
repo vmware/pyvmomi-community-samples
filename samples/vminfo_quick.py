@@ -29,6 +29,7 @@ def endit():
     total = end - START
     print("Completion time: {0} seconds.".format(total))
 
+
 # List of properties.
 # See: http://goo.gl/fjTEpW
 # for all properties.
@@ -39,13 +40,13 @@ vm_properties = ["name", "config.uuid", "config.hardware.numCPU",
 
 parser = cli.Parser()
 args = parser.get_args()
-serviceInstance = service_instance.connect(args)
+si = service_instance.connect(args)
 atexit.register(endit)
 
-root_folder = serviceInstance.content.rootFolder
-view = pchelper.get_container_view(serviceInstance,
-                                   obj_type=[vim.VirtualMachine])
-vm_data = pchelper.collect_properties(serviceInstance, view_ref=view,
+root_folder = si.content.rootFolder
+view = pchelper.get_container_view(si, obj_type=[vim.VirtualMachine])
+vm_data = pchelper.collect_properties(si,
+                                      view_ref=view,
                                       obj_type=vim.VirtualMachine,
                                       path_set=vm_properties,
                                       include_mors=True)

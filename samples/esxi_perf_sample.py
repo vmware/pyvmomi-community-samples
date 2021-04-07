@@ -21,26 +21,26 @@ def main():
     parser = cli.Parser()
     parser.add_required_arguments(cli.Argument.VIHOST)
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
     try:
-        content = serviceInstance.RetrieveContent()
+        content = si.RetrieveContent()
 
         search_index = content.searchIndex
         # quick/dirty way to find an ESXi host
         host = search_index.FindByDnsName(dnsName=args.vihost, vmSearch=False)
 
-        perfManager = content.perfManager
-        metricId = vim.PerformanceManager.MetricId(counterId=6, instance="*")
-        startTime = datetime.datetime.now() - datetime.timedelta(hours=1)
-        endTime = datetime.datetime.now()
+        perf_manager = content.perfManager
+        metric_id = vim.PerformanceManager.MetricId(counterId=6, instance="*")
+        start_time = datetime.datetime.now() - datetime.timedelta(hours=1)
+        end_time = datetime.datetime.now()
 
         query = vim.PerformanceManager.QuerySpec(maxSample=1,
                                                  entity=host,
-                                                 metricId=[metricId],
-                                                 startTime=startTime,
-                                                 endTime=endTime)
+                                                 metricId=[metric_id],
+                                                 startTime=start_time,
+                                                 endTime=end_time)
 
-        print(perfManager.QueryPerf(querySpec=[query]))
+        print(perf_manager.QueryPerf(querySpec=[query]))
 
     except vmodl.MethodFault as e:
         print("Caught vmodl fault : " + e.msg)
@@ -50,6 +50,7 @@ def main():
         return -1
 
     return 0
+
 
 # Start program
 if __name__ == "__main__":

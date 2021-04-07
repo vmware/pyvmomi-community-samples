@@ -64,9 +64,9 @@ def main():
     parser = cli.Parser()
     parser.add_optional_arguments(cli.Argument.DATASTORE_NAME)
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
 
-    content = serviceInstance.RetrieveContent()
+    content = si.RetrieveContent()
     # Get list of ds mo
     datastore = pchelper.search_for_obj(content, [vim.Datastore], args.datastore_name)
     if datastore:
@@ -76,6 +76,7 @@ def main():
 
     for ds in ds_obj_list:
         print_datastore_info(ds)
+
 
 # start
 if __name__ == "__main__":

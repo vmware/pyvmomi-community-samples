@@ -20,7 +20,8 @@ from tools import cli, service_instance
 
 MAX_DEPTH = 10
 
-def printvminfo(vm, depth=1):
+
+def print_vminfo(vm, depth=1):
     """
     Print information for a particular virtual machine or recurse into a folder
     with depth protection
@@ -33,7 +34,7 @@ def printvminfo(vm, depth=1):
             return
         vmlist = vm.childEntity
         for child in vmlist:
-            printvminfo(child, depth+1)
+            print_vminfo(child, depth+1)
         return
 
     summary = vm.summary
@@ -47,16 +48,17 @@ def main():
 
     parser = cli.Parser()
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
 
-    content = serviceInstance.RetrieveContent()
+    content = si.RetrieveContent()
     for child in content.rootFolder.childEntity:
         if hasattr(child, 'vmFolder'):
             datacenter = child
             vmfolder = datacenter.vmFolder
             vmlist = vmfolder.childEntity
             for vm in vmlist:
-                printvminfo(vm)
+                print_vminfo(vm)
+
 
 # Start program
 if __name__ == "__main__":

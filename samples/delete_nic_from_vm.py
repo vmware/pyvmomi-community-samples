@@ -11,8 +11,6 @@ http://opensource.org/licenses/Apache-2.0
 """
 from pyVmomi import vim
 from tools import tasks, service_instance, pchelper, cli
-import argparse
-import getpass
 
 
 def del_nic(si, vm, nic_number):
@@ -47,23 +45,24 @@ def del_nic(si, vm, nic_number):
 
 def main():
     parser = cli.Parser()
-    parser.add_optional_arguments(cli.Argument.UUID,cli.Argument.VM_NAME)
+    parser.add_optional_arguments(cli.Argument.UUID, cli.Argument.VM_NAME)
     parser.add_custom_argument('--unit-number', required=True, action='store', help='unit number')
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
 
     vm = None
     if args.uuid:
-        search_index = serviceInstance.content.searchIndex
+        search_index = si.content.searchIndex
         vm = search_index.FindByUuid(None, args.uuid, True)
     elif args.vm_name:
-        content = serviceInstance.RetrieveContent()
+        content = si.RetrieveContent()
         vm = pchelper.get_obj(content, [vim.VirtualMachine], args.vm_name)
     if vm:
-        if del_nic(serviceInstance, vm, int(args.unit_number)):
+        if del_nic(si, vm, int(args.unit_number)):
             print("Successfully deleted NIC CARD")
     else:
         print("VM not found")
+
 
 # start this thing
 if __name__ == "__main__":

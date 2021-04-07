@@ -38,11 +38,11 @@ def main():
     parser = cli.Parser()
     parser.add_required_arguments(cli.Argument.VM_NAME)
     parser.add_custom_argument('--release', required=False, action='store', default=None,
-                                        help='Version/release number of the Virtual machine hardware')
+                               help='Version/release number of the Virtual machine hardware')
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
 
-    content = serviceInstance.RetrieveContent()
+    content = si.RetrieveContent()
     vm = pchelper.get_obj(content, [vim.VirtualMachine], args.vm_name)
     if not vm:
         print("Could not find VM %s" % args.vm_name)
@@ -59,7 +59,7 @@ def main():
         # Upgrade the VM
         try:
             task.WaitForTask(task=vm.UpgradeVM_Task(version),
-                             si=serviceInstance)
+                             si=si)
             print("Upgrade complete")
         except vim.fault.AlreadyUpgraded:
             print("VM is already upgraded")

@@ -24,26 +24,25 @@ def main():
     parser = cli.Parser()
     parser.add_required_arguments(cli.Argument.CLUSTER_NAME)
     parser.add_custom_argument('--key', required=True, action='store',
-                                        help='Name of ESXi Advanced Setting to update')
+                               help='Name of ESXi Advanced Setting to update')
     parser.add_custom_argument('--value', required=True, action='store',
-                                        help='Value of the ESXi Advanced Setting to update')
+                               help='Value of the ESXi Advanced Setting to update')
     args = parser.get_args()
     try:
-        serviceInstance = service_instance.connect(args)
+        si = service_instance.connect(args)
 
-        content = serviceInstance.RetrieveContent()
+        content = si.RetrieveContent()
 
-        cluster = pchelper.get_obj(content,
-                          [vim.ClusterComputeResource], args.cluster_name)
+        cluster = pchelper.get_obj(content, [vim.ClusterComputeResource], args.cluster_name)
 
         hosts = cluster.host
         for host in hosts:
-            optionManager = host.configManager.advancedOption
+            option_manager = host.configManager.advancedOption
             option = vim.option.OptionValue(key=args.key,
                                             value=int(args.value))
             print("Updating %s on ESXi host %s "
                   "with value of %s" % (args.key, host.name, args.value))
-            if optionManager.UpdateOptions(changedValue=[option]):
+            if option_manager.UpdateOptions(changedValue=[option]):
                 print("Settings updated!")
 
     except vmodl.MethodFault as e:
@@ -54,6 +53,7 @@ def main():
         return -1
 
     return 0
+
 
 # Start program
 if __name__ == "__main__":

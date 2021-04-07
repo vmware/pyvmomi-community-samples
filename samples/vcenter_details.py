@@ -51,10 +51,10 @@ def main():
     args = parser.get_args()
 
     try:
-        serviceInstance = service_instance.connect(args)
+        si = service_instance.connect(args)
 
         # ## Do the actual parsing of data ## #
-        parse_service_instance(serviceInstance)
+        parse_service_instance(si)
 
     except vmodl.MethodFault as e:
         print("Caught vmodl fault : {}".format(e.msg))

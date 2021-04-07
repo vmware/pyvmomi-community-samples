@@ -21,14 +21,14 @@ parser = cli.Parser()
 parser.add_required_arguments(cli.Argument.MESSAGE)
 parser.add_optional_arguments(cli.Argument.UUID, cli.Argument.VM_NAME)
 args = parser.get_args()
-serviceInstance = service_instance.connect(args)
+si = service_instance.connect(args)
 
 vm = None
 if args.uuid:
-    search_index = serviceInstance.content.searchIndex
+    search_index = si.content.searchIndex
     vm = search_index.FindByUuid(None, args.uuid, True)
 elif args.vm_name:
-    content = serviceInstance.RetrieveContent()
+    content = si.RetrieveContent()
     vm = pchelper.get_obj(content, [vim.VirtualMachine], args.vm_name)
 
 if not vm:
@@ -38,5 +38,5 @@ print("Found: {0}".format(vm.name))
 spec = vim.vm.ConfigSpec()
 spec.annotation = args.message
 task = vm.ReconfigVM_Task(spec)
-tasks.wait_for_tasks(serviceInstance, [task])
+tasks.wait_for_tasks(si, [task])
 print("Done.")

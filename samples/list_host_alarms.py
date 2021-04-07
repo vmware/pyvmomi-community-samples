@@ -17,9 +17,9 @@ parser = cli.Parser()
 # https://10.12.254.10/mob/?moid=ha-host&doPath=hardware%2esystemInfo
 parser.add_optional_arguments(cli.Argument.UUID, cli.Argument.ESX_IP)
 args = parser.get_args()
-serviceInstance = service_instance.connect(args)
+si = service_instance.connect(args)
 
-INDEX = serviceInstance.content.searchIndex
+INDEX = si.content.searchIndex
 if INDEX:
     if args.uuid:
         HOST = INDEX.FindByUuid(datacenter=None, uuid=args.uuid, vmSearch=False)
@@ -34,8 +34,7 @@ if INDEX:
     # prompt the user for the entity info needed to reset an alarm from red
     # to green
     try:
-        alarm_mor = input("Enter the alarm_moref from above to reset the "
-                              "alarm to green: ")
+        alarm_mor = input("Enter the alarm_moref from above to reset the alarm to green: ")
     except KeyboardInterrupt:
         # this is useful in case the user decides to quit and hits control-c
         print()
@@ -44,7 +43,7 @@ if INDEX:
         if alarm.reset_alarm(entity_moref=HOST._moId,
                              entity_type='HostSystem',
                              alarm_moref=alarm_mor.strip(),
-                             service_instance=serviceInstance):
+                             service_instance=si):
             print("Successfully reset alarm {0} to green.".format(alarm_mor))
 else:
     print("Unable to create a SearchIndex.")

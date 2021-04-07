@@ -20,12 +20,12 @@ from tools import cli, service_instance
 parser = cli.Parser()
 parser.add_required_arguments(cli.Argument.UUID)
 args = parser.get_args()
-serviceInstance = service_instance.connect(args)
+si = service_instance.connect(args)
 
 # see:
 # http://pubs.vmware.com/vsphere-55/topic/com.vmware.wssdk.apiref.doc/vim.ServiceInstanceContent.html
 # http://pubs.vmware.com/vsphere-55/topic/com.vmware.wssdk.apiref.doc/vim.SearchIndex.html
-search_index = serviceInstance.content.searchIndex
+search_index = si.content.searchIndex
 vm = search_index.FindByUuid(None, args.uuid, True)
 
 if vm is None:

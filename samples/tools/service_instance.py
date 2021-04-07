@@ -20,10 +20,10 @@ def connect(args):
     try:
         if args.disable_ssl_verification:
             service_instance = SmartConnect(host=args.host,
-                                                 user=args.user,
-                                                 pwd=args.password,
-                                                 port=args.port,
-                                                 sslValidation=False)
+                                            user=args.user,
+                                            pwd=args.password,
+                                            port=args.port,
+                                            sslValidation=False)
         else:
             service_instance = SmartConnect(host=args.host,
                                             user=args.user,

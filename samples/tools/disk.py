@@ -13,8 +13,6 @@ This module implements simple helper functions for working with:
 - First Class Disks
 """
 
-from pyVmomi import vim
-
 
 def retrieve_fcd(content, datastore, vdisk):
     """

@@ -34,7 +34,6 @@ from pyVim.task import WaitForTask
 
 def list_snapshots_recursively(snapshots):
     snapshot_data = []
-    snap_text = ""
     for snapshot in snapshots:
         snap_text = "Name: %s; Description: %s; CreateTime: %s; State: %s" % (
                                         snapshot.name, snapshot.description,
@@ -72,11 +71,11 @@ def main():
     parser = cli.Parser()
     parser.add_optional_arguments(cli.Argument.VM_NAME, cli.Argument.SNAPSHOT_OPERATION, cli.Argument.SNAPSHOT_NAME)
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
 
     print("Connected to VCENTER SERVER !")
 
-    content = serviceInstance.RetrieveContent()
+    content = si.RetrieveContent()
 
     vm = pchelper.get_obj(content, [vim.VirtualMachine], args.vm_name)
 
@@ -87,13 +86,13 @@ def main():
     if args.snapshot_operation == 'create':
         snapshot_name = args.snapshot_name
         description = "Test snapshot"
-        dumpMemory = False
+        dump_memory = False
         quiesce = False
 
         print("Creating snapshot %s for virtual machine %s" % (
                                         snapshot_name, vm.name))
         WaitForTask(vm.CreateSnapshot(
-            snapshot_name, description, dumpMemory, quiesce))
+            snapshot_name, description, dump_memory, quiesce))
 
     elif args.snapshot_operation in ['remove', 'revert']:
         snapshot_name = args.snapshot_name
@@ -139,6 +138,7 @@ def main():
     else:
         print("Specify operation in "
               "create/remove/revert/list_all/list_current/remove_all")
+
 
 # Start program
 if __name__ == "__main__":

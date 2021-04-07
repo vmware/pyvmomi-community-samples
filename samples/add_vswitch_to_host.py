@@ -13,7 +13,7 @@ from tools import cli, service_instance
 import sys
 
 
-def GetVMHosts(content):
+def get_vm_hosts(content):
     host_view = content.viewManager.CreateContainerView(content.rootFolder,
                                                         [vim.HostSystem],
                                                         True)
@@ -22,29 +22,28 @@ def GetVMHosts(content):
     return obj
 
 
-def AddHostsSwitch(hosts, vswitchName):
+def add_hosts_switch(hosts, vswitch_name):
     for host in hosts:
-        AddHostSwitch(host, vswitchName)
+        add_host_switch(host, vswitch_name)
     return True
 
 
-def AddHostSwitch(host, vswitchName):
+def add_host_switch(host, vswitch_name):
     vswitch_spec = vim.host.VirtualSwitch.Specification()
     vswitch_spec.numPorts = 1024
     vswitch_spec.mtu = 1450
-    host.configManager.networkSystem.AddVirtualSwitch(vswitchName,
-                                                      vswitch_spec)
+    host.configManager.networkSystem.AddVirtualSwitch(vswitch_name, vswitch_spec)
 
 
 def main():
     parser = cli.Parser()
     parser.add_required_arguments(cli.Argument.VSWITCH_NAME)
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
-    content = serviceInstance.RetrieveContent()
+    si = service_instance.connect(args)
+    content = si.RetrieveContent()
 
-    hosts = GetVMHosts(content)
-    if AddHostsSwitch(hosts, args.vswitch_name):
+    hosts = get_vm_hosts(content)
+    if add_hosts_switch(hosts, args.vswitch_name):
         print("vSwitch Added")
 
 

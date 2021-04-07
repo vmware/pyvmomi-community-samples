@@ -43,7 +43,7 @@ def add_nic(vm, mac, port):
 
     nic_changes.append(nic_spec)
     spec.deviceChange = nic_changes
-    e = vm.ReconfigVM_Task(spec=spec)
+    vm.ReconfigVM_Task(spec=spec)
     print("Nic card added success ...")
 
 
@@ -73,19 +73,18 @@ def main():
     parser = cli.Parser()
     parser.add_required_arguments(cli.Argument.VM_NAME, cli.Argument.PORT_GROUP, cli.Argument.VM_MAC)
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
 
-    content = serviceInstance.RetrieveContent()
+    content = si.RetrieveContent()
     print("Search VDS PortGroup by Name ...")
-    portgroup = pchelper.get_obj(content,
-                        [vim.dvs.DistributedVirtualPortgroup], args.port_group)
+    portgroup = pchelper.get_obj(content, [vim.dvs.DistributedVirtualPortgroup], args.port_group)
     if portgroup is None:
         print("Portgroup not Found in DVS ...")
         exit(0)
     print("Search Available(Unused) port for VM...")
     dvs = portgroup.config.distributedVirtualSwitch
-    portKey = search_port(dvs, portgroup.key)
-    port = port_find(dvs, portKey)
+    port_key = search_port(dvs, portgroup.key)
+    port = port_find(dvs, port_key)
     print("Search VM by Name ...")
     vm = None
     vm = pchelper.get_obj(content, [vim.VirtualMachine], args.vm_name)

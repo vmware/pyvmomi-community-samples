@@ -14,7 +14,7 @@ import json
 data = {}
 
 
-def getNICs(summary, guest):
+def get_nics(guest):
     nics = {}
     for nic in guest.net:
         if nic.network:  # Only return adapter backed interfaces
@@ -29,14 +29,14 @@ def getNICs(summary, guest):
                         nics[nic.macAddress]['ipv4'][i] = ip.ipAddress
                         nics[nic.macAddress]['prefix'] = ip.prefixLength
                         nics[nic.macAddress]['connected'] = nic.connected
-                i = i+1
+                    i = i+1
     return nics
 
 
 def vmsummary(summary, guest):
     vmsum = {}
     config = summary.config
-    net = getNICs(summary, guest)
+    net = get_nics(guest)
     vmsum['mem'] = str(config.memorySizeMB / 1024)
     vmsum['diskGB'] = str("%.2f" % (summary.storage.committed / 1024**3))
     vmsum['cpu'] = str(config.numCpu)
@@ -63,9 +63,9 @@ def vm2dict(dc, cluster, host, vm, summary):
     data[dc][cluster][host][vmname]['annotation'] = summary['annotation']
 
 
-def data2json(data, args):
+def data2json(raw_data, args):
     with open(args.jsonfile, 'w') as f:
-        json.dump(data, f)
+        json.dump(raw_data, f)
 
 
 def main():
@@ -74,16 +74,16 @@ def main():
     """
     parser = cli.Parser()
     parser.add_custom_argument('--json', required=False, action='store_true',
-                                        help='Write out to json file')
+                               help='Write out to json file')
     parser.add_custom_argument('--jsonfile', required=False, action='store', default='getvmsbycluster.json',
-                                        help='Filename and path of json file')
+                               help='Filename and path of json file')
     parser.add_custom_argument('--silent', required=False, action='store_true',
-                                        help='supress output to screen')
+                               help='supress output to screen')
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
     outputjson = True if args.json else False
 
-    content = serviceInstance.RetrieveContent()
+    content = si.RetrieveContent()
     children = content.rootFolder.childEntity
     for child in children:  # Iterate though DataCenters
         dc = child
@@ -109,6 +109,7 @@ def main():
 
     if outputjson:
         data2json(data, args)
+
 
 # Start program
 if __name__ == "__main__":

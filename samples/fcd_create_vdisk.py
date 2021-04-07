@@ -15,8 +15,6 @@
 Python program for creating a first class disk (fcd)
 """
 
-import atexit
-
 from tools import cli, tasks, service_instance, pbmhelper, pchelper
 from pyVmomi import vmodl, vim
 
@@ -27,27 +25,27 @@ def main():
     """
 
     parser = cli.Parser()
-    parser.add_required_arguments(cli.Argument.DATASTORE_NAME,cli.Argument.FIRST_CLASS_DISK_NAME)
+    parser.add_required_arguments(cli.Argument.DATASTORE_NAME, cli.Argument.FIRST_CLASS_DISK_NAME)
     parser.add_optional_arguments(cli.Argument.STORAGE_POLICY_NAME)
     parser.add_custom_argument('--capacityInGB', required=True, action='store', type=int,
-                                        help='Size in GB of the First Class Disk.')
+                               help='Size in GB of the First Class Disk.')
     parser.add_custom_argument('--keepAfterDeleteVm', action='store_true',
-                                        help='Keep after VM deletion. Choice of the '
-                                             'deletion behavior of this virtual storage object. '
-                                             'If not set, the default value is false.')
+                               help='Keep after VM deletion. Choice of the '
+                               'deletion behavior of this virtual storage object. '
+                               'If not set, the default value is false.')
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
 
     try:
-        content = serviceInstance.RetrieveContent()
+        content = si.RetrieveContent()
 
         # Connect to SPBM Endpoint
-        pbmSi = pbmhelper.create_pbm_session(serviceInstance._stub)
-        pbmContent = pbmSi.RetrieveContent()
+        pbm_si = pbmhelper.create_pbm_session(si._stub)
+        pbm_content = pbm_si.RetrieveContent()
 
         # Retrieving Storage Policy
         if args.storage_policy_name:
-            policy = pbmhelper.retrieve_storage_policy(pbmContent, args.storage_policy_name)
+            policy = pbmhelper.retrieve_storage_policy(pbm_content, args.storage_policy_name)
         else:
             policy = None
 
@@ -70,7 +68,7 @@ def main():
         # Create FCD
         storage = content.vStorageObjectManager
         task = storage.CreateDisk_Task(spec)
-        tasks.wait_for_tasks(serviceInstance, [task])
+        tasks.wait_for_tasks(si, [task])
         print("FCD created!")
 
     except vmodl.MethodFault as error:

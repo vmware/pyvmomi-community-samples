@@ -46,17 +46,16 @@ def main():
 
     urllib3.disable_warnings()
     print("Connected to vCenter Server")
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
 
-    content = serviceInstance.RetrieveContent()
+    content = si.RetrieveContent()
 
     datacenter = pchelper.search_for_obj(content, [vim.Datacenter], args.datacenter_name)
     if not datacenter:
         raise Exception("Couldn't find the Datacenter with the provided name "
                         "'{}'".format(args.datacenter_name))
 
-    cluster = pchelper.search_for_obj(content, [vim.ClusterComputeResource], args.cluster_name,
-                      datacenter.hostFolder)
+    cluster = pchelper.search_for_obj(content, [vim.ClusterComputeResource], args.cluster_name, datacenter.hostFolder)
 
     if not cluster:
         raise Exception("Couldn't find the Cluster with the provided name "
@@ -70,16 +69,16 @@ def main():
 
     vm_folder = datacenter.vmFolder
 
-    template = pchelper.search_for_obj(content, [vim.VirtualMachine], args.template,
-                       vm_folder)
+    template = pchelper.search_for_obj(content, [vim.VirtualMachine], args.template, vm_folder)
 
     if not template:
         raise Exception("Couldn't find the template with the provided name "
                         "'{}'".format(args.template))
 
     location = _get_relocation_spec(host_obj, cluster.resourcePool)
-    _take_template_snapshot(serviceInstance, template)
-    _clone_vm(serviceInstance, template, args.vm_name, vm_folder, location)
+    _take_template_snapshot(si, template)
+    _clone_vm(si, template, args.vm_name, vm_folder, location)
+
 
 if __name__ == "__main__":
     main()

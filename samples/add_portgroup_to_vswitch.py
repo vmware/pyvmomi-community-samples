@@ -14,7 +14,7 @@ import sys
 import re
 
 
-def GetVMHosts(content, regex_esxi=None):
+def get_vm_hosts(content, regex_esxi=None):
     host_view = content.viewManager.CreateContainerView(content.rootFolder,
                                                         [vim.HostSystem],
                                                         True)
@@ -33,17 +33,17 @@ def GetVMHosts(content, regex_esxi=None):
         return obj
 
 
-def AddHostsPortgroup(hosts, vswitchName, portgroupName, vlanId):
+def add_hosts_portgroup(hosts, vswitch_name, portgroup_name, vlan_id):
     for host in hosts:
-        AddHostPortgroup(host, vswitchName, portgroupName, vlanId)
+        add_host_portgroup(host, vswitch_name, portgroup_name, vlan_id)
     return True
 
 
-def AddHostPortgroup(host, vswitchName, portgroupName, vlanId):
+def add_host_portgroup(host, vswitch_name, portgroup_name, vlan_id):
     portgroup_spec = vim.host.PortGroup.Specification()
-    portgroup_spec.vswitchName = vswitchName
-    portgroup_spec.name = portgroupName
-    portgroup_spec.vlanId = int(vlanId)
+    portgroup_spec.vswitchName = vswitch_name
+    portgroup_spec.name = portgroup_name
+    portgroup_spec.vlanId = int(vlan_id)
     network_policy = vim.host.NetworkPolicy()
     network_policy.security = vim.host.NetworkPolicy.SecurityPolicy()
     network_policy.security.allowPromiscuous = True
@@ -59,11 +59,11 @@ def main():
     parser.add_required_arguments(cli.Argument.VSWITCH_NAME, cli.Argument.PORT_GROUP, cli.Argument.VLAN_ID)
     parser.add_optional_arguments(cli.Argument.ESX_NAME_REGEX)
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
-    content = serviceInstance.RetrieveContent()
+    si = service_instance.connect(args)
+    content = si.RetrieveContent()
 
-    hosts = GetVMHosts(content, args.esx_name_regex)
-    if AddHostsPortgroup(hosts, args.vswitch_name, args.port_group, args.vlan_id):
+    hosts = get_vm_hosts(content, args.esx_name_regex)
+    if add_hosts_portgroup(hosts, args.vswitch_name, args.port_group, args.vlan_id):
         print("Added Port group to vSwitch")
 
 

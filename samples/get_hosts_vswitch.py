@@ -13,7 +13,8 @@ from pyVmomi import vim
 from tools import cli, service_instance
 import sys
 
-def GetVMHosts(content):
+
+def get_vm_hosts(content):
     host_view = content.viewManager.CreateContainerView(content.rootFolder,
                                                         [vim.HostSystem],
                                                         True)
@@ -22,25 +23,25 @@ def GetVMHosts(content):
     return obj
 
 
-def GetHostsSwitches(hosts):
-    hostSwitchesDict = {}
+def get_hosts_switches(hosts):
+    host_switches_dict = {}
     for host in hosts:
         switches = host.config.network.vswitch
-        hostSwitchesDict[host] = switches
-    return hostSwitchesDict
+        host_switches_dict[host] = switches
+    return host_switches_dict
 
 
 def main():
     parser = cli.Parser()
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
-    content = serviceInstance.RetrieveContent()
+    si = service_instance.connect(args)
+    content = si.RetrieveContent()
 
-    hosts = GetVMHosts(content)
-    hostSwitchesDict = GetHostsSwitches(hosts)
-    if hostSwitchesDict is not None:
+    hosts = get_vm_hosts(content)
+    host_switches_dict = get_hosts_switches(hosts)
+    if host_switches_dict is not None:
         print("The vSwitches are:\n")
-    for host, vswithes in hostSwitchesDict.items():
+    for host, vswithes in host_switches_dict.items():
         for v in vswithes:
             print(v.name)
 

@@ -15,8 +15,6 @@
 Python program for deleting a snapshot of a first class disk (fcd)
 """
 
-import atexit
-
 from tools import cli, tasks, disk, pchelper, service_instance
 from pyVmomi import vmodl
 from pyVmomi import vim
@@ -32,10 +30,10 @@ def main():
                                   cli.Argument.SNAPSHOT_NAME)
     parser.add_custom_argument('--yes', action='store_true', help='Confirm disk deletion.')
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
 
     try:
-        content = serviceInstance.RetrieveContent()
+        content = si.RetrieveContent()
 
         # Retrieve Datastore Object
         datastore = pchelper.get_obj(content, [vim.Datastore], args.datastore_name)
@@ -61,7 +59,7 @@ def main():
         storage = content.vStorageObjectManager
         task = storage.DeleteSnapshot_Task(
             vdisk.config.id, datastore, snapshot)
-        tasks.wait_for_tasks(serviceInstance, [task])
+        tasks.wait_for_tasks(si, [task])
         print("FCD snapshot deleted!")
 
     except vmodl.MethodFault as error:

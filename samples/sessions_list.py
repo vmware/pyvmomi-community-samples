@@ -35,14 +35,14 @@ from tools import cli, service_instance
 
 parser = cli.Parser()
 args = parser.get_args()
-serviceInstance = service_instance.connect(args)
+si = service_instance.connect(args)
 
 print("logged in to %s" % args.host)
-session_id = serviceInstance.content.sessionManager.currentSession.key
+session_id = si.content.sessionManager.currentSession.key
 print("current pyVmomi session id: %s" % session_id)
 
 print("Listing all sessions I can see:")
-for session in serviceInstance.content.sessionManager.sessionList:
+for session in si.content.sessionManager.sessionList:
     print(
         "session key={0.key}, "
         "username={0.userName}, "
@@ -50,8 +50,8 @@ for session in serviceInstance.content.sessionManager.sessionList:
         )
 
 print("logout")
-serviceInstance.content.sessionManager.Logout()
+si.content.sessionManager.Logout()
 
 # The current session will be None after logout
-session = serviceInstance.content.sessionManager.currentSession
+session = si.content.sessionManager.currentSession
 print("current pyVmomi session: %s" % session)

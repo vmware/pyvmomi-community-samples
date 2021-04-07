@@ -22,16 +22,16 @@ def main():
     """
 
     parser = cli.Parser()
-    parser.add_optional_arguments(cli.Argument.UUID,cli.Argument.VM_NAME, cli.Argument.NETWORK_NAME)
+    parser.add_optional_arguments(cli.Argument.UUID, cli.Argument.VM_NAME, cli.Argument.NETWORK_NAME)
     parser.add_custom_argument('--is_VDS',
-                                        action="store_true",
-                                        default=False,
-                                        help='The provided network is in VSS or VDS')
+                               action="store_true",
+                               default=False,
+                               help='The provided network is in VSS or VDS')
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
 
     try:
-        content = serviceInstance.RetrieveContent()
+        content = si.RetrieveContent()
         vm = None
         if args.uuid:
             vm = content.searchIndex.FindByUuid(None, args.uuid, True)
@@ -59,9 +59,7 @@ def main():
                         pchelper.get_obj(content, [vim.Network], args.network_name)
                     nicspec.device.backing.deviceName = args.network_name
                 else:
-                    network = pchelper.get_obj(content,
-                                      [vim.dvs.DistributedVirtualPortgroup],
-                                      args.network_name)
+                    network = pchelper.get_obj(content, [vim.dvs.DistributedVirtualPortgroup], args.network_name)
                     dvs_port_connection = vim.dvs.PortConnection()
                     dvs_port_connection.portgroupKey = network.key
                     dvs_port_connection.switchUuid = \
@@ -80,7 +78,7 @@ def main():
 
         config_spec = vim.vm.ConfigSpec(deviceChange=device_change)
         task = vm.ReconfigVM_Task(config_spec)
-        tasks.wait_for_tasks(serviceInstance, [task])
+        tasks.wait_for_tasks(si, [task])
         print("Successfully changed network")
 
     except vmodl.MethodFault as error:
@@ -88,6 +86,7 @@ def main():
         return -1
 
     return 0
+
 
 # Start program
 if __name__ == "__main__":

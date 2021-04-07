@@ -21,7 +21,7 @@ from pyVmomi import pbm, vim, VmomiSupport, SoapStubAdapter
 from tools import service_instance
 
 
-class bcolors(object):
+class BColors(object):
     """A class used to represent ANSI escape sequences
        for console color output.
     """
@@ -35,11 +35,11 @@ class bcolors(object):
     UNDERLINE = '\033[4m'
 
 
-def PbmConnect(stubAdapter, disable_ssl_verification=False):
+def pbm_connect(stub_adapter, disable_ssl_verification=False):
     """Connect to the VMware Storage Policy Server
 
-    :param stubAdapter: The ServiceInstance stub adapter
-    :type stubAdapter: SoapStubAdapter
+    :param stub_adapter: The ServiceInstance stub adapter
+    :type stub_adapter: SoapStubAdapter
     :param disable_ssl_verification: A flag used to skip ssl certificate
         verification (default is False)
     :type disable_ssl_verification: bool
@@ -50,27 +50,27 @@ def PbmConnect(stubAdapter, disable_ssl_verification=False):
     if disable_ssl_verification:
         import ssl
         if hasattr(ssl, '_create_unverified_context'):
-            sslContext = ssl._create_unverified_context()
+            ssl_context = ssl._create_unverified_context()
         else:
-            sslContext = None
+            ssl_context = None
     else:
-        sslContext = None
+        ssl_context = None
 
     VmomiSupport.GetRequestContext()["vcSessionCookie"] = \
-        stubAdapter.cookie.split('"')[1]
-    hostname = stubAdapter.host.split(":")[0]
-    pbmStub = SoapStubAdapter(
+        stub_adapter.cookie.split('"')[1]
+    hostname = stub_adapter.host.split(":")[0]
+    pbm_stub = SoapStubAdapter(
         host=hostname,
         version="pbm.version.version1",
         path="/pbm/sdk",
         poolSize=0,
-        sslContext=sslContext)
-    pbmSi = pbm.ServiceInstance("ServiceInstance", pbmStub)
-    pbmContent = pbmSi.RetrieveContent()
-    return pbmContent
+        sslContext=ssl_context)
+    pbm_si = pbm.ServiceInstance("ServiceInstance", pbm_stub)
+    pbm_content = pbm_si.RetrieveContent()
+    return pbm_content
 
 
-def GetStorageProfiles(profileManager, ref):
+def get_storage_profiles(profile_manager, ref):
     """Get vmware storage policy profiles associated with specified entities
 
     :param profileManager: A VMware Storage Policy Service manager object
@@ -84,14 +84,14 @@ def GetStorageProfiles(profileManager, ref):
     """
 
     profiles = []
-    profileIds = profileManager.PbmQueryAssociatedProfile(ref)
-    if len(profileIds) > 0:
-        profiles = profileManager.PbmRetrieveContent(profileIds=profileIds)
+    profile_ids = profile_manager.PbmQueryAssociatedProfile(ref)
+    if len(profile_ids) > 0:
+        profiles = profile_manager.PbmRetrieveContent(profileIds=profile_ids)
         return profiles
     return profiles
 
 
-def ShowStorageProfileCapabilities(capabilities):
+def show_storage_profile_capabilities(capabilities):
     """Print vmware storage policy profile capabilities
 
     :param capabilities: A list of VMware Storage Policy profile
@@ -108,7 +108,7 @@ def ShowStorageProfileCapabilities(capabilities):
                                                        propertyInstance.value))
 
 
-def ShowStorageProfile(profiles):
+def show_storage_profile(profiles):
     """Print vmware storage policy profile
 
     :param profiles: A list of VMware Storage Policy profiles
@@ -117,9 +117,9 @@ def ShowStorageProfile(profiles):
     """
 
     for profile in profiles:
-        print("Name: {}{}{} ".format(bcolors.OKGREEN,
+        print("Name: {}{}{} ".format(BColors.OKGREEN,
                                      profile.name,
-                                     bcolors.ENDC))
+                                     BColors.ENDC))
         print("ID: {} ".format(profile.profileId.uniqueId))
         print("Description: {} ".format(profile.description))
         if hasattr(profile.constraints, 'subProfiles'):
@@ -127,14 +127,14 @@ def ShowStorageProfile(profiles):
             for subprofile in subprofiles:
                 print("RuleSetName: {} ".format(subprofile.name))
                 capabilities = subprofile.capability
-                ShowStorageProfileCapabilities(capabilities)
+                show_storage_profile_capabilities(capabilities)
 
 
-def SearchVMByName(serviceInstance, name, strict=False):
+def search_vm_by_name(si, name, strict=False):
     """Search virtual machine by name
 
-    :param serviceInstance: A ServiceInstance managed object
-    :type name: serviceInstance
+    :param si: A ServiceInstance managed object
+    :type name: si
     :param name: A virtual machine name
     :type name: str
     :param strict: A flag used to set strict search method
@@ -144,15 +144,13 @@ def SearchVMByName(serviceInstance, name, strict=False):
     :rtype: VirtualMachine
     """
 
-    content = serviceInstance.content
+    content = si.content
     root_folder = content.rootFolder
-    objView = content.viewManager.CreateContainerView(root_folder,
-                                                      [vim.VirtualMachine],
-                                                      True)
-    vmList = objView.view
-    objView.Destroy()
+    obj_view = content.viewManager.CreateContainerView(root_folder, [vim.VirtualMachine], True)
+    vm_list = obj_view.view
+    obj_view.Destroy()
     obj = []
-    for vm in vmList:
+    for vm in vm_list:
         if strict:
             if (vm.name == name):
                 obj.append(vm)
@@ -170,39 +168,35 @@ def main():
     parser = cli.Parser()
     parser.add_required_arguments(cli.Argument.VM_NAME)
     parser.add_custom_argument('--strict', required=False, action='store_true',
-                                        help='Search strict virtual machine name matches')
+                               help='Search strict virtual machine name matches')
     args = parser.get_args()
-    serviceInstance = service_instance.connect(args)
+    si = service_instance.connect(args)
 
-    pbm_content = PbmConnect(serviceInstance._stub,
-                             args.disable_ssl_verification)
+    pbm_content = pbm_connect(si._stub, args.disable_ssl_verification)
     pm = pbm_content.profileManager
 
-    vm_list = SearchVMByName(serviceInstance, args.vm_name, args.strict)
+    vm_list = search_vm_by_name(si, args.vm_name, args.strict)
     for vm in vm_list:
-        print("Virtual machine name: {}{}{}".format(bcolors.OKGREEN,
+        print("Virtual machine name: {}{}{}".format(BColors.OKGREEN,
                                                     vm.name,
-                                                    bcolors.ENDC))
-        pmObjectType = pbm.ServerObjectRef.ObjectType("virtualMachine")
-        pmRef = pbm.ServerObjectRef(key=vm._moId,
-                                    objectType=pmObjectType)
-        profiles = GetStorageProfiles(pm, pmRef)
+                                                    BColors.ENDC))
+        pm_object_type = pbm.ServerObjectRef.ObjectType("virtualMachine")
+        pm_ref = pbm.ServerObjectRef(key=vm._moId, objectType=pm_object_type)
+        profiles = get_storage_profiles(pm, pm_ref)
         if len(profiles) > 0:
             print("Home Storage Profile:")
-            ShowStorageProfile(profiles)
+            show_storage_profile(profiles)
 
         print("\r\nVirtual Disk Storage Profile:")
         for device in vm.config.hardware.device:
-            deviceType = type(device).__name__
-            if deviceType == "vim.vm.device.VirtualDisk":
-                pmObjectType = pbm.ServerObjectRef.ObjectType("virtualDiskId")
-                pmRef = pbm.ServerObjectRef(key="{}:{}".format(vm._moId,
-                                                               device.key),
-                                            objectType=pmObjectType)
-                profiles = GetStorageProfiles(pm, pmRef)
+            device_type = type(device).__name__
+            if device_type == "vim.vm.device.VirtualDisk":
+                pm_object_type = pbm.ServerObjectRef.ObjectType("virtualDiskId")
+                pm_ref = pbm.ServerObjectRef(key="{}:{}".format(vm._moId, device.key), objectType=pm_object_type)
+                profiles = get_storage_profiles(pm, pm_ref)
                 if len(profiles) > 0:
                     print(device.deviceInfo.label)
-                    ShowStorageProfile(profiles)
+                    show_storage_profile(profiles)
                     print("")
         print("")
 
