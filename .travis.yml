@@ -5,9 +5,9 @@ python:
     - "pypy"
 
 before_install:
-    - pip install pep8
-    - pep8 $TRAVIS_BUILD_DIR/samples/*.py
-    - pep8 $TRAVIS_BUILD_DIR/samples/tools/*.py
+    - pip install pycodestyle
+    - pycodestyle $TRAVIS_BUILD_DIR/samples/*.py
+    - pycodestyle $TRAVIS_BUILD_DIR/samples/tools/*.py
 
 install:
     - python setup.py bdist_egg

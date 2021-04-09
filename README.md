@@ -32,8 +32,8 @@ submitted sample reverts to the project itself
 
 # Code Style
 
-Please conform to pep8 standards. Check your code by running the pep8 tool.
-    https://pypi.python.org/pypi/pep8
+Please conform to pep8 standards. Check your code by running the pycodestyle tool.
+    https://pypi.python.org/pypi/pycodestyle
 
 # Contribution Process
 
