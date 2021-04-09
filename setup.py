@@ -12,32 +12,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from setuptools import find_packages, setup
 import os
+
+from setuptools import find_packages, setup
 
 
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 
-setup(name='pyvmomi-community-samples',
-      version='5.5.0_2014.dev',
-      description='VMware vSphere Python SDK Community Samples',
-      author='VMware, Inc.',
-      author_email='hartsocks@vmware.com',
-      url='http://vmware.github.io/pyvmomi-community-samples/',
-      install_requires=['pyvmomi'],
-      packages=find_packages(),
-      test_suite='samples.tests',
-      license='Apache',
-      long_description=read('README.md'),
-      classifiers=[
-          "License :: OSI Approved :: Apache Software License",
-          "Development Status :: 4 - Beta",
-          "Environment :: No Input/Output (Daemon)",
-          "Intended Audience :: Information Technology",
-          "Intended Audience :: System Administrators",
-          "Topic :: Software Development :: Libraries :: Python Modules",
-          "Topic :: System :: Distributed Computing"
-      ],
-      zip_safe=True)
+setup(
+    name='pyvmomi-community-samples',
+    version='5.5.0_2014.dev',
+    description='VMware vSphere Python SDK Community Samples',
+    author='VMware, Inc.',
+    author_email='hartsocks@vmware.com',
+    url='http://vmware.github.io/pyvmomi-community-samples/',
+    install_requires=['pyvmomi'],
+    packages=find_packages(),
+    test_suite='samples.tests',
+    license='Apache',
+    long_description=read('README.md'),
+    classifiers=[
+        "License :: OSI Approved :: Apache Software License",
+        "Development Status :: 4 - Beta",
+        "Environment :: No Input/Output (Daemon)",
+        "Intended Audience :: Information Technology",
+        "Intended Audience :: System Administrators",
+        "Topic :: Software Development :: Libraries :: Python Modules",
+        "Topic :: System :: Distributed Computing"
+    ],
+    zip_safe=True
+)
