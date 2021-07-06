@@ -45,27 +45,27 @@ def main():
     parser = cli.Parser()
     parser.add_custom_argument(
         "--startTime",
-        help="Events start time, ISO format or now",
+        help='(default: now) Events start time, ISO format or "now"',
         default="now",
     )
     parser.add_custom_argument(
         "--endTime",
-        help="Events end time, ISO format or now.",
+        help='Events end time, ISO format or "now"',
     )
     parser.add_custom_argument(
         "--pageSize",
-        help="Events page size",
+        help="(default: 1000) Events page size",
         default=1000,
         type=int,
     )
     parser.add_custom_argument(
         "--interval",
-        help="Seconds between update. If set, it will continue loop infintely",
+        help="Seconds between update. If set, it will continue until killed",
         type=int,
     )
     parser.add_custom_argument(
         "--eventType",
-        help="filter on certain events,refer: \
+        help="Filter on certain events,refer: \
             https://pubs.vmware.com/vsphere-6-5/topic/com.vmware.wssdk.smssdk.doc/vim.event.EventFilterSpec.html",
         nargs="+",
         default=[],
