@@ -60,7 +60,7 @@ def main():
     )
     parser.add_custom_argument(
         "--interval",
-        help="Seconds between update. If set, it will continue until killed",
+        help="Seconds between update. If set, it will continue loop infinitely",
         type=int,
     )
     parser.add_custom_argument(
