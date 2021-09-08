@@ -14,6 +14,7 @@ To do that the VM needs an additional scsi controller
 and I have not yet worked through that
 """
 from pyVmomi import vim
+from pyVim.task import WaitForTask
 from tools import cli, pchelper, service_instance
 
 
@@ -56,7 +57,7 @@ def add_disk(vm, disk_size, disk_type):
     disk_spec.device.controllerKey = controller.key
     dev_changes.append(disk_spec)
     spec.deviceChange = dev_changes
-    vm.ReconfigVM_Task(spec=spec)
+    WaitForTask(vm.ReconfigVM_Task(spec=spec))
     print("%sGB disk added to %s" % (disk_size, vm.config.name))
     return 0
 
