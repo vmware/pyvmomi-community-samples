@@ -200,7 +200,7 @@ def find_match(uuid):
 def main():
     """
     function runs all of the other functions. Some parts of this function
-    are taken from the getallvms.py script from the pyvmomi gihub repo
+    are taken from the getallvms.py script from the pyvmomi github repo
     """
     parser = cli.Parser()
     parser.add_optional_arguments(cli.Argument.VM_NAME, cli.Argument.UUID, cli.Argument.PORT_GROUP)
