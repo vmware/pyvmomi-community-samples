@@ -4,7 +4,7 @@ This module implements simple helper functions for managing service instance obj
 __author__ = "VMware, Inc."
 
 import atexit
-from pyVim.connect import SmartConnect, Disconnect
+from pyVim.connect import SmartConnect, SmartConnectNoSSL, Disconnect
 
 
 def connect(args):
@@ -19,11 +19,10 @@ def connect(args):
     # form a connection...
     try:
         if args.disable_ssl_verification:
-            service_instance = SmartConnect(host=args.host,
+            service_instance = SmartConnectNoSSL(host=args.host,
                                             user=args.user,
                                             pwd=args.password,
-                                            port=args.port,
-                                            disableSslCertValidation=True)
+                                            port=args.port)
         else:
             service_instance = SmartConnect(host=args.host,
                                             user=args.user,
