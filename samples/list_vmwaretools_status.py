@@ -33,7 +33,7 @@ def get_vms(content):
 def print_vmwareware_tools_status(vm):
     print(_columns_four.format(vm.name,
                                vm.guest.toolsRunningStatus,
-                               vm.guest.toolsVersion,
+                               str(vm.guest.toolsVersion),
                                vm.guest.toolsVersionStatus2))
 
 
