@@ -33,7 +33,7 @@ def get_ovf_descriptor(ovf_path):
 
 def get_obj_in_list(obj_name, obj_list):
     """
-    Gets an object out of a list (obj_list) whos name matches obj_name.
+    Gets an object out of a list (obj_list) whose name matches obj_name.
     """
     for obj in obj_list:
         if obj.name == obj_name:
