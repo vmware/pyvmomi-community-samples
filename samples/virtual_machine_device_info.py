@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # VMware vSphere Python SDK
-# Copyright (c) 2008-2014 VMware, Inc. All Rights Reserved.
+# Copyright (c) 2008-2021 VMware, Inc. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,13 +13,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from __future__ import print_function
-
-import atexit
-import argparse
-import getpass
-
-from pyVim import connect
+import sys
+from tools import cli, service_instance, pchelper
+from pyVmomi import vim
 
 # Demonstrates:
 # =============
@@ -153,62 +149,12 @@ from pyVim import connect
 # =====================
 
 
-def get_args():
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument('-s', '--host',
-                        required=True,
-                        action='store',
-                        help='Remote host to connect to')
-
-    parser.add_argument('-o', '--port',
-                        required=False,
-                        action='store',
-                        help="port to use, default 443", default=443)
-
-    parser.add_argument('-u', '--user',
-                        required=True,
-                        action='store',
-                        help='User name to use when connecting to host')
-
-    parser.add_argument('-p', '--password',
-                        required=False,
-                        action='store',
-                        help='Password to use when connecting to host')
-
-    parser.add_argument('-d', '--uuid',
-                        required=False,
-                        action='store',
-                        help='Instance UUID (not BIOS id) of a VM to find.')
-
-    parser.add_argument('-i', '--ip',
-                        required=False,
-                        action='store',
-                        help='IP address of the VM to search for')
-
-    args = parser.parse_args()
-
-    password = None
-    if args.password is None:
-        password = getpass.getpass(
-            prompt='Enter password for host %s and user %s: ' %
-                   (args.host, args.user))
-
-    args = parser.parse_args()
-
-    if password:
-        args.password = password
-
-    return args
-
-args = get_args()
+parser = cli.Parser()
+parser.add_optional_arguments(cli.Argument.UUID, cli.Argument.VM_IP, cli.Argument.VM_NAME)
+args = parser.get_args()
 
 # form a connection...
-si = connect.SmartConnect(host=args.host, user=args.user, pwd=args.password,
-                          port=args.port)
-
-# Note: from daemons use a shutdown hook to do this, not the atexit
-atexit.register(connect.Disconnect, si)
+si = service_instance.connect(args)
 
 # http://pubs.vmware.com/vsphere-55/topic/com.vmware.wssdk.apiref.doc/vim.SearchIndex.html
 search_index = si.content.searchIndex
@@ -219,13 +165,16 @@ search_index = si.content.searchIndex
 
 vm = None
 if args.uuid:
-    vm = search_index.FindByUuid(None, args.uuid, True, True)
-elif args.ip:
-    vm = search_index.FindByIp(None, args.ip, True)
+    vm = search_index.FindByUuid(None, args.uuid, True)
+elif args.vm_ip:
+    vm = search_index.FindByIp(None, args.vm_ip, True)
+elif args.vm_name:
+    content = si.RetrieveContent()
+    vm = pchelper.get_obj(content, [vim.VirtualMachine], args.vm_name)
 
 if not vm:
     print(u"Could not find a virtual machine to examine.")
-    exit(1)
+    sys.exit(1)
 
 print(u"Found Virtual Machine")
 print(u"=====================")
@@ -264,27 +213,27 @@ for device in vm.config.hardware.device:
     # backing type has a file name we *know* it's sitting on a datastore
     # and will have to have all of the following attributes.
     if hasattr(device.backing, 'fileName'):
-            datastore = device.backing.datastore
-            if datastore:
-                print(u"    datastore")
-                print(u"        name: {0}".format(datastore.name))
-                # there may be multiple hosts, the host property
-                # is a host mount info type not a host system type
-                # but we can navigate to the host system from there
-                for host_mount in datastore.host:
-                    host_system = host_mount.key
-                    print(u"        host: {0}".format(host_system.name))
-                print(u"        summary")
-                summary = {'capacity': datastore.summary.capacity,
-                           'freeSpace': datastore.summary.freeSpace,
-                           'file system': datastore.summary.type,
-                           'url': datastore.summary.url}
-                for key, val in summary.items():
-                    print(u"            {0}: {1}".format(key, val))
-            print(u"    fileName: {0}".format(device.backing.fileName))
-            print(u"    device ID: {0}".format(device.backing.backingObjectId))
+        datastore = device.backing.datastore
+        if datastore:
+            print(u"    datastore")
+            print(u"        name: {0}".format(datastore.name))
+            # there may be multiple hosts, the host property
+            # is a host mount info type not a host system type
+            # but we can navigate to the host system from there
+            for host_mount in datastore.host:
+                host_system = host_mount.key
+                print(u"        host: {0}".format(host_system.name))
+            print(u"        summary")
+            summary = {'capacity': datastore.summary.capacity,
+                       'freeSpace': datastore.summary.freeSpace,
+                       'file system': datastore.summary.type,
+                       'url': datastore.summary.url}
+            for key, val in summary.items():
+                print(u"            {0}: {1}".format(key, val))
+        print(u"    fileName: {0}".format(device.backing.fileName))
+        print(u"    device ID: {0}".format(device.backing.backingObjectId))
 
     print(u"  ------------------")
 
 print(u"=====================")
-exit()
+sys.exit()

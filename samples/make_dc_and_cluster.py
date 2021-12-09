@@ -7,33 +7,20 @@ Blog: http://www.errr-online.com/
 This code has been released under the terms of the Apache 2.0 license
 http://opensource.org/licenses/Apache-2.0
 """
-import atexit
 
-from pyVim.connect import SmartConnect, Disconnect
-
-from tools import cluster
-from tools import datacenter
-from tools import cli
+from tools import cluster, service_instance, datacenter, cli, pchelper
+from pyVmomi import vim
 
 
-PARSER = cli.build_arg_parser()
-PARSER.add_argument("-n", "--dcname",
-                    required=True,
-                    action="store",
-                    help="Name of the Datacenter to create.")
+parser = cli.Parser()
+parser.add_required_arguments(cli.Argument.DATACENTER_NAME, cli.Argument.CLUSTER_NAME)
+args = parser.get_args()
+si = service_instance.connect(args)
 
-PARSER.add_argument("-c", "--cname",
-                    required=True,
-                    action="store",
-                    help="Name to give the cluster to be created.")
-
-MY_ARGS = PARSER.parse_args()
-cli.prompt_for_password(MY_ARGS)
-SI = SmartConnect(host=MY_ARGS.host,
-                  user=MY_ARGS.user,
-                  pwd=MY_ARGS.password,
-                  port=MY_ARGS.port)
-
-atexit.register(Disconnect, SI)
-dc = datacenter.create_datacenter(dcname=MY_ARGS.dcname, service_instance=SI)
-cluster.create_cluster(datacenter=dc, name=MY_ARGS.cname)
+content = si.RetrieveContent()
+if pchelper.search_for_obj(content, [vim.Datacenter], args.datacenter_name):
+    print("Datacenter '%s' already exists" % args.datacenter_name)
+else:
+    dc = datacenter.create_datacenter(dc_name=args.datacenter_name, service_instance=si)
+    cluster.create_cluster(datacenter=dc, name=args.cluster_name)
+    print("created DC and cluster")

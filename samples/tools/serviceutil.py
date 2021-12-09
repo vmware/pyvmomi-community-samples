@@ -1,5 +1,5 @@
 # VMware vSphere Python SDK
-# Copyright (c) 2008-2014 VMware, Inc. All Rights Reserved.
+# Copyright (c) 2008-2021 VMware, Inc. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -32,104 +32,97 @@ def build_full_traversal():
     and datastores.
     """
 
-    TraversalSpec = vmodl.query.PropertyCollector.TraversalSpec
-    SelectionSpec = vmodl.query.PropertyCollector.SelectionSpec
+    traversal_spec = vmodl.query.PropertyCollector.TraversalSpec
+    selection_spec = vmodl.query.PropertyCollector.SelectionSpec
 
     # Recurse through all resourcepools
-    rpToRp = TraversalSpec(name='rpToRp', type=vim.ResourcePool,
-                           path="resourcePool", skip=False)
+    rp_to_rp = traversal_spec(name='rpToRp', type=vim.ResourcePool, path="resourcePool", skip=False)
 
-    rpToRp.selectSet.extend(
+    rp_to_rp.selectSet.extend(
         (
-            SelectionSpec(name="rpToRp"),
-            SelectionSpec(name="rpToVm"),
+            selection_spec(name="rpToRp"),
+            selection_spec(name="rpToVm"),
         )
     )
 
-    rpToVm = TraversalSpec(name='rpToVm', type=vim.ResourcePool, path="vm",
-                           skip=False)
+    rp_to_vm = traversal_spec(name='rpToVm', type=vim.ResourcePool, path="vm", skip=False)
 
     # Traversal through resourcepool branch
-    crToRp = TraversalSpec(name='crToRp', type=vim.ComputeResource,
-                           path='resourcePool', skip=False)
-    crToRp.selectSet.extend(
+    cr_to_rp = traversal_spec(
+        name='crToRp', type=vim.ComputeResource, path='resourcePool', skip=False)
+    cr_to_rp.selectSet.extend(
         (
-            SelectionSpec(name='rpToRp'),
-            SelectionSpec(name='rpToVm'),
+            selection_spec(name='rpToRp'),
+            selection_spec(name='rpToVm'),
         )
     )
 
     # Traversal through host branch
-    crToH = TraversalSpec(name='crToH', type=vim.ComputeResource, path='host',
-                          skip=False)
+    cr_to_h = traversal_spec(name='crToH', type=vim.ComputeResource, path='host', skip=False)
 
     # Traversal through hostFolder branch
-    dcToHf = TraversalSpec(name='dcToHf', type=vim.Datacenter,
-                           path='hostFolder', skip=False)
-    dcToHf.selectSet.extend(
+    dc_to_hf = traversal_spec(name='dcToHf', type=vim.Datacenter, path='hostFolder', skip=False)
+    dc_to_hf.selectSet.extend(
         (
-            SelectionSpec(name='visitFolders'),
+            selection_spec(name='visitFolders'),
         )
     )
 
     # Traversal through vmFolder branch
-    dcToVmf = TraversalSpec(name='dcToVmf', type=vim.Datacenter,
-                            path='vmFolder', skip=False)
-    dcToVmf.selectSet.extend(
+    dc_to_vmf = traversal_spec(name='dcToVmf', type=vim.Datacenter, path='vmFolder', skip=False)
+    dc_to_vmf.selectSet.extend(
         (
-            SelectionSpec(name='visitFolders'),
+            selection_spec(name='visitFolders'),
         )
     )
 
     # Traversal through network folder branch
-    dcToNet = TraversalSpec(name='dcToNet', type=vim.Datacenter,
-                            path='networkFolder', skip=False)
-    dcToNet.selectSet.extend(
+    dc_to_net = traversal_spec(
+        name='dcToNet', type=vim.Datacenter, path='networkFolder', skip=False)
+    dc_to_net.selectSet.extend(
         (
-            SelectionSpec(name='visitFolders'),
+            selection_spec(name='visitFolders'),
         )
     )
 
     # Traversal through datastore branch
-    dcToDs = TraversalSpec(name='dcToDs', type=vim.Datacenter,
-                           path='datastore', skip=False)
-    dcToDs.selectSet.extend(
+    dc_to_ds = traversal_spec(name='dcToDs', type=vim.Datacenter, path='datastore', skip=False)
+    dc_to_ds.selectSet.extend(
         (
-            SelectionSpec(name='visitFolders'),
+            selection_spec(name='visitFolders'),
         )
     )
 
     # Recurse through all hosts
-    hToVm = TraversalSpec(name='hToVm', type=vim.HostSystem, path='vm',
-                          skip=False)
-    hToVm.selectSet.extend(
+    h_to_vm = traversal_spec(name='hToVm', type=vim.HostSystem, path='vm', skip=False)
+    h_to_vm.selectSet.extend(
         (
-            SelectionSpec(name='visitFolders'),
+            selection_spec(name='visitFolders'),
         )
     )
 
     # Recurse through the folders
-    visitFolders = TraversalSpec(name='visitFolders', type=vim.Folder,
-                                 path='childEntity', skip=False)
-    visitFolders.selectSet.extend(
+    visit_folders = traversal_spec(
+        name='visitFolders', type=vim.Folder, path='childEntity', skip=False)
+    visit_folders.selectSet.extend(
         (
-            SelectionSpec(name='visitFolders'),
-            SelectionSpec(name='dcToHf'),
-            SelectionSpec(name='dcToVmf'),
-            SelectionSpec(name='dcToNet'),
-            SelectionSpec(name='crToH'),
-            SelectionSpec(name='crToRp'),
-            SelectionSpec(name='dcToDs'),
-            SelectionSpec(name='hToVm'),
-            SelectionSpec(name='rpToVm'),
+            selection_spec(name='visitFolders'),
+            selection_spec(name='dcToHf'),
+            selection_spec(name='dcToVmf'),
+            selection_spec(name='dcToNet'),
+            selection_spec(name='crToH'),
+            selection_spec(name='crToRp'),
+            selection_spec(name='dcToDs'),
+            selection_spec(name='hToVm'),
+            selection_spec(name='rpToVm'),
         )
     )
 
-    fullTraversal = SelectionSpec.Array(
-        (visitFolders, dcToHf, dcToVmf, dcToNet, crToH, crToRp, dcToDs, rpToRp,
-         hToVm, rpToVm,))
+    full_traversal = selection_spec.Array(
+        (visit_folders, dc_to_hf, dc_to_vmf, dc_to_net, cr_to_h, cr_to_rp, dc_to_ds, rp_to_rp,
+         h_to_vm, rp_to_vm,))
 
-    return fullTraversal
+    return full_traversal
 
 
 # vim: set ts=4 sw=4 expandtab filetype=python:

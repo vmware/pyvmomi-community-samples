@@ -15,27 +15,12 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-from __future__ import print_function
-import atexit
-from pyVim.connect import SmartConnectNoSSL, Disconnect
-from pyVmomi import vim
-from tools import cli
+from tools import cli, service_instance
 
 MAX_DEPTH = 10
 
 
-def setup_args():
-
-    """
-    Get standard connection arguments
-    """
-    parser = cli.build_arg_parser()
-    my_args = parser.parse_args()
-
-    return cli.prompt_for_password(my_args)
-
-
-def printvminfo(vm, depth=1):
+def print_vminfo(vm, depth=1):
     """
     Print information for a particular virtual machine or recurse into a folder
     with depth protection
@@ -48,7 +33,7 @@ def printvminfo(vm, depth=1):
             return
         vmlist = vm.childEntity
         for child in vmlist:
-            printvminfo(child, depth+1)
+            print_vminfo(child, depth+1)
         return
 
     summary = vm.summary
@@ -60,17 +45,9 @@ def main():
     Simple command-line program for listing the virtual machines on a host.
     """
 
-    args = setup_args()
-    si = None
-    try:
-        si = SmartConnectNoSSL(host=args.host,
-                               user=args.user,
-                               pwd=args.password,
-                               port=int(args.port))
-        atexit.register(Disconnect, si)
-    except vim.fault.InvalidLogin:
-        raise SystemExit("Unable to connect to host "
-                         "with supplied credentials.")
+    parser = cli.Parser()
+    args = parser.get_args()
+    si = service_instance.connect(args)
 
     content = si.RetrieveContent()
     for child in content.rootFolder.childEntity:
@@ -79,7 +56,8 @@ def main():
             vmfolder = datacenter.vmFolder
             vmlist = vmfolder.childEntity
             for vm in vmlist:
-                printvminfo(vm)
+                print_vminfo(vm)
+
 
 # Start program
 if __name__ == "__main__":

@@ -11,16 +11,13 @@
 # http://opensource.org/licenses/Apache-2.0
 #
 
-import atexit
 import requests
-from tools import cli
 from pyVmomi import vim
-from pyVim.connect import SmartConnect, Disconnect
-from tools import tasks
+from tools import cli, tasks, service_instance, pchelper
 
 # disable  urllib3 warnings
-if hasattr(requests.packages.urllib3, 'disable_warnings'):
-    requests.packages.urllib3.disable_warnings()
+requests.packages.urllib3.disable_warnings(
+    requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
 
 def update_virtual_cd_backend_by_obj(si, vm_obj, cdrom_number,
@@ -65,8 +62,7 @@ def update_virtual_cd_backend_by_obj(si, vm_obj, cdrom_number,
     # Allowing guest control
     virtual_cd_spec.device.connectable.allowGuestControl = True
 
-    dev_changes = []
-    dev_changes.append(virtual_cd_spec)
+    dev_changes = [virtual_cd_spec]
     spec = vim.vm.ConfigSpec()
     spec.deviceChange = dev_changes
     task = vm_obj.ReconfigVM_Task(spec=spec)
@@ -74,54 +70,28 @@ def update_virtual_cd_backend_by_obj(si, vm_obj, cdrom_number,
     return True
 
 
-def get_args():
-    parser = cli.build_arg_parser()
-    parser.add_argument('-n', '--vmname', required=True,
-                        help="Name of the VirtualMachine you want to change.")
-    parser.add_argument('-m', '--unitnumber', required=True,
-                        help='CD/DVD unit number.', type=int)
-    parser.add_argument('-i', '--iso', required=False,
-                        help='Full path to iso. i.e. "[ds1] folder/Ubuntu.iso"'
-                             ' If not provided, backend will'
-                             ' set to RemotePassThrough')
-    my_args = parser.parse_args()
-    return cli.prompt_for_password(my_args)
-
-
-def get_obj(content, vim_type, name):
-    obj = None
-    container = content.viewManager.CreateContainerView(
-        content.rootFolder, vim_type, True)
-    for c in container.view:
-        if c.name == name:
-            obj = c
-            break
-    return obj
-
-
 def main():
-    args = get_args()
-
-    # connect to vc
-    si = SmartConnect(
-        host=args.host,
-        user=args.user,
-        pwd=args.password,
-        port=args.port)
-    # disconnect vc
-    atexit.register(Disconnect, si)
+    parser = cli.Parser()
+    parser.add_required_arguments(cli.Argument.VM_NAME)
+    # Full path to iso. i.e. "[ds1] folder/Ubuntu.iso"
+    # If not provided, backend will set to RemotePassThrough
+    parser.add_optional_arguments(cli.Argument.ISO)
+    parser.add_custom_argument('--unitnumber', required=True, help='CD/DVD unit number.', type=int)
+    args = parser.get_args()
+    si = service_instance.connect(args)
 
     content = si.RetrieveContent()
-    print 'Searching for VM {}'.format(args.vmname)
-    vm_obj = get_obj(content, [vim.VirtualMachine], args.vmname)
+    print('Searching for VM {}'.format(args.vm_name))
+    vm_obj = pchelper.get_obj(content, [vim.VirtualMachine], args.vm_name)
 
     if vm_obj:
         update_virtual_cd_backend_by_obj(si, vm_obj, args.unitnumber, args.iso)
         device_change = args.iso if args.iso else 'Client Device'
-        print 'VM CD/DVD {} successfully' \
-              ' state changed to {}'.format(args.unitnumber, device_change)
+        print('VM CD/DVD {} successfully state changed to {}'.format(args.unitnumber,
+                                                                     device_change))
     else:
-        print "VM not found"
+        print("VM not found")
+
 
 # start
 if __name__ == "__main__":

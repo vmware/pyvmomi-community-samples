@@ -21,74 +21,54 @@ a traverse spec go through all the datacenters to gather VMs that
 may also be in sub-folders.
 
 """
-import sys
 from pyVmomi import vim, vmodl
-from pyVim.connect import SmartConnectNoSSL, Disconnect
-from pyVim.task import WaitForTask
-from tools import cli
+from tools import cli, service_instance, pchelper
 
 __author__ = 'prziborowski'
 
 
-def setup_args():
-    parser = cli.build_arg_parser()
-    parser.add_argument('-n', '--property', default='runtime.powerState',
-                        help='Name of the property to filter by')
-    parser.add_argument('-v', '--value', default='poweredOn',
-                        help='Value to filter with')
-    return cli.prompt_for_password(parser.parse_args())
-
-
-def get_obj(si, root, vim_type):
-    container = si.content.viewManager.CreateContainerView(root, vim_type,
-                                                           True)
-    view = container.view
-    container.Destroy()
-    return view
-
-
-def create_filter_spec(pc, vms, prop):
-    objSpecs = []
+def create_filter_spec(vms, prop):
+    obj_specs = []
     for vm in vms:
-        objSpec = vmodl.query.PropertyCollector.ObjectSpec(obj=vm)
-        objSpecs.append(objSpec)
-    filterSpec = vmodl.query.PropertyCollector.FilterSpec()
-    filterSpec.objectSet = objSpecs
-    propSet = vmodl.query.PropertyCollector.PropertySpec(all=False)
-    propSet.type = vim.VirtualMachine
-    propSet.pathSet = [prop]
-    filterSpec.propSet = [propSet]
-    return filterSpec
+        obj_spec = vmodl.query.PropertyCollector.ObjectSpec(obj=vm)
+        obj_specs.append(obj_spec)
+    filter_spec = vmodl.query.PropertyCollector.FilterSpec()
+    filter_spec.objectSet = obj_specs
+    prop_set = vmodl.query.PropertyCollector.PropertySpec(all=False)
+    prop_set.type = vim.VirtualMachine
+    prop_set.pathSet = [prop]
+    filter_spec.propSet = [prop_set]
+    return filter_spec
 
 
 def filter_results(result, value):
     vms = []
-    for o in result.objects:
-        if o.propSet[0].val == value:
-            vms.append(o.obj)
+    for obj in result.objects:
+        if obj.propSet[0].val == value:
+            vms.append(obj.obj)
     return vms
 
 
 def main():
-    args = setup_args()
-    si = SmartConnectNoSSL(host=args.host,
-                           user=args.user,
-                           pwd=args.password,
-                           port=args.port)
+    parser = cli.Parser()
+    parser.add_custom_argument('--property', default='runtime.powerState',
+                               help='Name of the property to filter by')
+    parser.add_custom_argument('--value', default='poweredOn', help='Value to filter with')
+    args = parser.get_args()
+    si = service_instance.connect(args)
     # Start with all the VMs from container, which is easier to write than
     # PropertyCollector to retrieve them.
-    vms = get_obj(si, si.content.rootFolder, [vim.VirtualMachine])
+    content = si.RetrieveContent()
+    vms = pchelper.get_all_obj(content, [vim.VirtualMachine])
 
-    pc = si.content.propertyCollector
-    filter_spec = create_filter_spec(pc, vms, args.property)
+    prop_collector = content.propertyCollector
+    filter_spec = create_filter_spec(vms, args.property)
     options = vmodl.query.PropertyCollector.RetrieveOptions()
-    result = pc.RetrievePropertiesEx([filter_spec], options)
+    result = prop_collector.RetrievePropertiesEx([filter_spec], options)
     vms = filter_results(result, args.value)
     print("VMs with %s = %s" % (args.property, args.value))
     for vm in vms:
         print(vm.name)
-
-    Disconnect(si)
 
 
 if __name__ == '__main__':

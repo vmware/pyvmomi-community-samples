@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # VMware vSphere Python SDK
-# Copyright (c) 2008-2014 VMware, Inc. All Rights Reserved.
+# Copyright (c) 2008-2021 VMware, Inc. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,52 +19,10 @@ Python program to authenticate and print
 a friendly encouragement to joining the community!
 """
 
-import atexit
-import argparse
-import getpass
-
-import vcr
-
-from pyVim import connect
-from pyVmomi import vmodl
-
-
-def get_args():
-    """Get command line args from the user.
-    """
-    parser = argparse.ArgumentParser(
-        description='Standard Arguments for talking to vCenter')
-
-    # because -h is reserved for 'help' we use -s for service
-    parser.add_argument('-s', '--host',
-                        required=True,
-                        action='store',
-                        help='vSphere service to connect to')
-
-    # because we want -p for password, we use -o for port
-    parser.add_argument('-o', '--port',
-                        type=int,
-                        default=443,
-                        action='store',
-                        help='Port to connect on')
-
-    parser.add_argument('-u', '--user',
-                        required=True,
-                        action='store',
-                        help='User name to use when connecting to host')
-
-    parser.add_argument('-p', '--password',
-                        required=False,
-                        action='store',
-                        help='Password to use when connecting to host')
-
-    args = parser.parse_args()
-
-    if not args.password:
-        args.password = getpass.getpass(
-            prompt='Enter password for host {0} and user {1}: '.format(
-                args.host, args.user))
-    return args
+from vcr import config
+from vcr.stubs import VCRHTTPSConnection
+from tools import cli, service_instance
+from pyVmomi import vmodl, SoapAdapter
 
 
 def main():
@@ -72,39 +30,34 @@ def main():
     Simple command-line program for listing the virtual machines on a system.
     """
 
-    args = get_args()
+    parser = cli.Parser()
+    args = parser.get_args()
 
     try:
-        my_vcr = vcr.VCR()
+        my_vcr = config.VCR(custom_patches=((SoapAdapter, "_HTTPSConnection", VCRHTTPSConnection),))
         # use the vcr instance to setup an instance of service_instance
-        with my_vcr.use_cassette('hello_world_vcenter.yaml',
-                                 record_mode='all'):
-            service_instance = connect.SmartConnect(host=args.host,
-                                                    user=args.user,
-                                                    pwd=args.password,
-                                                    port=int(args.port))
-            # the recording will show up in the working directory
+        with my_vcr.use_cassette('hello_world_vcenter.yaml', record_mode='all'):
+            si = service_instance.connect(args)
 
-        atexit.register(connect.Disconnect, service_instance)
-
-        print "\nHello World!\n"
-        print "If you got here, you authenticted into vCenter."
-        print "The server is {0}!".format(args.host)
-        # NOTE (hartsock): only a successfully authenticated session has a
-        # session key aka session id.
-        session_id = service_instance.content.sessionManager.currentSession.key
-        print "current session id: {0}".format(session_id)
-        print "Well done!"
-        print "\n"
-        print "Download, learn and contribute back:"
-        print "https://github.com/vmware/pyvmomi-community-samples"
-        print "\n\n"
+            print("\nHello World!\n")
+            print("If you got here, you authenticted into vCenter.")
+            print("The server is {0}!".format(args.host))
+            # NOTE (hartsock): only a successfully authenticated session has a
+            # session key aka session id.
+            session_id = si.content.sessionManager.currentSession.key
+            print("current session id: {0}".format(session_id))
+            print("Well done!")
+            print("\n")
+            print("Download, learn and contribute back:")
+            print("https://github.com/vmware/pyvmomi-community-samples")
+            print("\n\n")
 
     except vmodl.MethodFault as error:
-        print "Caught vmodl fault : " + error.msg
+        print("Caught vmodl fault : " + error.msg)
         return -1
 
     return 0
+
 
 # Start program
 if __name__ == "__main__":

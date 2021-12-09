@@ -7,77 +7,40 @@ Note: Example code For testing purposes only
 This code has been released under the terms of the Apache-2.0 license
 http://opensource.org/licenses/Apache-2.0
 """
-from __future__ import print_function
-from pyVim.connect import SmartConnect, Disconnect
-from pyVmomi import vim
-import atexit
 import sys
-import argparse
+from pyVmomi import vim
+from tools import cli, service_instance
 
 
-def get_args():
-    parser = argparse.ArgumentParser(
-        description='Arguments for talking to vCenter')
-
-    parser.add_argument('-s', '--host',
-                        required=True,
-                        action='store',
-                        help='vSpehre service to connect to')
-
-    parser.add_argument('-o', '--port',
-                        type=int,
-                        default=443,
-                        action='store',
-                        help='Port to connect on')
-
-    parser.add_argument('-u', '--user',
-                        required=True,
-                        action='store',
-                        help='User name to use')
-
-    parser.add_argument('-p', '--password',
-                        required=True,
-                        action='store',
-                        help='Password to use')
-
-    parser.add_argument('-v', '--vswitch',
-                        required=True,
-                        action='store',
-                        help='vSwitch to delete')
-
-    args = parser.parse_args()
-    return args
-
-
-def GetVMHosts(content):
+def get_vm_hosts(content):
     host_view = content.viewManager.CreateContainerView(content.rootFolder,
                                                         [vim.HostSystem],
                                                         True)
-    obj = [host for host in host_view.view]
+    hosts = list(host_view.view)
     host_view.Destroy()
-    return obj
+    return hosts
 
 
-def DelHostsSwitch(hosts, vswitchName):
+def del_hosts_switch(hosts, vswitch_name):
     for host in hosts:
-        DelHostSwitch(host, vswitchName)
+        del_host_switch(host, vswitch_name)
+    return True
 
 
-def DelHostSwitch(host, vswitchName):
-    host.configManager.networkSystem.RemoveVirtualSwitch(vswitchName)
+def del_host_switch(host, vswitch_name):
+    host.configManager.networkSystem.RemoveVirtualSwitch(vswitch_name)
 
 
 def main():
-    args = get_args()
-    serviceInstance = SmartConnect(host=args.host,
-                                   user=args.user,
-                                   pwd=args.password,
-                                   port=443)
-    atexit.register(Disconnect, serviceInstance)
-    content = serviceInstance.RetrieveContent()
+    parser = cli.Parser()
+    parser.add_required_arguments(cli.Argument.VSWITCH_NAME)
+    args = parser.get_args()
+    si = service_instance.connect(args)
+    content = si.RetrieveContent()
 
-    hosts = GetVMHosts(content)
-    DelHostsSwitch(hosts, args.vswitch)
+    hosts = get_vm_hosts(content)
+    if del_hosts_switch(hosts, args.vswitch_name):
+        print("vSwitch Deleted")
 
 
 # Main section

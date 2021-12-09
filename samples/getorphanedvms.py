@@ -15,15 +15,13 @@ Example:
       $./getorphanedvms.py -s 10.90.2.10 -u vcenter.svc -p password
 """
 
-from pyVim.connect import SmartConnect
-from pyVim.connect import Disconnect
-from pyVmomi import vmodl
-from pyVmomi import vim
 import argparse
-import atexit
-import urllib2
-import urlparse
+import urllib.request
+import urllib.parse
 import base64
+from pyVim.connect import Disconnect
+from pyVmomi import vmodl, vim
+from tools import cli, service_instance
 
 
 VMX_PATH = []
@@ -39,18 +37,18 @@ def updatevmx_path():
     VMX_PATH = []
 
 
-def url_fix(s, charset='utf-8'):
+def url_fix(url_str, charset='utf-8'):
     """
     function to fix any URLs that have spaces in them
     urllib for some reason doesn't like spaces
     function found on internet
     """
-    if isinstance(s, unicode):
-        s = s.encode(charset, 'ignore')
-    scheme, netloc, path, qs, anchor = urlparse.urlsplit(s)
-    path = urllib2.quote(path, '/%')
-    qs = urllib2.quote(qs, ':&=')
-    return urlparse.urlunsplit((scheme, netloc, path, qs, anchor))
+    if isinstance(url_str, unicode):
+        url_str = url_str.encode(charset, 'ignore')
+    scheme, netloc, path, qs, anchor = urllib.parse.urlsplit(url_str)
+    path = urllib.parse.quote(path, '/%')
+    qs = urllib.parse.quote(qs, ':&=')
+    return urllib.parse.urlunsplit((scheme, netloc, path, qs, anchor))
 
 
 def get_args():
@@ -78,32 +76,32 @@ def get_args():
     return args
 
 
-def find_vmx(dsbrowser, dsname, datacenter, fulldsname):
+def find_vmx(ds_browser, ds_name, datacenter, full_ds_name):
     """
     function to search for VMX files on any datastore that is passed to it
     """
     args = get_args()
     search = vim.HostDatastoreBrowserSearchSpec()
     search.matchPattern = "*.vmx"
-    search_ds = dsbrowser.SearchDatastoreSubFolders_Task(dsname, search)
+    search_ds = ds_browser.SearchDatastoreSubFolders_Task(ds_name, search)
     while search_ds.info.state != "success":
         pass
     # results = search_ds.info.result
-    # print results
+    # print(results)
 
-    for rs in search_ds.info.result:
-        dsfolder = rs.folderPath
-        for f in rs.file:
+    for sub_folder in search_ds.info.result:
+        ds_folder = sub_folder.folderPath
+        for file in sub_folder.file:
             try:
-                dsfile = f.path
-                vmfold = dsfolder.split("]")
-                vmfold = vmfold[1]
-                vmfold = vmfold[1:]
+                ds_file = file.path
+                vm_folder = ds_folder.split("]")
+                vm_folder = vm_folder[1]
+                vm_folder = vm_folder[1:]
                 vmxurl = "https://%s/folder/%s%s?dcPath=%s&dsName=%s" % \
-                         (args.host, vmfold, dsfile, datacenter, fulldsname)
+                         (args.host, vm_folder, ds_file, datacenter, full_ds_name)
                 VMX_PATH.append(vmxurl)
-            except Exception, e:
-                print "Caught exception : " + str(e)
+            except Exception as ex:
+                print("Caught exception : " + str(ex))
                 return -1
 
 
@@ -115,15 +113,15 @@ def examine_vmx(dsname):
     args = get_args()
     try:
         for file_vmx in VMX_PATH:
-            # print file_vmx
+            # print(file_vmx)
 
             username = args.user
             password = args.password
-            request = urllib2.Request(url_fix(file_vmx))
+            request = urllib.request.Request(url_fix(file_vmx))
             base64string = base64.encodestring(
                 '%s:%s' % (username, password)).replace('\n', '')
             request.add_header("Authorization", "Basic %s" % base64string)
-            result = urllib2.urlopen(request)
+            result = urllib.request.urlopen(request)
             vmxfile = result.readlines()
             mylist = []
             for a in vmxfile:
@@ -148,13 +146,13 @@ def examine_vmx(dsname):
             tempds_vm = [newdn, dspath]
             DS_VM[uuid] = tempds_vm
 
-    except Exception, e:
-        print "Caught exception : " + str(e)
+    except Exception as ex:
+        print("Caught exception : " + str(ex))
 
 
 def getvm_info(vm, depth=1):
     """
-    Print information for a particular virtual machine or recurse
+    print information for a particular virtual machine or recurse
     into a folder with depth protection
     from the getallvms.py script from pyvmomi from github repo
     """
@@ -180,8 +178,8 @@ def getvm_info(vm, depth=1):
         uuid = vm.config.instanceUuid
         uuid = uuid.replace("-", "")
         INV_VM.append(uuid)
-    except Exception, e:
-        print "Caught exception : " + str(e)
+    except Exception as ex:
+        print("Caught exception : " + str(ex))
         return -1
 
 
@@ -196,32 +194,19 @@ def find_match(uuid):
         if uuid == temp:
             a = a+1
     if a < 1:
-        print DS_VM[uuid]
+        print(DS_VM[uuid])
 
 
 def main():
     """
     function runs all of the other functions. Some parts of this function
-    are taken from the getallvms.py script from the pyvmomi gihub repo
+    are taken from the getallvms.py script from the pyvmomi github repo
     """
-    args = get_args()
+    parser = cli.Parser()
+    parser.add_optional_arguments(cli.Argument.VM_NAME, cli.Argument.UUID, cli.Argument.PORT_GROUP)
+    args = parser.get_args()
+    si = service_instance.connect(args)
     try:
-        si = None
-        try:
-            si = SmartConnect(host=args.host,
-                              user=args.user,
-                              pwd=args.password,
-                              port=int(args.port))
-        except IOError, e:
-            pass
-
-        if not si:
-            print "Could not connect to the specified host using " \
-                  "specified username and password"
-            return -1
-
-        atexit.register(Disconnect, si)
-
         content = si.RetrieveContent()
         datacenter = content.rootFolder.childEntity[0]
         datastores = datacenter.datastore
@@ -233,10 +218,10 @@ def main():
         # to the find_vmx and examine_vmx functions to find all
         # VMX files and search them
 
-        for ds in datastores:
-            find_vmx(ds.browser, "[%s]" % ds.summary.name, datacenter.name,
-                     ds.summary.name)
-            examine_vmx(ds.summary.name)
+        for datastore in datastores:
+            find_vmx(datastore.browser, "[%s]" % datastore.summary.name,
+                     datacenter.name, datastore.summary.name)
+            examine_vmx(datastore.summary.name)
             updatevmx_path()
 
         # each VM found in the inventory is passed to the getvm_info
@@ -254,20 +239,21 @@ def main():
         # each uuid in the dsvmkey list is passed to the find_match
         # function to look for a match
 
-        print "The following virtual machine(s) do not exist in the " \
-              "inventory, but exist on a datastore " \
-              "(Display Name, Datastore/Folder name):"
+        print("The following virtual machine(s) do not exist in the "
+              "inventory, but exist on a datastore "
+              "(Display Name, Datastore/Folder name):")
         for match in dsvmkey:
             find_match(match)
         Disconnect(si)
-    except vmodl.MethodFault, e:
-        print "Caught vmodl fault : " + e.msg
+    except vmodl.MethodFault as ex:
+        print("Caught vmodl fault : " + ex.msg)
         return -1
-    except Exception, e:
-        print "Caught exception : " + str(e)
+    except Exception as ex:
+        print("Caught exception : " + str(ex))
         return -1
 
     return 0
+
 
 # Start program
 if __name__ == "__main__":

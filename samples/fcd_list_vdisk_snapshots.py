@@ -15,35 +15,8 @@
 Python program for listing all snapshots of a first class disk (fcd)
 """
 
-import atexit
-
-from tools import cli, tasks, disk
-from pyVim import connect
-from pyVmomi import vmodl
-from pyVmomi import vim
-
-
-def get_args():
-    """
-    Adds additional args for listing all snapshots of a fcd
-
-    -d datastore
-    -v vdisk
-    """
-    parser = cli.build_arg_parser()
-
-    parser.add_argument('-d', '--datastore',
-                        required=True,
-                        action='store',
-                        help='Datastore name where disk is located')
-
-    parser.add_argument('-v', '--vdisk',
-                        required=True,
-                        action='store',
-                        help='First Class Disk name to delete snapshot for')
-
-    my_args = parser.parse_args()
-    return cli.prompt_for_password(my_args)
+from tools import cli, disk, pchelper, service_instance
+from pyVmomi import vmodl, vim
 
 
 def list_fcd_snapshots(content, vdisk):
@@ -59,10 +32,10 @@ def list_fcd_snapshots(content, vdisk):
     if len(snapshots) > 0:
         # Print snapshot information
         print("")
-        for s in snapshots:
-            print("Name: %s " % s.description)
-            print("ID: %s " % s.id.id)
-            print("Create Time: %s " % s.createTime)
+        for snapshot in snapshots:
+            print("Name: %s " % snapshot.description)
+            print("ID: %s " % snapshot.id.id)
+            print("Create Time: %s " % snapshot.createTime)
             print("")
     else:
         print("No snapshots found for this vdisk.")
@@ -73,29 +46,19 @@ def main():
     Simple command-line program for listing all snapshots of a fcd
     """
 
-    args = get_args()
+    parser = cli.Parser()
+    parser.add_required_arguments(cli.Argument.DATASTORE_NAME, cli.Argument.FIRST_CLASS_DISK_NAME)
+    args = parser.get_args()
+    si = service_instance.connect(args)
 
     try:
-        if args.disable_ssl_verification:
-            service_instance = connect.SmartConnectNoSSL(host=args.host,
-                                                         user=args.user,
-                                                         pwd=args.password,
-                                                         port=int(args.port))
-        else:
-            service_instance = connect.SmartConnect(host=args.host,
-                                                    user=args.user,
-                                                    pwd=args.password,
-                                                    port=int(args.port))
-
-        atexit.register(connect.Disconnect, service_instance)
-
-        content = service_instance.RetrieveContent()
+        content = si.RetrieveContent()
 
         # Retrieve Datastore Object
-        datastore = disk.get_obj(content, [vim.Datastore], args.datastore)
+        datastore = pchelper.get_obj(content, [vim.Datastore], args.datastore_name)
 
         # Retrieve FCD Object
-        vdisk = disk.retrieve_fcd(content, datastore, args.vdisk)
+        vdisk = disk.retrieve_fcd(content, datastore, args.fcd_name)
 
         # Retrieve all Snapshots
         list_fcd_snapshots(content, vdisk)

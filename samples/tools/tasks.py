@@ -13,11 +13,11 @@ from pyVmomi import vim
 from pyVmomi import vmodl
 
 
-def wait_for_tasks(service_instance, tasks):
-    """Given the service instance si and tasks, it returns after all the
+def wait_for_tasks(si, tasks):
+    """Given the service instance and tasks, it returns after all the
    tasks are complete
    """
-    property_collector = service_instance.content.propertyCollector
+    property_collector = si.content.propertyCollector
     task_list = [str(task) for task in tasks]
     # Create filter
     obj_specs = [vmodl.query.PropertyCollector.ObjectSpec(obj=task)
@@ -32,7 +32,7 @@ def wait_for_tasks(service_instance, tasks):
     try:
         version, state = None, None
         # Loop looking for updates till the state moves to a completed state.
-        while len(task_list):
+        while task_list:
             update = property_collector.WaitForUpdates(version)
             for filter_set in update.filterSet:
                 for obj_set in filter_set.objectSet:

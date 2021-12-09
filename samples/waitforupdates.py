@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # VMware vSphere Python SDK
-# Copyright (c) 2008-2014 VMware, Inc. All Rights Reserved.
+# Copyright (c) 2008-2021 VMware, Inc. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,66 +20,11 @@ Sample Python program for monitoring property changes to objects of one
 or more types
 """
 
-
-from tools import serviceutil
-from pyVim.connect import SmartConnect, Disconnect
-from pyVmomi import vim, vmodl
-
-import argparse
 import atexit
 import collections
-import getpass
 import sys
-
-
-def get_args():
-    """
-    Supports the command-line arguments listed below.
-    """
-
-    parser = argparse.ArgumentParser(
-        description='Process args for streaming property changes',
-        epilog="""
-Example usage:
-waitforupdates.py -k -s vcenter -u root -p vmware -i 1 -P
-VirtualMachine:name,summary.config.numCpu,runtime.powerState,config.uuid -P
--P Datacenter:name -- This will fetch and print a few VM properties and the
-name of the datacenters
-""")
-
-    parser.add_argument('-s', '--host',
-                        required=True, action='store',
-                        help='Remote host to connect to')
-    parser.add_argument('-o', '--port', type=int, default=443, action='store',
-                        help='Port to connect on')
-    parser.add_argument('-u', '--user', required=True, action='store',
-                        help='User name to use when connecting to host')
-    parser.add_argument('-p', '--password', required=False, action='store',
-                        help='Password to use when connecting to host')
-    parser.add_argument('-i', '--iterations', type=int, default=None,
-                        action='store', help="""
-The number of updates to receive before exiting, default is no limit.Must be 1
-or more if specified.
-""")
-    parser.add_argument('-P'  '--propspec', dest='propspec', required=True,
-                        action='append',
-                        help='Property specifications to monitor, e.g. '
-                        'VirtualMachine:name,summary.config. Repetition '
-                        'permitted')
-    parser.add_argument('-k', '--disable_ssl_warnings', required=False,
-                        action='store_true',
-                        help='Disable ssl host certificate verification '
-                        'warnings')
-
-    args = parser.parse_args()
-
-    if args.iterations is not None and args.iterations < 1:
-        parser.print_help()
-        print >>sys.stderr, '\nInvalid argument: Iteration count must be' \
-                            ' omitted or greater than 0'
-        sys.exit(-1)
-
-    return args
+from pyVmomi import vim, vmodl
+from tools import cli, service_instance, serviceutil
 
 
 def parse_propspec(propspec):
@@ -128,47 +73,46 @@ def make_wait_options(max_wait_seconds=None, max_object_updates=None):
     return waitopts
 
 
-def make_property_collector(pc, from_node, props):
+def make_property_collector(prop_collector, from_node, props):
     """
-    :type pc: pyVmomi.VmomiSupport.vmodl.query.PropertyCollector
+    :type prop_collector: pyVmomi.VmomiSupport.vmodl.query.PropertyCollector
     :type from_node: pyVmomi.VmomiSupport.ManagedObject
     :type props: collections.Sequence
     :rtype: pyVmomi.VmomiSupport.vmodl.query.PropertyCollector.Filter
     """
 
     # Make the filter spec
-    filterSpec = vmodl.query.PropertyCollector.FilterSpec()
+    filter_spec = vmodl.query.PropertyCollector.FilterSpec()
 
     # Make the object spec
     traversal = serviceutil.build_full_traversal()
 
-    objSpec = vmodl.query.PropertyCollector.ObjectSpec(obj=from_node,
-                                                       selectSet=traversal)
-    objSpecs = [objSpec]
+    obj_spec = vmodl.query.PropertyCollector.ObjectSpec(obj=from_node, selectSet=traversal)
+    obj_specs = [obj_spec]
 
-    filterSpec.objectSet = objSpecs
+    filter_spec.objectSet = obj_specs
 
     # Add the property specs
-    propSet = []
+    prop_set = []
     for motype, proplist in props:
-        propSpec = \
+        prop_spec = \
             vmodl.query.PropertyCollector.PropertySpec(type=motype, all=False)
-        propSpec.pathSet.extend(proplist)
-        propSet.append(propSpec)
+        prop_spec.pathSet.extend(proplist)
+        prop_set.append(prop_spec)
 
-    filterSpec.propSet = propSet
+    filter_spec.propSet = prop_set
 
     try:
-        pcFilter = pc.CreateFilter(filterSpec, True)
-        atexit.register(pcFilter.Destroy)
-        return pcFilter
-    except vmodl.MethodFault, e:
-        if e._wsdlName == 'InvalidProperty':
-            print >> sys.stderr, "InvalidProperty fault while creating " \
-                                 "PropertyCollector filter : %s" % e.name
+        pc_filter = prop_collector.CreateFilter(filter_spec, True)
+        atexit.register(pc_filter.Destroy)
+        return pc_filter
+    except vmodl.MethodFault as ex:
+        if ex._wsdlName == 'InvalidProperty':
+            print("InvalidProperty fault while creating PropertyCollector filter : %s"
+                  % ex.name, file=sys.stderr)
         else:
-            print >> sys.stderr, "Problem creating PropertyCollector " \
-                                 "filter : %s" % str(e.faultMessage)
+            print("Problem creating PropertyCollector filter : %s"
+                  % str(ex.faultMessage), file=sys.stderr)
         raise
 
 
@@ -179,8 +123,8 @@ def monitor_property_changes(si, propspec, iterations=None):
     :type iterations: int or None
     """
 
-    pc = si.content.propertyCollector
-    make_property_collector(pc, si.content.rootFolder, propspec)
+    prop_collector = si.content.propertyCollector
+    make_property_collector(prop_collector, si.content.rootFolder, propspec)
     waitopts = make_wait_options(30)
 
     version = ''
@@ -188,51 +132,51 @@ def monitor_property_changes(si, propspec, iterations=None):
     while True:
         if iterations is not None:
             if iterations <= 0:
-                print 'Iteration limit reached, monitoring stopped'
+                print('Iteration limit reached, monitoring stopped')
                 break
 
-        result = pc.WaitForUpdatesEx(version, waitopts)
+        result = prop_collector.WaitForUpdatesEx(version, waitopts)
 
         # timeout, call again
         if result is None:
             continue
 
         # process results
-        for filterSet in result.filterSet:
-            for objectSet in filterSet.objectSet:
-                moref = getattr(objectSet, 'obj', None)
-                assert moref is not None, 'object moref should always be ' \
-                                          'present in objectSet'
+        for filter_set in result.filterSet:
+            for object_set in filter_set.objectSet:
+                moref = getattr(object_set, 'obj', None)
+                assert moref is not None, \
+                    'object moref should always be present in objectSet'
 
                 moref = str(moref).strip('\'')
 
-                kind = getattr(objectSet, 'kind', None)
+                kind = getattr(object_set, 'kind', None)
                 assert (
-                    kind is not None and kind in ('enter', 'modify', 'leave',)
-                ), 'objectSet kind must be valid'
+                        kind is not None
+                        and kind in ('enter', 'modify', 'leave',)), \
+                    'objectSet kind must be valid'
 
-                if kind == 'enter' or kind == 'modify':
-                    changeSet = getattr(objectSet, 'changeSet', None)
-                    assert (changeSet is not None and isinstance(
-                        changeSet, collections.Sequence
-                    ) and len(changeSet) > 0), \
-                        'enter or modify objectSet should have non-empty' \
-                        ' changeSet'
+                if kind in ('enter', 'modify'):
+                    change_set = getattr(object_set, 'changeSet', None)
+                    assert (change_set is not None
+                            and isinstance(change_set, collections.Sequence)
+                            and len(change_set) > 0), \
+                        'enter or modify objectSet should have non-empty changeSet'
 
                     changes = []
-                    for change in changeSet:
+                    for change in change_set:
                         name = getattr(change, 'name', None)
                         assert (name is not None), \
                             'changeset should contain property name'
                         val = getattr(change, 'val', None)
                         changes.append((name, val,))
 
-                    print "== %s ==" % moref
-                    print '\n'.join(['%s: %s' % (n, v,) for n, v in changes])
-                    print '\n'
+                    print("== %s ==" % moref)
+                    print('\n'.join(['%s: %s' % (n, v,) for n, v in changes]))
+                    print('\n')
                 elif kind == 'leave':
-                    print "== %s ==" % moref
-                    print '(removed)\n'
+                    print("== %s ==" % moref)
+                    print('(removed)\n')
 
         version = result.version
 
@@ -246,51 +190,54 @@ def main():
     one or more types to stdout
     """
 
-    args = get_args()
+    parser = cli.Parser()
+    parser.set_epilog("""
+        Example usage:
+        waitforupdates.py -k -s vcenter -u root -p vmware -i 1 -P
+        VirtualMachine:name,summary.config.numCpu,runtime.powerState,config.uuid -P
+        -P Datacenter:name -- This will fetch and print a few VM properties and the
+        name of the datacenters
+        """)
+    parser.add_custom_argument('--iterations', type=int, default=None,
+                               action='store',
+                               help="""
+                               The number of updates to receive before exiting
+                               , default is no limit. Must be 1 or more if specified.
+                               """)
+    parser.add_custom_argument('--propspec', dest='propspec', required=True,
+                               action='append',
+                               help='Property specifications to monitor, e.g. '
+                               'VirtualMachine:name,summary.config. Repetition '
+                               'permitted')
+    args = parser.get_args()
 
-    if args.password:
-        password = args.password
-    else:
-        password = getpass.getpass(prompt='Enter password for host %s and '
-                                   'user %s: ' % (args.host, args.user))
+    if args.iterations is not None and args.iterations < 1:
+        parser.print_help()
+        print('\nInvalid argument: Iteration count must be omitted or greater than 0',
+              file=sys.stderr)
+        sys.exit(-1)
 
     try:
-        if args.disable_ssl_warnings:
-            from requests.packages import urllib3
-            urllib3.disable_warnings()
-
-        si = SmartConnect(host=args.host, user=args.user, pwd=password,
-                          port=int(args.port))
-
-        if not si:
-            print >>sys.stderr, "Could not connect to the specified host ' \
-                                'using specified username and password"
-            raise
-
-        atexit.register(Disconnect, si)
-
+        si = service_instance.connect(args)
         propspec = parse_propspec(args.propspec)
 
-        print "Monitoring property changes.  Press ^C to exit"
+        print("Monitoring property changes.  Press ^C to exit")
         monitor_property_changes(si, propspec, args.iterations)
 
-    except vmodl.MethodFault, e:
-        print >>sys.stderr, "Caught vmodl fault :\n%s" % str(e)
-        raise
-    except Exception, e:
-        print >>sys.stderr, "Caught exception : " + str(e)
-        raise
+    except vmodl.MethodFault as ex:
+        print("Caught vmodl fault :\n%s" % str(ex), file=sys.stderr)
+    except Exception as ex:
+        print("Caught exception : " + str(ex), file=sys.stderr)
 
 
 if __name__ == '__main__':
     try:
         main()
         sys.exit(0)
-    except Exception, e:
-        print >>sys.stderr, "Caught exception : " + str(e)
-        raise
-    except KeyboardInterrupt, e:
-        print >>sys.stderr, "Exiting"
+    except Exception as ex:
+        print("Caught exception : " + str(ex), file=sys.stderr)
+    except KeyboardInterrupt:
+        print("Exiting", file=sys.stderr)
         sys.exit(0)
 
 

@@ -9,33 +9,8 @@
 # datastore and datacenter
 #
 
-import atexit
-
-from pyVim.connect import Disconnect, SmartConnectNoSSL, SmartConnect
 from pyVmomi import vim, vmodl
-
-from tools import cli
-
-
-def get_args():
-    """
-    Adds additional args for the vMotion
-    """
-    parser = cli.build_arg_parser()
-
-    parser.add_argument('-dd', '--datastore-dest',
-                        required=False,
-                        help=' Datastore of the destination')
-
-    parser.add_argument('-t', '--target-esx-host',
-                        required=False,
-                        help="name of the destination esx host")
-
-    parser.add_argument('-v', '--vm-name',
-                        required=True,
-                        help="name of the vm")
-    my_args = parser.parse_args()
-    return cli.prompt_for_password(my_args)
+from tools import cli, service_instance
 
 
 def get_object(content, vimtype, name, disp=False):
@@ -44,6 +19,7 @@ def get_object(content, vimtype, name, disp=False):
     :param content:
     :param vimtype:
     :param name:
+    :param disp:
     :return: Object
     """
     obj = None
@@ -104,18 +80,16 @@ def construct_locator(template_disks, datastore_dest_id):
     return ds_disk
 
 
-def relocate_vm(vm_name, content, host_dest, datastore_dest=None, **kwargs):
+def relocate_vm(vm_name, content, host_dest, datastore_dest=None):
     """
     This method relocates vm to the host_dest across
     datacenters, clusters, datastores managed by a Vcenter
 
     Args:
         vm_name:
-        vcenter:
+        content:
         host_dest:
-        datastore_src
         datastore_dest:
-        **kwargs:
 
     Returns:
 
@@ -170,29 +144,20 @@ def relocate_vm(vm_name, content, host_dest, datastore_dest=None, **kwargs):
 
 def main():
 
-    args = get_args()
+    parser = cli.Parser()
+    parser.add_required_arguments(
+        cli.Argument.VM_NAME, cli.Argument.DATASTORE_NAME, cli.Argument.ESX_NAME)
+    args = parser.get_args()
+    si = service_instance.connect(args)
 
     try:
-        if args.disable_ssl_verification:
-            service_instance = SmartConnectNoSSL(host=args.host,
-                                                 user=args.user,
-                                                 pwd=args.password,
-                                                 port=args.port)
-        else:
-            service_instance = SmartConnect(host=args.host,
-                                            user=args.user,
-                                            pwd=args.password,
-                                            port=args.port)
-
-        atexit.register(Disconnect, service_instance)
-
-        content = service_instance.RetrieveContent()
+        content = si.RetrieveContent()
 
         # Assigning destination datastores
-        datastore_dest = args.datastore_dest
+        datastore_dest = args.datastore_name
 
         # Target compute resource
-        host_dest = args.target_esx_host
+        host_dest = args.esx_name
 
         relocate_vm(args.vm_name,
                     content=content,

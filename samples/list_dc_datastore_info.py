@@ -11,36 +11,13 @@
 # http://opensource.org/licenses/Apache-2.0
 #
 
-import atexit
 import requests
-from tools import cli
 from pyVmomi import vim
-from pyVim.connect import SmartConnect, Disconnect
+from tools import cli, service_instance, pchelper
 
 # disable  urllib3 warnings
-if hasattr(requests.packages.urllib3, 'disable_warnings'):
-    requests.packages.urllib3.disable_warnings()
-
-
-def get_args():
-    parser = cli.build_arg_parser()
-    parser.add_argument('-n', '--name', required=False,
-                        help="Name of the Datastore.")
-    my_args = parser.parse_args()
-    return cli.prompt_for_password(my_args)
-
-
-def get_obj(content, vim_type, name=None):
-    obj = None
-    container = content.viewManager.CreateContainerView(
-        content.rootFolder, vim_type, True)
-    if name:
-        for c in container.view:
-            if c.name == name:
-                obj = c
-                return [obj]
-    else:
-        return container.view
+requests.packages.urllib3.disable_warnings(
+    requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
 
 # http://stackoverflow.com/questions/1094841/
@@ -67,38 +44,38 @@ def print_datastore_info(ds_obj):
     ds_overp = ds_provisioned - ds_capacity
     ds_overp_pct = (ds_overp * 100) / ds_capacity \
         if ds_capacity else 0
-    print ""
-    print "Name                  : {}".format(summary.name)
-    print "URL                   : {}".format(summary.url)
-    print "Capacity              : {} GB".format(sizeof_fmt(ds_capacity))
-    print "Free Space            : {} GB".format(sizeof_fmt(ds_freespace))
-    print "Uncommitted           : {} GB".format(sizeof_fmt(ds_uncommitted))
-    print "Provisioned           : {} GB".format(sizeof_fmt(ds_provisioned))
+    print("")
+    print("Name                  : {}".format(summary.name))
+    print("URL                   : {}".format(summary.url))
+    print("Capacity              : {} GB".format(sizeof_fmt(ds_capacity)))
+    print("Free Space            : {} GB".format(sizeof_fmt(ds_freespace)))
+    print("Uncommitted           : {} GB".format(sizeof_fmt(ds_uncommitted)))
+    print("Provisioned           : {} GB".format(sizeof_fmt(ds_provisioned)))
     if ds_overp > 0:
-        print "Over-provisioned      : {} GB / {} %".format(
+        print("Over-provisioned      : {} GB / {} %".format(
             sizeof_fmt(ds_overp),
-            ds_overp_pct)
-    print "Hosts                 : {}".format(len(ds_obj.host))
-    print "Virtual Machines      : {}".format(len(ds_obj.vm))
+            ds_overp_pct))
+    print("Hosts                 : {}".format(len(ds_obj.host)))
+    print("Virtual Machines      : {}".format(len(ds_obj.vm)))
 
 
 def main():
-    args = get_args()
-
-    # connect to vc
-    si = SmartConnect(
-        host=args.host,
-        user=args.user,
-        pwd=args.password,
-        port=args.port)
-    # disconnect vc
-    atexit.register(Disconnect, si)
+    parser = cli.Parser()
+    parser.add_optional_arguments(cli.Argument.DATASTORE_NAME)
+    args = parser.get_args()
+    si = service_instance.connect(args)
 
     content = si.RetrieveContent()
     # Get list of ds mo
-    ds_obj_list = get_obj(content, [vim.Datastore], args.name)
+    datastore = pchelper.search_for_obj(content, [vim.Datastore], args.datastore_name)
+    if datastore:
+        ds_obj_list = [datastore]
+    else:
+        ds_obj_list = pchelper.get_all_obj(content, [vim.Datastore])
+
     for ds in ds_obj_list:
         print_datastore_info(ds)
+
 
 # start
 if __name__ == "__main__":

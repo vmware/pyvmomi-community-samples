@@ -91,7 +91,7 @@ class ESXTests(TestCase):
         self.assertEquals(self.wrapped_esx.get_number_of_cores(), 42)
 
 
-class getAllVMInFolderTests(TestCase):
+class GetAllVMInFolderTests(TestCase):
 
     def test_should_resolve_deep_nesting(self):
         vm_1 = lambda: None

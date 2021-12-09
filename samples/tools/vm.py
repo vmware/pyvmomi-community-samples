@@ -1,5 +1,5 @@
 # VMware vSphere Python SDK Community Samples Addons
-# Copyright (c) 2014 VMware, Inc. All Rights Reserved.
+# Copyright (c) 2014-2021 VMware, Inc. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -31,23 +31,23 @@ def print_vm_info(vm, depth=1, max_depth=10):
     if hasattr(vm, 'childEntity'):
         if depth > max_depth:
             return
-        vmList = vm.childEntity
-        for c in vmList:
-            print_vm_info(c, depth + 1)
+        vm_list = vm.childEntity
+        for child_vm in vm_list:
+            print_vm_info(child_vm, depth + 1)
         return
 
     summary = vm.summary
-    print("Name       : {}".format(summary.config.name))
-    print("Path       : {}".format(summary.config.vmPathName))
-    print("Guest      : {}".format(summary.config.guestFullName))
+    print("Name       :", summary.config.name)
+    print("Path       :", summary.config.vmPathName)
+    print("Guest      :", summary.config.guestFullName)
     annotation = summary.config.annotation
     if annotation:
-        print("Annotation : {}".format(annotation))
-    print("State      : {}".format(summary.runtime.powerState))
+        print("Annotation :", annotation)
+    print("State      :", summary.runtime.powerState)
     if summary.guest is not None:
         ip = summary.guest.ipAddress
         if ip:
-            print("IP         : {}".format(ip))
+            print("IP         :", ip)
     if summary.runtime.question is not None:
-        print("Question  : {}".format(summary.runtime.question.text))
+        print("Question  :", summary.runtime.question.text)
     print("")

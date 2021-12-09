@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # VMware vSphere Python SDK
-# Copyright (c) 2008-2013 VMware, Inc. All Rights Reserved.
+# Copyright (c) 2008-2021 VMware, Inc. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,28 +15,12 @@
 # limitations under the License.
 
 """
-Python program for listing the vms on an ESX / vCenter host
+Python program for listing the VMs on an ESX / vCenter host
 """
 
 import re
-import atexit
-
-from pyVim import connect
-from pyVmomi import vmodl
-from pyVmomi import vim
-
-import tools.cli as cli
-
-
-def get_args():
-    parser = cli.build_arg_parser()
-    parser.add_argument('-f', '--find',
-                        required=False,
-                        action='store',
-                        help='String to match VM names')
-    args = parser.parse_args()
-
-    return cli.prompt_for_password(args)
+from pyVmomi import vmodl, vim
+from tools import cli, service_instance
 
 
 def print_vm_info(virtual_machine):
@@ -76,31 +60,22 @@ def main():
     Simple command-line program for listing the virtual machines on a system.
     """
 
-    args = get_args()
+    parser = cli.Parser()
+    parser.add_custom_argument('-f', '--find', required=False,
+                               action='store', help='String to match VM names')
+    args = parser.get_args()
+    si = service_instance.connect(args)
 
     try:
-        if args.disable_ssl_verification:
-            service_instance = connect.SmartConnectNoSSL(host=args.host,
-                                                         user=args.user,
-                                                         pwd=args.password,
-                                                         port=int(args.port))
-        else:
-            service_instance = connect.SmartConnect(host=args.host,
-                                                    user=args.user,
-                                                    pwd=args.password,
-                                                    port=int(args.port))
-
-        atexit.register(connect.Disconnect, service_instance)
-
-        content = service_instance.RetrieveContent()
+        content = si.RetrieveContent()
 
         container = content.rootFolder  # starting point to look into
-        viewType = [vim.VirtualMachine]  # object types to look for
+        view_type = [vim.VirtualMachine]  # object types to look for
         recursive = True  # whether we should look into it recursively
-        containerView = content.viewManager.CreateContainerView(
-            container, viewType, recursive)
+        container_view = content.viewManager.CreateContainerView(
+            container, view_type, recursive)
 
-        children = containerView.view
+        children = container_view.view
         if args.find is not None:
             pat = re.compile(args.find, re.IGNORECASE)
         for child in children:

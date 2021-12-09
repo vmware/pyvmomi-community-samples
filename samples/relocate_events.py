@@ -12,58 +12,54 @@ didn't want to add time parsing complications.
 
 """
 import re
-import sys
 from pyVmomi import vim
-from pyVim.connect import SmartConnectNoSSL
-from pyVim.task import WaitForTask
-from tools import cli
+from tools import cli, service_instance
 
 __author__ = 'prziborowski'
 
 
-def setup_args():
-    parser = cli.build_arg_parser()
-    parser.add_argument('-n', '--name',
-                        help='Name of the VM for relocate events')
-    parser.add_argument('-d', '--datacenter',
-                        help='Name of datacenter to search on. '
-                             'Defaults to first.')
-    parser.add_argument('--filterUsers',
-                        help="Comma-separated list of users to filter on")
-    parser.add_argument('--filterSystemUser', action='store_true',
-                        help="Filter system user, defaults to false.")
-    return cli.prompt_for_password(parser.parse_args())
+def get_dc(si, name):
+    """
+    Get a datacenter by its name.
+    """
+    for datacenter in si.content.rootFolder.childEntity:
+        if datacenter.name == name:
+            return datacenter
+    raise Exception('Failed to find datacenter named %s' % name)
 
 
 def main():
-    args = setup_args()
-    si = SmartConnectNoSSL(host=args.host,
-                           user=args.user,
-                           pwd=args.password,
-                           port=args.port)
-    if args.datacenter:
-        dc = get_dc(si, args.datacenter)
-    else:
-        dc = si.content.rootFolder.childEntity[0]
+    parser = cli.Parser()
+    parser.add_required_arguments(cli.Argument.VM_NAME, cli.Argument.DATACENTER_NAME)
+    parser.add_custom_argument('--filterUsers', help="Comma-separated list of users to filter on")
+    parser.add_custom_argument('--filterSystemUser', action='store_true',
+                               help="Filter system user, defaults to false.")
+    args = parser.get_args()
+    si = service_instance.connect(args)
 
-    vm = si.content.searchIndex.FindChild(dc.vmFolder, args.name)
+    if args.datacenter_name:
+        datacenter = get_dc(si, args.datacenter_name)
+    else:
+        datacenter = si.content.rootFolder.childEntity[0]
+
+    vm = si.content.searchIndex.FindChild(datacenter.vmFolder, args.vm_name)
     if vm is None:
         raise Exception('Failed to find VM %s in datacenter %s' %
-                        (dc.name, args.name))
-    byEntity = vim.event.EventFilterSpec.ByEntity(entity=vm, recursion="self")
+                        (datacenter.name, args.vm_name))
+    by_entity = vim.event.EventFilterSpec.ByEntity(entity=vm, recursion="self")
     ids = ['VmRelocatedEvent', 'DrsVmMigratedEvent', 'VmMigratedEvent']
-    filterSpec = vim.event.EventFilterSpec(entity=byEntity, eventTypeId=ids)
+    filter_spec = vim.event.EventFilterSpec(entity=by_entity, eventTypeId=ids)
 
     # Optionally filter by users
-    userList = []
+    user_list = []
     if args.filterUsers:
-        userList = re.split('.*,.*', args.filterUsers)
-    if len(userList) > 0 or args.filterSystemUser:
-        byUser = vim.event.EventFilterSpec.ByUsername(userList=userList)
-        byUser.systemUser = args.filterSystemUser
-        filterSpec.userName = byUser
-    eventManager = si.content.eventManager
-    events = eventManager.QueryEvent(filterSpec)
+        user_list = re.split('.*,.*', args.filterUsers)
+    if len(user_list) > 0 or args.filterSystemUser:
+        by_user = vim.event.EventFilterSpec.ByUsername(userList=user_list)
+        by_user.systemUser = args.filterSystemUser
+        filter_spec.userName = by_user
+    event_manager = si.content.eventManager
+    events = event_manager.QueryEvent(filter_spec)
 
     for event in events:
         print("%s" % event._wsdlName)
@@ -75,6 +71,7 @@ def main():
         print("Datastore: %s -> %s" % (event.sourceDatastore.name,
                                        event.ds.name))
     print("%s" % events)
+
 
 if __name__ == '__main__':
     main()

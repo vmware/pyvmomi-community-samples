@@ -30,56 +30,56 @@ def create_pbm_session(stub):
     except ImportError:
         import Cookie as cookies
 
-    sessionCookie = stub.cookie.split('"')[1]
-    httpContext = VmomiSupport.GetHttpContext()
+    session_cookie = stub.cookie.split('"')[1]
+    http_context = VmomiSupport.GetHttpContext()
     cookie = cookies.SimpleCookie()
-    cookie["vmware_soap_session"] = sessionCookie
-    httpContext["cookies"] = cookie
-    VmomiSupport.GetRequestContext()["vcSessionCookie"] = sessionCookie
+    cookie["vmware_soap_session"] = session_cookie
+    http_context["cookies"] = cookie
+    VmomiSupport.GetRequestContext()["vcSessionCookie"] = session_cookie
     hostname = stub.host.split(":")[0]
 
     context = None
     if hasattr(ssl, "_create_unverified_context"):
         context = ssl._create_unverified_context()
-    pbmStub = pyVmomi.SoapStubAdapter(
+    pbm_stub = pyVmomi.SoapStubAdapter(
         host=hostname,
         version="pbm.version.version1",
         path="/pbm/sdk",
         poolSize=0,
         sslContext=context)
-    pbmSi = pbm.ServiceInstance("ServiceInstance", pbmStub)
+    pbm_si = pbm.ServiceInstance("ServiceInstance", pbm_stub)
 
-    return pbmSi
+    return pbm_si
 
 
-def retrieve_storage_policy(pbmContent, policy):
+def retrieve_storage_policy(pbm_content, policy):
     """
     Retrieves the managed object for the storage policy specified
 
     Sample Usage:
 
-    pbmContent = pbmSi.RetrieveContent()
-    retrieve_storage_policy(pbmContent, "Policy Name")
+    pbm_content = pbm_si.RetrieveContent()
+    retrieve_storage_policy(pbm_content, "Policy Name")
     """
     # Set PbmQueryProfile
-    pm = pbmContent.profileManager
+    profile_manager = pbm_content.profileManager
 
     # Retrieving Storage Policies
-    profileIds = pm.PbmQueryProfile(resourceType=pbm.profile.ResourceType(
+    profile_ids = profile_manager.PbmQueryProfile(resourceType=pbm.profile.ResourceType(
         resourceType="STORAGE"), profileCategory="REQUIREMENT"
     )
-    if len(profileIds) > 0:
-        profiles = pm.PbmRetrieveContent(profileIds=profileIds)
+    if len(profile_ids) > 0:
+        profiles = profile_manager.PbmRetrieveContent(profileIds=profile_ids)
     else:
         raise RuntimeError("No Storage Policies found.")
 
     # Searching for Storage Policy
-    profile = None
-    for p in profiles:
-        if p.name == policy:
-            profile = p
+    storage_polity_profile = None
+    for profile in profiles:
+        if profile.name == policy:
+            storage_polity_profile = profile
             break
-    if not profile:
+    if not storage_polity_profile:
         raise RuntimeError("Storage Policy specified not found.")
 
-    return profile
+    return storage_polity_profile

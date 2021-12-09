@@ -15,50 +15,12 @@ Thanks to William Lam (https://github.com/lamw) for ideas from
 the script list_vm_storage_policy.py
 """
 
-import atexit
 import re
-import tools.cli as cli
-
+from tools import cli, service_instance
 from pyVmomi import pbm, vim, VmomiSupport, SoapStubAdapter
-from pyVim.connect import SmartConnect, SmartConnectNoSSL, Disconnect
 
 
-def get_args():
-    """Supports the command-line arguments listed below.
-    """
-    parser = cli.build_arg_parser()
-    parser.description = 'Set VM Home or Virtual Disk Storage Policies'
-    parser.add_argument('-v', '--vm_name',
-                        required=True,
-                        action='store',
-                        metavar='string',
-                        help='Get virtual machine by name')
-    parser.add_argument('--strict',
-                        required=False,
-                        action='store_true',
-                        help='Search strict virtual machine name matches')
-    parser.add_argument('--set_vm_home',
-                        required=False,
-                        action='store_true',
-                        help='Set the specified policy for vm home.')
-    parser.add_argument('--virtual_disk_number',
-                        required=False,
-                        nargs='+',
-                        metavar='int',
-                        help='The sequence numbers of the virtual disks for which \
-                              the specified policy should be set. \
-                              Space as delimiter.')
-    parser.add_argument('--storage_policy_name',
-                        required=True,
-                        action='store',
-                        metavar='string',
-                        help='The name of the storage policy to be set for VM \
-                              Home or Virtual Disk')
-    args = parser.parse_args()
-    return cli.prompt_for_password(args)
-
-
-class bcolors(object):
+class BColors(object):
     """A class used to represent ANSI escape sequences
        for console color output.
     """
@@ -72,11 +34,11 @@ class bcolors(object):
     UNDERLINE = '\033[4m'
 
 
-def PbmConnect(stubAdapter, disable_ssl_verification=False):
+def pbm_connect(stub_adapter, disable_ssl_verification=False):
     """Connect to the VMware Storage Policy Server
 
-    :param stubAdapter: The ServiceInstance stub adapter
-    :type stubAdapter: SoapStubAdapter
+    :param stub_adapter: The ServiceInstance stub adapter
+    :type stub_adapter: SoapStubAdapter
     :param disable_ssl_verification: A flag used to skip ssl certificate
         verification (default is False)
     :type disable_ssl_verification: bool
@@ -87,27 +49,27 @@ def PbmConnect(stubAdapter, disable_ssl_verification=False):
     if disable_ssl_verification:
         import ssl
         if hasattr(ssl, '_create_unverified_context'):
-            sslContext = ssl._create_unverified_context()
+            ssl_context = ssl._create_unverified_context()
         else:
-            sslContext = None
+            ssl_context = None
     else:
-        sslContext = None
+        ssl_context = None
 
     VmomiSupport.GetRequestContext()["vcSessionCookie"] = \
-        stubAdapter.cookie.split('"')[1]
-    hostname = stubAdapter.host.split(":")[0]
-    pbmStub = SoapStubAdapter(
+        stub_adapter.cookie.split('"')[1]
+    hostname = stub_adapter.host.split(":")[0]
+    pbm_stub = SoapStubAdapter(
         host=hostname,
         version="pbm.version.version1",
         path="/pbm/sdk",
         poolSize=0,
-        sslContext=sslContext)
-    pbmSi = pbm.ServiceInstance("ServiceInstance", pbmStub)
-    pbmContent = pbmSi.RetrieveContent()
-    return pbmContent
+        sslContext=ssl_context)
+    pbm_si = pbm.ServiceInstance("ServiceInstance", pbm_stub)
+    pbm_content = pbm_si.RetrieveContent()
+    return pbm_content
 
 
-def CheckStorageProfileAssociated(profileManager, ref, name):
+def check_storage_profile_associated(profile_manager, ref, name):
     """Get name of VMware Storage Policy profile associated with
         the specified entities
 
@@ -123,19 +85,19 @@ def CheckStorageProfileAssociated(profileManager, ref, name):
     :rtype: bool
     """
 
-    profileIds = profileManager.PbmQueryAssociatedProfile(ref)
-    if len(profileIds) > 0:
-        profiles = profileManager.PbmRetrieveContent(profileIds=profileIds)
+    profile_ids = profile_manager.PbmQueryAssociatedProfile(ref)
+    if len(profile_ids) > 0:
+        profiles = profile_manager.PbmRetrieveContent(profileIds=profile_ids)
         for profile in profiles:
             if profile.name == name:
                 return True
     return False
 
 
-def SearchStorageProfileByName(profileManager, name):
+def search_storage_profile_by_name(profile_manager, name):
     """Search vmware storage policy profile by name
 
-    :param profileManager: A VMware Storage Policy Service manager object
+    :param profile_manager: A VMware Storage Policy Service manager object
     :type profileManager: pbm.profile.ProfileManager
     :param name: A VMware Storage Policy profile name
     :type name: str
@@ -143,20 +105,21 @@ def SearchStorageProfileByName(profileManager, name):
     :rtype: pbm.profile.Profile
     """
 
-    profileIds = profileManager.PbmQueryProfile(
+    profile_ids = profile_manager.PbmQueryProfile(
         resourceType=pbm.profile.ResourceType(resourceType="STORAGE"),
         profileCategory="REQUIREMENT"
     )
-    if len(profileIds) > 0:
-        storageProfiles = profileManager.PbmRetrieveContent(
-            profileIds=profileIds)
+    if len(profile_ids) > 0:
+        storage_profiles = profile_manager.PbmRetrieveContent(
+            profileIds=profile_ids)
 
-    for storageProfile in storageProfiles:
+    for storageProfile in storage_profiles:
         if storageProfile.name == name:
             return storageProfile
+    return -1
 
 
-def SetVMStorageProfile(vm, profile):
+def set_vm_storage_profile(vm, profile):
     """Set vmware storage policy profile to VM Home
 
     :param vm: A virtual machine object
@@ -167,47 +130,47 @@ def SetVMStorageProfile(vm, profile):
     """
 
     spec = vim.vm.ConfigSpec()
-    profileSpecs = []
-    profileSpec = vim.vm.DefinedProfileSpec()
-    profileSpec.profileId = profile.profileId.uniqueId
-    profileSpecs.append(profileSpec)
-    spec.vmProfile = profileSpecs
+    profile_specs = []
+    profile_spec = vim.vm.DefinedProfileSpec()
+    profile_spec.profileId = profile.profileId.uniqueId
+    profile_specs.append(profile_spec)
+    spec.vmProfile = profile_specs
     vm.ReconfigVM_Task(spec)
 
 
-def SetVirtualDiskStorageProfile(vm, hardwareDevice, profile):
+def set_virtual_disk_storage_profile(vm, hardware_device, profile):
     """Set vmware storage policy profile to Virtual Disk
 
     :param vm: A virtual machine object
     :type vm: VirtualMachine
-    :param hardwareDevice: A virtual disk object
-    :type hardwareDevice: VirtualDevice
+    :param hardware_device: A virtual disk object
+    :type hardware_device: VirtualDevice
     :param profile: A VMware Storage Policy profile
     :type profile: pbm.profile.Profile
     :returns: None
     """
 
     spec = vim.vm.ConfigSpec()
-    deviceSpecs = []
-    profileSpecs = []
-    profileSpec = vim.vm.DefinedProfileSpec()
-    profileSpec.profileId = profile.profileId.uniqueId
-    profileSpecs.append(profileSpec)
+    device_specs = []
+    profile_specs = []
+    profile_spec = vim.vm.DefinedProfileSpec()
+    profile_spec.profileId = profile.profileId.uniqueId
+    profile_specs.append(profile_spec)
 
-    deviceSpec = vim.vm.device.VirtualDeviceSpec()
-    deviceSpec.operation = vim.vm.device.VirtualDeviceSpec.Operation.edit
-    deviceSpec.device = hardwareDevice
-    deviceSpec.profile = profileSpecs
-    deviceSpecs.append(deviceSpec)
-    spec.deviceChange = deviceSpecs
+    device_spec = vim.vm.device.VirtualDeviceSpec()
+    device_spec.operation = vim.vm.device.VirtualDeviceSpec.Operation.edit
+    device_spec.device = hardware_device
+    device_spec.profile = profile_specs
+    device_specs.append(device_spec)
+    spec.deviceChange = device_specs
     vm.ReconfigVM_Task(spec)
 
 
-def SearchVMByName(serviceInstance, name, strict=False):
+def search_vm_by_name(si, name, strict=False):
     """Search virtual machine by name
 
-    :param serviceInstance: A ServiceInstance managed object
-    :type name: serviceInstance
+    :param si: A ServiceInstance managed object
+    :type name: si
     :param name: A virtual machine name
     :type name: str
     :param strict: A flag used to set strict search method
@@ -217,17 +180,15 @@ def SearchVMByName(serviceInstance, name, strict=False):
     :rtype: VirtualMachine
     """
 
-    content = serviceInstance.content
+    content = si.content
     root_folder = content.rootFolder
-    objView = content.viewManager.CreateContainerView(root_folder,
-                                                      [vim.VirtualMachine],
-                                                      True)
-    vmList = objView.view
-    objView.Destroy()
+    obj_view = content.viewManager.CreateContainerView(root_folder, [vim.VirtualMachine], True)
+    vm_list = obj_view.view
+    obj_view.Destroy()
     obj = []
-    for vm in vmList:
+    for vm in vm_list:
         if strict:
-            if (vm.name == name):
+            if vm.name == name:
                 obj.append(vm)
                 return obj
         else:
@@ -240,101 +201,82 @@ def main():
     """Main program.
     """
 
-    args = get_args()
-    serviceInstance = None
-    try:
-        if args.disable_ssl_verification:
-            serviceInstance = SmartConnectNoSSL(host=args.host,
-                                                user=args.user,
-                                                pwd=args.password,
-                                                port=int(args.port))
-        else:
-            serviceInstance = SmartConnect(host=args.host,
-                                           user=args.user,
-                                           pwd=args.password,
-                                           port=int(args.port))
-        atexit.register(Disconnect, serviceInstance)
-    except IOError as e:
-        print(e)
-        pass
-    if not serviceInstance:
-        raise SystemExit('Unable to connect to host with supplied info.')
+    parser = cli.Parser()
+    parser.add_required_arguments(cli.Argument.VM_NAME, cli.Argument.STORAGE_POLICY_NAME)
+    parser.add_custom_argument('--strict', required=False, action='store_true',
+                               help='Search strict virtual machine name matches')
+    parser.add_custom_argument('--set_vm_home', required=False, action='store_true',
+                               help='Set the specified policy for vm home.')
+    parser.add_custom_argument('--virtual_disk_number', required=False, nargs='+', metavar='int',
+                               help='The sequence numbers of the virtual disks for which '
+                                    'the specified policy should be set. Space as delimiter.')
+    args = parser.get_args()
+    si = service_instance.connect(args)
 
-    vdNumber = args.virtual_disk_number
-    policyName = args.storage_policy_name
+    vd_number = args.virtual_disk_number
+    policy_name = args.storage_policy_name
 
-    pbm_content = PbmConnect(serviceInstance._stub,
-                             args.disable_ssl_verification)
+    pbm_content = pbm_connect(si._stub, args.disable_ssl_verification)
     pm = pbm_content.profileManager
 
-    storageProfile = SearchStorageProfileByName(pm, policyName)
-    if not storageProfile:
+    storage_profile = search_storage_profile_by_name(pm, policy_name)
+    if not storage_profile:
         raise SystemExit('Unable to find storage profile with name '
-                         '{}{}{}.'.format(bcolors.FAIL,
-                                          policyName,
-                                          bcolors.ENDC))
+                         '{}{}{}.'.format(BColors.FAIL, policy_name, BColors.ENDC))
 
-    vm_list = SearchVMByName(serviceInstance, args.vm_name, args.strict)
+    vm_list = search_vm_by_name(si, args.vm_name, args.strict)
     for vm in vm_list:
-        pmObjectType = pbm.ServerObjectRef.ObjectType("virtualMachine")
-        pmRef = pbm.ServerObjectRef(key=vm._moId,
-                                    objectType=pmObjectType)
-        print('\r\nVirtual machine name: {}{}{}'.format(bcolors.OKGREEN,
+        pm_object_type = pbm.ServerObjectRef.ObjectType("virtualMachine")
+        pm_ref = pbm.ServerObjectRef(key=vm._moId, objectType=pm_object_type)
+        print('\r\nVirtual machine name: {}{}{}'.format(BColors.OKGREEN,
                                                         vm.name,
-                                                        bcolors.ENDC))
+                                                        BColors.ENDC))
 
         # The implementation of idempotency for the operation of the storage
         # policy assignment for VM Home
         if args.set_vm_home:
-            if not CheckStorageProfileAssociated(pm,
-                                                 pmRef,
-                                                 policyName):
+            if not check_storage_profile_associated(pm, pm_ref, policy_name):
                 print('Set VM Home policy: '
-                      '{}{}{}'.format(bcolors.OKGREEN,
-                                      policyName,
-                                      bcolors.ENDC))
+                      '{}{}{}'.format(BColors.OKGREEN,
+                                      policy_name,
+                                      BColors.ENDC))
 
                 try:
-                    SetVMStorageProfile(vm, storageProfile)
+                    set_vm_storage_profile(vm, storage_profile)
                 except Exception as exc:
                     print('VM reconfiguration task error: '
-                          '{}{}{}'.format(bcolors.FAIL,
+                          '{}{}{}'.format(BColors.FAIL,
                                           exc,
-                                          bcolors.ENDC))
+                                          BColors.ENDC))
             else:
                 print('Set VM Home policy: Nothing to do')
 
-        if vdNumber:
+        if vd_number:
             for device in vm.config.hardware.device:
-                deviceType = type(device).__name__
-                if deviceType == "vim.vm.device.VirtualDisk" and \
+                device_type = type(device).__name__
+                if device_type == "vim.vm.device.VirtualDisk" and \
                    re.search('Hard disk (.+)',
-                             device.deviceInfo.label).group(1) in vdNumber:
-                    pmObjectType = \
+                             device.deviceInfo.label).group(1) in vd_number:
+                    pm_object_type = \
                         pbm.ServerObjectRef.ObjectType("virtualDiskId")
-                    pmRef = pbm.ServerObjectRef(key="{}:{}".format(vm._moId,
-                                                                   device.key),
-                                                objectType=pmObjectType)
+                    pm_ref = pbm.ServerObjectRef(
+                        key="{}:{}".format(vm._moId, device.key), objectType=pm_object_type)
 
                     # The implementation of idempotency for the operation
                     # of the storage policy assignment for virtual disk
-                    if not CheckStorageProfileAssociated(pm,
-                                                         pmRef,
-                                                         policyName):
+                    if not check_storage_profile_associated(pm, pm_ref, policy_name):
                         print('Set {} policy: '
                               '{}{}{}'.format(device.deviceInfo.label,
-                                              bcolors.OKGREEN,
-                                              policyName,
-                                              bcolors.ENDC))
+                                              BColors.OKGREEN,
+                                              policy_name,
+                                              BColors.ENDC))
                         try:
-                            SetVirtualDiskStorageProfile(vm,
-                                                         device,
-                                                         storageProfile)
+                            set_virtual_disk_storage_profile(vm, device, storage_profile)
                         except Exception as exc:
                             print('Virtual disk reconfiguration task error: '
-                                  '{}{}{}'.format(bcolors.FAIL,
+                                  '{}{}{}'.format(BColors.FAIL,
                                                   exc,
-                                                  bcolors.ENDC))
+                                                  BColors.ENDC))
                     else:
                         print('Set {} policy: Nothing to do'.format(
                             device.deviceInfo.label))

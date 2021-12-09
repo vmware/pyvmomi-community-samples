@@ -7,40 +7,21 @@
 # http://www.apache.org/licenses/LICENSE-2.0.html
 
 
-import atexit
+from tools import cli, service_instance, pchelper
+from pyVmomi import vim
 
-from pyVim import connect
+parser = cli.Parser()
+parser.add_optional_arguments(cli.Argument.UUID, cli.Argument.VM_NAME)
+args = parser.get_args()
+si = service_instance.connect(args)
 
-from tools import cli
+vm = None
+if args.uuid:
+    vm = si.content.searchIndex.FindByUuid(datacenter=None, uuid=args.uuid, vmSearch=True)
+elif args.vm_name:
+    content = si.RetrieveContent()
+    vm = pchelper.get_obj(content, [vim.VirtualMachine], args.vm_name)
 
-
-def setup_args():
-    """
-    Adds additional args to allow the vm uuid to
-    be set.
-    """
-    parser = cli.build_arg_parser()
-    # using j here because -u is used for user
-    parser.add_argument('-j', '--uuid',
-                        required=True,
-                        help='UUID of the VirtualMachine you want to reboot.')
-    my_args = parser.parse_args()
-    return cli.prompt_for_password(my_args)
-
-args = setup_args()
-si = None
-try:
-    si = connect.SmartConnect(host=args.host,
-                              user=args.user,
-                              pwd=args.password,
-                              port=int(args.port))
-    atexit.register(connect.Disconnect, si)
-except IOError as e:
-    pass
-
-if not si:
-    raise SystemExit("Unable to connect to host with supplied info.")
-vm = si.content.searchIndex.FindByUuid(None, args.uuid, True, True)
 if not vm:
     raise SystemExit("Unable to locate VirtualMachine.")
 

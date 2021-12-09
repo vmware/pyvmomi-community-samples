@@ -1,12 +1,8 @@
 #!/usr/bin/env python
 
-import atexit
-import argparse
-import getpass
 import ssl
-
 from pyVmomi import pbm, VmomiSupport
-from pyVim.connect import SmartConnect, Disconnect
+from tools import cli, service_instance
 
 """
 Example of using Storage Policy Based Management (SPBM) API
@@ -19,51 +15,33 @@ __author__ = 'William Lam'
 
 
 # retrieve SPBM API endpoint
-def GetPbmConnection(vpxdStub):
-    import Cookie
+def get_pbm_connection(vpxd_stub):
+    import http.cookies as http_cookies
     import pyVmomi
-    sessionCookie = vpxdStub.cookie.split('"')[1]
-    httpContext = VmomiSupport.GetHttpContext()
-    cookie = Cookie.SimpleCookie()
-    cookie["vmware_soap_session"] = sessionCookie
-    httpContext["cookies"] = cookie
-    VmomiSupport.GetRequestContext()["vcSessionCookie"] = sessionCookie
-    hostname = vpxdStub.host.split(":")[0]
+    session_cookie = vpxd_stub.cookie.split('"')[1]
+    http_context = VmomiSupport.GetHttpContext()
+    cookie = http_cookies.SimpleCookie()
+    cookie["vmware_soap_session"] = session_cookie
+    http_context["cookies"] = cookie
+    VmomiSupport.GetRequestContext()["vcSessionCookie"] = session_cookie
+    hostname = vpxd_stub.host.split(":")[0]
 
     context = None
     if hasattr(ssl, "_create_unverified_context"):
         context = ssl._create_unverified_context()
-    pbmStub = pyVmomi.SoapStubAdapter(
+    pbm_stub = pyVmomi.SoapStubAdapter(
         host=hostname,
         version="pbm.version.version1",
         path="/pbm/sdk",
         poolSize=0,
         sslContext=context)
-    pbmSi = pbm.ServiceInstance("ServiceInstance", pbmStub)
-    pbmContent = pbmSi.RetrieveContent()
+    pbm_si = pbm.ServiceInstance("ServiceInstance", pbm_stub)
+    pbm_content = pbm_si.RetrieveContent()
 
-    return (pbmSi, pbmContent)
-
-
-def GetArgs():
-    """
-    Supports the command-line arguments listed below.
-    """
-    parser = argparse.ArgumentParser(
-        description='Process args for VSAN SDK sample application')
-    parser.add_argument('-s', '--host', required=True, action='store',
-                        help='Remote host to connect to')
-    parser.add_argument('-o', '--port', type=int, default=443, action='store',
-                        help='Port to connect on')
-    parser.add_argument('-u', '--user', required=True, action='store',
-                        help='User name to use when connecting to host')
-    parser.add_argument('-p', '--password', required=False, action='store',
-                        help='Password to use when connecting to host')
-    args = parser.parse_args()
-    return args
+    return pbm_si, pbm_content
 
 
-def showCapabilities(capabilities):
+def show_capabilities(capabilities):
     for capability in capabilities:
         for constraint in capability.constraint:
             if hasattr(constraint, 'propertyInstance'):
@@ -74,36 +52,21 @@ def showCapabilities(capabilities):
 
 # Start program
 def main():
-    args = GetArgs()
-    if args.password:
-        password = args.password
-    else:
-        password = getpass.getpass(
-            prompt='Enter password for host %s and '
-                   'user %s: ' % (args.host, args.user))
-
-    context = None
-    if hasattr(ssl, "_create_unverified_context"):
-        context = ssl._create_unverified_context()
-    si = SmartConnect(host=args.host,
-                      user=args.user,
-                      pwd=password,
-                      port=int(args.port),
-                      sslContext=context)
-
-    atexit.register(Disconnect, si)
+    parser = cli.Parser()
+    args = parser.get_args()
+    si = service_instance.connect(args)
 
     # Connect to SPBM Endpoint
-    pbmSi, pbmContent = GetPbmConnection(si._stub)
+    pbm_si, pbm_content = get_pbm_connection(si._stub)
 
-    pm = pbmContent.profileManager
-    profileIds = pm.PbmQueryProfile(resourceType=pbm.profile.ResourceType(
+    pm = pbm_content.profileManager
+    profile_ids = pm.PbmQueryProfile(resourceType=pbm.profile.ResourceType(
         resourceType="STORAGE"), profileCategory="REQUIREMENT"
     )
 
     profiles = []
-    if len(profileIds) > 0:
-        profiles = pm.PbmRetrieveContent(profileIds=profileIds)
+    if len(profile_ids) > 0:
+        profiles = pm.PbmRetrieveContent(profileIds=profile_ids)
 
     for profile in profiles:
         print("Name: %s " % profile.name)
@@ -114,7 +77,7 @@ def main():
             for subprofile in subprofiles:
                 print("RuleSetName: %s " % subprofile.name)
                 capabilities = subprofile.capability
-                showCapabilities(capabilities)
+                show_capabilities(capabilities)
         print("")
 
 

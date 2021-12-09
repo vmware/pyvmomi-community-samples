@@ -9,51 +9,10 @@ http://www.apache.org/licenses/LICENSE-2.0.html
 Example script to upload a file from host to guest
 
 """
-from __future__ import with_statement
-import atexit
-import requests
-from tools import cli
-from tools import tasks
-from pyVim import connect
-from pyVmomi import vim, vmodl
 import re
-
-
-def get_args():
-    """Get command line args from the user.
-    """
-
-    parser = cli.build_arg_parser()
-
-    parser.add_argument('-v', '--vm_uuid',
-                        required=False,
-                        action='store',
-                        help='Virtual machine uuid')
-
-    parser.add_argument('-r', '--vm_user',
-                        required=False,
-                        action='store',
-                        help='virtual machine user name')
-
-    parser.add_argument('-w', '--vm_pwd',
-                        required=False,
-                        action='store',
-                        help='virtual machine password')
-
-    parser.add_argument('-l', '--path_inside_vm',
-                        required=False,
-                        action='store',
-                        help='Path inside VM for upload')
-
-    parser.add_argument('-f', '--upload_file',
-                        required=False,
-                        action='store',
-                        help='Path of the file to be uploaded from host')
-
-    args = parser.parse_args()
-
-    cli.prompt_for_password(args)
-    return args
+import requests
+from tools import cli, service_instance, pchelper
+from pyVmomi import vim, vmodl
 
 
 def main():
@@ -61,18 +20,31 @@ def main():
     Simple command-line program for Uploading a file from host to guest
     """
 
-    args = get_args()
-    vm_path = args.path_inside_vm
+    parser = cli.Parser()
+
+    parser.add_required_arguments(cli.Argument.VM_USER, cli.Argument.VM_PASS,
+                                  cli.Argument.REMOTE_FILE_PATH, cli.Argument.LOCAL_FILE_PATH)
+    parser.add_optional_arguments(cli.Argument.VM_NAME, cli.Argument.UUID)
+    args = parser.get_args()
+
+    vm_path = args.remote_file_path
     try:
-        service_instance = connect.SmartConnect(host=args.host,
-                                                user=args.user,
-                                                pwd=args.password,
-                                                port=int(args.port))
+        si = service_instance.connect(args)
+        content = si.RetrieveContent()
 
-        atexit.register(connect.Disconnect, service_instance)
-        content = service_instance.RetrieveContent()
+        vm = None
+        if args.uuid:
+            search_index = si.content.searchIndex
+            vm = search_index.FindByUuid(None, args.uuid, True)
+        elif args.vm_name:
+            content = si.RetrieveContent()
+            vm = pchelper.get_obj(content, [vim.VirtualMachine], args.vm_name)
 
-        vm = content.searchIndex.FindByUuid(None, args.vm_uuid, True)
+        if not vm:
+            raise SystemExit("Unable to locate VirtualMachine.")
+
+        print("Found: {0}".format(vm.name))
+
         tools_status = vm.guest.toolsStatus
         if (tools_status == 'toolsNotInstalled' or
                 tools_status == 'toolsNotRunning'):
@@ -83,33 +55,34 @@ def main():
 
         creds = vim.vm.guest.NamePasswordAuthentication(
             username=args.vm_user, password=args.vm_pwd)
-        with open(args.upload_file, 'rb') as myfile:
-            fileinmemory = myfile.read()
+        with open(args.local_file_path, 'rb') as myfile:
+            data_to_send = myfile.read()
 
         try:
             file_attribute = vim.vm.guest.FileManager.FileAttributes()
             url = content.guestOperationsManager.fileManager. \
                 InitiateFileTransferToGuest(vm, creds, vm_path,
                                             file_attribute,
-                                            len(fileinmemory), True)
+                                            len(data_to_send), True)
             # When : host argument becomes https://*:443/guestFile?
             # Ref: https://github.com/vmware/pyvmomi/blob/master/docs/ \
             #            vim/vm/guest/FileManager.rst
             # Script fails in that case, saying URL has an invalid label.
             # By having hostname in place will take take care of this.
             url = re.sub(r"^https://\*:", "https://"+str(args.host)+":", url)
-            resp = requests.put(url, data=fileinmemory, verify=False)
+            resp = requests.put(url, data=data_to_send, verify=False)
             if not resp.status_code == 200:
-                print "Error while uploading file"
+                print("Error while uploading file")
             else:
-                print "Successfully uploaded file"
-        except IOError, e:
-            print e
+                print("Successfully uploaded file")
+        except IOError as ex:
+            print(ex)
     except vmodl.MethodFault as error:
-        print "Caught vmodl fault : " + error.msg
+        print("Caught vmodl fault : " + error.msg)
         return -1
 
     return 0
+
 
 # Start program
 if __name__ == "__main__":

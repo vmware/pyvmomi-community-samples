@@ -15,40 +15,9 @@
 Python program for deleting a first class disk (fcd)
 """
 
-import atexit
-
-from tools import cli, tasks, disk
-from pyVim import connect
-from pyVmomi import vmodl
-from pyVmomi import vim
-
-
-def get_args():
-    """
-    Adds additional args for deleting a fcd
-
-    -d datastore
-    -v vdisk
-    -y yes
-    """
-    parser = cli.build_arg_parser()
-
-    parser.add_argument('-d', '--datastore',
-                        required=True,
-                        action='store',
-                        help='Datastore name where disk is located')
-
-    parser.add_argument('-v', '--vdisk',
-                        required=True,
-                        action='store',
-                        help='First Class Disk name to be deleted')
-
-    parser.add_argument('-y', '--yes',
-                        action='store_true',
-                        help='Confirm disk deletion.')
-
-    my_args = parser.parse_args()
-    return cli.prompt_for_password(my_args)
+import sys
+from tools import cli, tasks, disk, pchelper, service_instance
+from pyVmomi import vmodl, vim
 
 
 def main():
@@ -56,44 +25,36 @@ def main():
     Simple command-line program for deleting a snapshot of a first class disk.
     """
 
-    args = get_args()
+    parser = cli.Parser()
+    parser.add_required_arguments(cli.Argument.DATASTORE_NAME, cli.Argument.FIRST_CLASS_DISK_NAME)
+    parser.add_custom_argument('--yes', action='store_true', help='Confirm disk deletion.')
+    args = parser.get_args()
+    si = service_instance.connect(args)
 
     try:
-        if args.disable_ssl_verification:
-            service_instance = connect.SmartConnectNoSSL(host=args.host,
-                                                         user=args.user,
-                                                         pwd=args.password,
-                                                         port=int(args.port))
-        else:
-            service_instance = connect.SmartConnect(host=args.host,
-                                                    user=args.user,
-                                                    pwd=args.password,
-                                                    port=int(args.port))
-
-        atexit.register(connect.Disconnect, service_instance)
-
-        content = service_instance.RetrieveContent()
+        content = si.RetrieveContent()
 
         # Retrieve Datastore Object
-        datastore = disk.get_obj(content, [vim.Datastore], args.datastore)
+        datastore = pchelper.get_obj(content, [vim.Datastore], args.datastore_name)
 
         # Retrieve FCD Object
-        vdisk = disk.retrieve_fcd(content, datastore, args.vdisk)
+        vdisk = disk.retrieve_fcd(content, datastore, args.fcd_name)
 
         # Confirming FCD deletion
         if not args.yes:
             response = cli.prompt_y_n_question("Are you sure you want to "
-                                               "delete vdisk '" + args.vdisk +
+                                               "delete vdisk '" + args.fcd_name +
                                                "'?",
                                                default='no')
             if not response:
                 print("Exiting script. User chose not to delete HDD.")
-                exit()
+                sys.exit()
 
         # Delete FCD
         storage = content.vStorageObjectManager
         task = storage.DeleteVStorageObject_Task(vdisk.config.id, datastore)
-        tasks.wait_for_tasks(service_instance, [task])
+        tasks.wait_for_tasks(si, [task])
+        print("FCD deleted!")
 
     except vmodl.MethodFault as error:
         print("Caught vmodl fault : " + error.msg)

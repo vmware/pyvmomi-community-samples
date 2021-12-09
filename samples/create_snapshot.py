@@ -12,53 +12,17 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-from __future__ import print_function
+from tools import cli, service_instance
 
-import atexit
-
-import requests
-
-from pyVim.connect import SmartConnect, SmartConnectNoSSL, Disconnect
-
-from tools import cli
-
-requests.packages.urllib3.disable_warnings()
-
-
-def setup_args():
-    parser = cli.build_arg_parser()
-    parser.add_argument('-j', '--uuid', required=True,
-                        help="UUID of the VirtualMachine you want to find."
-                             " If -i is not used BIOS UUID assumed.")
-    parser.add_argument('-i', '--instance', required=False,
-                        action='store_true',
-                        help="Flag to indicate the UUID is an instance UUID")
-    parser.add_argument('-d', '--description', required=False,
-                        help="Description for the snapshot")
-    parser.add_argument('-n', '--name', required=True,
-                        help="Name for the Snapshot")
-    my_args = parser.parse_args()
-    return cli.prompt_for_password(my_args)
-
-
-args = setup_args()
-si = None
+parser = cli.Parser()
+parser.add_required_arguments(cli.Argument.UUID)
+parser.add_custom_argument('--instance', required=False, action='store_true',
+                           help="Flag to indicate the UUID is an instance UUID")
+parser.add_custom_argument('--description', required=False, help="Description for the snapshot")
+parser.add_custom_argument('--name', required=True, help="Name for the Snapshot")
+args = parser.get_args()
+si = service_instance.connect(args)
 instance_search = False
-try:
-    if args.disable_ssl_verification:
-        si = SmartConnectNoSSL(host=args.host,
-                               user=args.user,
-                               pwd=args.password,
-                               port=int(args.port))
-    else:
-        si = SmartConnect(host=args.host,
-                          user=args.user,
-                          pwd=args.password,
-                          port=int(args.port))
-
-    atexit.register(Disconnect, si)
-except IOError:
-    pass
 
 if not si:
     raise SystemExit("Unable to connect to host with supplied info.")

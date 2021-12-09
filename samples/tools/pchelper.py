@@ -7,7 +7,7 @@ import pyVmomi
 
 # Shamelessly borrowed from:
 # https://github.com/dnaeon/py-vconnector/blob/master/src/vconnector/core.py
-def collect_properties(service_instance, view_ref, obj_type, path_set=None,
+def collect_properties(si, view_ref, obj_type, path_set=None,
                        include_mors=False):
     """
     Collect properties for managed objects from a view ref
@@ -29,7 +29,7 @@ def collect_properties(service_instance, view_ref, obj_type, path_set=None,
         A list of properties for the managed objects
 
     """
-    collector = service_instance.content.propertyCollector
+    collector = si.content.propertyCollector
 
     # Create object specification to define the starting point of
     # inventory navigation
@@ -76,7 +76,7 @@ def collect_properties(service_instance, view_ref, obj_type, path_set=None,
     return data
 
 
-def get_container_view(service_instance, obj_type, container=None):
+def get_container_view(si, obj_type, container=None):
     """
     Get a vSphere Container View reference to all objects of type 'obj_type'
 
@@ -88,14 +88,71 @@ def get_container_view(service_instance, obj_type, container=None):
 
     Returns:
         A container view ref to the discovered managed objects
-
     """
     if not container:
-        container = service_instance.content.rootFolder
+        container = si.content.rootFolder
 
-    view_ref = service_instance.content.viewManager.CreateContainerView(
+    view_ref = si.content.viewManager.CreateContainerView(
         container=container,
         type=obj_type,
         recursive=True
     )
     return view_ref
+
+
+def search_for_obj(content, vim_type, name, folder=None, recurse=True):
+    """
+    Search the managed object for the name and type specified
+
+    Sample Usage:
+
+    get_obj(content, [vim.Datastore], "Datastore Name")
+    """
+    if folder is None:
+        folder = content.rootFolder
+
+    obj = None
+    container = content.viewManager.CreateContainerView(folder, vim_type, recurse)
+
+    for managed_object_ref in container.view:
+        if managed_object_ref.name == name:
+            obj = managed_object_ref
+            break
+    container.Destroy()
+    return obj
+
+
+def get_all_obj(content, vim_type, folder=None, recurse=True):
+    """
+    Search the managed object for the name and type specified
+
+    Sample Usage:
+
+    get_obj(content, [vim.Datastore], "Datastore Name")
+    """
+    if not folder:
+        folder = content.rootFolder
+
+    obj = {}
+    container = content.viewManager.CreateContainerView(folder, vim_type, recurse)
+
+    for managed_object_ref in container.view:
+        obj[managed_object_ref] = managed_object_ref.name
+
+    container.Destroy()
+    return obj
+
+
+def get_obj(content, vim_type, name, folder=None, recurse=True):
+    """
+    Retrieves the managed object for the name and type specified
+    Throws an exception if of not found.
+
+    Sample Usage:
+
+    get_obj(content, [vim.Datastore], "Datastore Name")
+    """
+    obj = search_for_obj(content, vim_type, name, folder, recurse)
+    if not obj:
+        raise RuntimeError("Managed Object " + name + " not found.")
+    return obj

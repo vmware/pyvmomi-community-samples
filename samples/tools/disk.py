@@ -13,28 +13,6 @@ This module implements simple helper functions for working with:
 - First Class Disks
 """
 
-from pyVmomi import vim
-
-
-def get_obj(content, vimtype, name):
-    """
-    Retrieves the managed object for the name and type specified
-
-    Sample Usage:
-
-    get_obj(content, [vim.Datastore], "Datastore Name")
-    """
-    obj = None
-    container = content.viewManager.CreateContainerView(
-        content.rootFolder, vimtype, True)
-    for c in container.view:
-        if c.name == name:
-            obj = c
-            break
-    if not obj:
-        raise RuntimeError("Managed Object " + name + " not found.")
-    return obj
-
 
 def retrieve_fcd(content, datastore, vdisk):
     """
@@ -48,18 +26,18 @@ def retrieve_fcd(content, datastore, vdisk):
     storage = content.vStorageObjectManager
 
     # Retrieve First Class Disks
-    disk = None
-    for d in storage.ListVStorageObject(datastore):
-        disk_info = storage.RetrieveVStorageObject(d, datastore)
+    fcd = None
+    for disk in storage.ListVStorageObject(datastore):
+        disk_info = storage.RetrieveVStorageObject(disk, datastore)
         if disk_info.config.name == vdisk:
-            disk = disk_info
+            fcd = disk_info
             break
-    if not disk:
+    if not fcd:
         raise RuntimeError("First Class Disk not found.")
-    return disk
+    return fcd
 
 
-def retrieve_fcd_snapshot(content, datastore, vdisk, snapshot):
+def retrieve_fcd_snapshot(content, datastore, vdisk, snapshot_name):
     """
     Retrieves the managed object for the fcd snapshot specified
 
@@ -71,12 +49,12 @@ def retrieve_fcd_snapshot(content, datastore, vdisk, snapshot):
     storage = content.vStorageObjectManager
 
     # Retrieve Snapshot
-    snap = None
+    fcd_snapshot = None
     snaps = storage.RetrieveSnapshotInfo(vdisk.config.id, datastore)
-    for s in snaps.snapshots:
-        if s.description == snapshot:
-            snap = s.id
+    for snapshot in snaps.snapshots:
+        if snapshot.description == snapshot_name:
+            fcd_snapshot = snapshot.id
             break
-    if not snap:
+    if not fcd_snapshot:
         raise RuntimeError("Snapshot not found.")
-    return snap
+    return fcd_snapshot

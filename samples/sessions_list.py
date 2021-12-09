@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # VMware vSphere Python SDK
-# Copyright (c) 2008-2014 VMware, Inc. All Rights Reserved.
+# Copyright (c) 2008-2021 VMware, Inc. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,10 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse
-import getpass
-
-from pyVim.connect import SmartConnectNoSSL
+from tools import cli, service_instance
 
 # Demonstrates some simple working with sessions actions. By common sense
 # you should expect that the session is None when you've logged out and
@@ -36,48 +33,13 @@ from pyVim.connect import SmartConnectNoSSL
 # > logout
 # > current pyVmomi session: None
 
+parser = cli.Parser()
+args = parser.get_args()
+si = service_instance.connect(args)
 
-parser = argparse.ArgumentParser()
-parser.add_argument('-s', '--host',
-                    required=True,
-                    action='store',
-                    help='Remote host to connect to')
-
-parser.add_argument('-u', '--user',
-                    required=True,
-                    action='store',
-                    help='User name to use when connecting to host')
-
-parser.add_argument('-p', '--password',
-                    required=False,
-                    action='store',
-                    help='Password to use when connecting to host')
-
-parser.add_argument('-o', '--port',
-                    required=False,
-                    action='store',
-                    help="port to use, default 443", default=443)
-
-args = parser.parse_args()
-if args.password:
-    password = args.password
-else:
-    password = getpass.getpass(
-        prompt='Enter password for host {0} and user {1}: '.format(
-                args.host, args.user
-            )
-        )
-
-si = SmartConnectNoSSL(
-        host=args.host,
-        user=args.user,
-        pwd=password,
-        port=int(args.port)
-    )
-
-print("logged in to {0}".format(args.host))
+print("logged in to %s" % args.host)
 session_id = si.content.sessionManager.currentSession.key
-print("current pyVmomi session id: {0}".format(session_id))
+print("current pyVmomi session id: %s" % session_id)
 
 print("Listing all sessions I can see:")
 for session in si.content.sessionManager.sessionList:
@@ -92,4 +54,4 @@ si.content.sessionManager.Logout()
 
 # The current session will be None after logout
 session = si.content.sessionManager.currentSession
-print("current pyVmomi session: {0}".format(session))
+print("current pyVmomi session: %s" % session)
