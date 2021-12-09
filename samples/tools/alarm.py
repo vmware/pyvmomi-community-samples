@@ -91,7 +91,7 @@ def _build_payload(**kwargs):
     status.text = 'green'
     # I hate hard coding this but I have no idea how to do it any other way
     # pull requests welcome :)
-    return '<?xml version="1.0" encoding="UTF-8"?>{0}'.format(tostring(root))
+    return tostring(root, encoding='UTF-8', method='xml').decode()
 
 
 def _send_request(payload=None, session=None):
