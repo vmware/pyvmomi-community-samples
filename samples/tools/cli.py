@@ -311,6 +311,10 @@ class Argument:
                     'choices': ['physicalMode', 'virtualMode'],
                     'help': 'See vim.vm.device.VirtualDiskOption.CompatibilityMode documentation.'}}
 
+    HTTP_BLOCK_SIZE = {
+        'name_or_flags': ['--http-block-size'],
+        'options': {'action': 'store', 'help': 'Block size to use when reading OVA files from http source, in bytes'}
+    }
     ISO = {
         'name_or_flags': ['--iso'],
         'options': {'action': 'store',
