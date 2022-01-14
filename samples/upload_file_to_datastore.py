@@ -63,7 +63,7 @@ def main():
         resource = "/folder" + remote_file
         params = {"dsName": datastore.info.name,
                   "dcPath": datacenter.name}
-        http_url = "https://" + args.host + ":443" + resource
+        http_url = "https://" + args.host + ":" + str(args.port) + resource
 
         # Get the cookie built from the current session
         client_cookie = si._stub.cookie
