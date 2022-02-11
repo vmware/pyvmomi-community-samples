@@ -20,11 +20,6 @@ def clone_vm_CPU_reconfig(si, vm_name, new_vmname, datacenter_name, host_ip, pow
         datastore = pchelper.get_obj(
             content, [vim.Datastore], VM.datastore[0].info.name)
 
-    if cpu is None:
-        cpu = 2
-    if memory is None:
-        memory = 4
-
     relospec = vim.vm.RelocateSpec()
     relospec.datastore = datastore
     relospec.pool = source_pool
@@ -44,9 +39,9 @@ def clone_vm_CPU_reconfig(si, vm_name, new_vmname, datacenter_name, host_ip, pow
     print(vm.config.hardware.numCPU)
 
     if power_on:
-        TASK = vm.PowerOnVM_Task()
-        tasks.wait_for_tasks(si, [TASK])
-        print("{0}".format(TASK.info.state))
+        task = vm.PowerOnVM_Task()
+        tasks.wait_for_tasks(si, [task])
+        print("{0}".format(task.info.state))
 
     print("VM All tasks completed.")
 
@@ -63,11 +58,11 @@ def main():
                                   cli.Argument.DATASTORE_NAME, cli.Argument.ESX_IP,)
     parser.add_optional_arguments(cli.Argument.POWER_ON)
 
-    parser.add_custom_argument('--cpu', required=False, action='store', default=None,
+    parser.add_custom_argument('--cpu', required=False, action='store', default=2,
                                help='Version/release CPUs of the Virtual machine CPUs')
 
-    parser.add_custom_argument('--memory', required=False, action='store', default=None,
-                               help='Version/release memory of the Virtual machine memories')
+    parser.add_custom_argument('--memory', required=False, action='store', default=4,
+                               help='Version/release memory (MB) of the Virtual machine memories')
 
     parser.add_custom_argument('--clone_name', required=False, action='store', default=None,
                                help='Version/release name of the Virtual machine clone name')

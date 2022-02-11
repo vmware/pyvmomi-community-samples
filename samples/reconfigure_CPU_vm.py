@@ -43,9 +43,9 @@ def main():
             print(vm.config.hardware.numCPU)
 
             if args.power_on:
-                TASK = vm.PowerOnVM_Task()
-                tasks.wait_for_tasks(si, [TASK])
-                print("{0}".format(TASK.info.state))
+                task = vm.PowerOnVM_Task()
+                tasks.wait_for_tasks(si, [task])
+                print("{0}".format(task.info.state))
         else:
             print("provide valid argument")
 
