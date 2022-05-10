@@ -1,6 +1,5 @@
 # IMPORT PACKAGES
 from pyVmomi import vim, vmodl
-from pyVim.connect import SmartConnect
 from tools import cli, service_instance, pchelper
 import ssl
 import time
@@ -68,7 +67,12 @@ def main():
         }
     parser.add_required_arguments(cli.Argument.VM_NAME, cli.Argument.DATACENTER_NAME, cli.Argument.CLUSTER_NAME, CONVERT_TO)
     args = parser.get_args()
-    si = service_instance.connect(args)
+    if args.disable_ssl_verification:
+      context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
+      context.verify_mode = ssl.CERT_NONE
+      si = service_instance.SmartConnect(host=args.host, user=args.user, pwd=args.password, sslContext=context)
+    else:
+        si = service_instance.connect(host=args.host, user=args.user, pwd=args.password)
     cluster = get_cluster(si, args.datacenter_name, args.cluster_name)
     convert_template(args.convert_to, si, args.vm_name, args.datacenter_name, args.cluster_name)
 
