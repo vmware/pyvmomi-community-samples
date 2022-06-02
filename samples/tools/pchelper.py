@@ -137,7 +137,7 @@ def get_all_obj(content, vim_type, folder=None, recurse=True):
     container = content.viewManager.CreateContainerView(folder, vim_type, recurse)
 
     for managed_object_ref in container.view:
-        obj[managed_object_ref] = managed_object_ref.name
+        obj[managed_object_ref.name] = managed_object_ref
 
     container.Destroy()
     return obj
