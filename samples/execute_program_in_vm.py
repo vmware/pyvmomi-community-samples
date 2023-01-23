@@ -45,6 +45,7 @@ def main():
                                help='Program command line options. '
                                     'e.g. "/etc/network/interfaces > /tmp/plop"')
     args = parser.get_args()
+   
     si = service_instance.connect(args)
     try:
         content = si.RetrieveContent()
@@ -67,7 +68,7 @@ def main():
                 "is running")
 
         creds = vim.vm.guest.NamePasswordAuthentication(
-            username=args.vm_user, password=args.vm_pwd
+            username=args.vm_user, password=args.vm_password
         )
 
         try:
