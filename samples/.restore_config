@@ -1,0 +1,7 @@
+host: 10.16.240.12
+user: Administrator@vsphere.local
+vm_names: [vm1 vm2]
+snap_name: initial
+debug: true
+insecure: true
+save_first: true
