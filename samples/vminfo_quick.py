@@ -11,7 +11,11 @@
 
 """
 import atexit
-from time import clock
+try:
+    # Python 3.8 : time.clock was deprecated and removed.
+    from time import perf_counter as clock
+except ImportError:
+    from time import clock
 from pyVmomi import vim
 from tools import cli, service_instance, pchelper
 
