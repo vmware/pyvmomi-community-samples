@@ -1,4 +1,12 @@
 #!/usr/bin/env python
+"""
+Written by Maros Kukan
+Github: https://github.com/maroskukan
+Email: maros.kukan@me.com
+Note: Example code For testing purposes only
+This code has been released under the terms of the Apache-2.0 license
+http://opensource.org/licenses/Apache-2.0
+"""
 
 from pyVmomi import vim
 from tools import cli, service_instance
