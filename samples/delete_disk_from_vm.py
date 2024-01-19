@@ -79,9 +79,7 @@ def main():
 
     if vm_obj:
         if not args.yes:
-            cli.prompt_y_n_question("Are you sure you want "
-                                    "to delete HDD "
-                                    "{}?".format(args.unitnumber),
+            cli.prompt_y_n_question(f'Are you sure you want to delete "Hard Disk {args.unitnumber}"?',
                                     default='no')
         delete_virtual_disk(si, vm_obj, args.unitnumber, args.language)
         print('VM HDD "{}" successfully deleted.'.format(args.unitnumber))
