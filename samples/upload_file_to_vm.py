@@ -54,7 +54,7 @@ def main():
                 "is running")
 
         creds = vim.vm.guest.NamePasswordAuthentication(
-            username=args.vm_user, password=args.vm_pwd)
+            username=args.vm_user, password=args.vm_password)
         with open(args.local_file_path, 'rb') as myfile:
             data_to_send = myfile.read()
 
