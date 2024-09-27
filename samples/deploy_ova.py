@@ -17,6 +17,8 @@ import ssl
 import sys
 import tarfile
 import time
+import http.client
+from urllib.parse import urlparse
 
 from threading import Timer
 from six.moves.urllib.request import Request, urlopen
@@ -31,7 +33,8 @@ __author__ = 'prziborowski'
 def main():
     parser = cli.Parser()
     parser.add_optional_arguments(cli.Argument.OVA_PATH, cli.Argument.DATACENTER_NAME,
-                                  cli.Argument.RESOURCE_POOL, cli.Argument.DATASTORE_NAME)
+                                  cli.Argument.RESOURCE_POOL, cli.Argument.DATASTORE_NAME,
+                                  cli.Argument.HTTP_BLOCK_SIZE)
     args = parser.get_args()
     si = service_instance.connect(args)
 
@@ -50,7 +53,11 @@ def main():
     else:
         datastore = get_largest_free_ds(datacenter)
 
-    ovf_handle = OvfHandler(args.ova_path)
+    http_block_size = None
+    if args.http_block_size:
+        http_block_size = int(args.http_block_size)
+
+    ovf_handle = OvfHandler(args.ova_path, http_block_size)
 
     ovf_manager = si.content.ovfManager
     # CreateImportSpecParams can specify many useful things such as
@@ -183,7 +190,7 @@ class OvfHandler(object):
     It processes the tarfile, matches disk keys to files and
     uploads the disks, while keeping the progress up to date for the lease.
     """
-    def __init__(self, ovafile):
+    def __init__(self, ovafile, http_block_size=None):
         """
         Performs necessary initialization, opening the OVA file,
         processing the files and reading the embedded ovf file.
@@ -194,6 +201,10 @@ class OvfHandler(object):
                                   self.tarfile.getnames()))[0]
         ovffile = self.tarfile.extractfile(ovffilename)
         self.descriptor = ovffile.read().decode()
+        if http_block_size is None:
+            self.http_block_size = 10485760    # 10MB by default
+        else:
+            self.http_block_size = http_block_size
 
     def _create_file_handle(self, entry):
         """
@@ -264,8 +275,23 @@ class OvfHandler(object):
             ssl_context = ssl._create_unverified_context()
         else:
             ssl_context = None
-        req = Request(url, ovffile, headers)
-        urlopen(req, context=ssl_context)
+
+        method = 'POST'
+        if not device_url.disk:
+            headers['Overwrite'] = 't'
+            method = 'PUT'
+        
+        p = urlparse(url)
+
+        if p.scheme == 'http':
+            conn = http.client.HTTPConnection(p.netloc,
+                                               blocksize=self.http_block_size)
+        else:
+            conn = http.client.HTTPSConnection(p.netloc, context=ssl_context,
+                                               blocksize=self.http_block_size)
+        conn.request(method, p.path, body=ovffile, headers=headers)
+        conn.close()
+
 
     def start_timer(self):
         """
