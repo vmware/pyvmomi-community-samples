@@ -54,6 +54,9 @@ def delete_virtual_disk(si, vm_obj, disk_number, language):
     virtual_hdd_spec = vim.vm.device.VirtualDeviceSpec()
     virtual_hdd_spec.operation = \
         vim.vm.device.VirtualDeviceSpec.Operation.remove
+    # remove the file that was used by disk as well
+    virtual_hdd_spec.fileOperation = \
+        vim.vm.device.VirtualDeviceSpec.FileOperation.destroy
     virtual_hdd_spec.device = virtual_hdd_device
 
     spec = vim.vm.ConfigSpec()
@@ -79,9 +82,7 @@ def main():
 
     if vm_obj:
         if not args.yes:
-            cli.prompt_y_n_question("Are you sure you want "
-                                    "to delete HDD "
-                                    "{}?".format(args.unitnumber),
+            cli.prompt_y_n_question(f'Are you sure you want to delete "Hard Disk {args.unitnumber}" and its file?',
                                     default='no')
         delete_virtual_disk(si, vm_obj, args.unitnumber, args.language)
         print('VM HDD "{}" successfully deleted.'.format(args.unitnumber))
