@@ -33,8 +33,20 @@ def clone_vm(
     cluster_name, resource_pool, and power_on are all optional.
     """
 
-    # if none git the first one
-    datacenter = pchelper.get_obj(content, [vim.Datacenter], datacenter_name)
+    # If no data center name is provided, get the default first data center
+    if datacenter_name:
+        datacenter = pchelper.get_obj(content, [vim.Datacenter], datacenter_name)
+    else:
+        datacenters = content.rootFolder.childEntity  
+        for dc in datacenters:
+            if isinstance(dc, vim.Datacenter):  
+                datacenter = dc  
+                print(f"Automatically selected data center: {datacenter.name}")
+                break
+        else:
+            raise RuntimeError("No data centers found")
+
+            
 
     if vm_folder:
         destfolder = pchelper.search_for_obj(content, [vim.Folder], vm_folder)
